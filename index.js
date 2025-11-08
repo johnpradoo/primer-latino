@@ -1,17 +1,16 @@
 const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
 const axios = require("axios");
 const fs = require("fs");
-const http = require("http");
 require("dotenv").config();
 
 // Leer movies.json
 const data = JSON.parse(fs.readFileSync("./movies.json", "utf-8"));
 const { movies, series } = data;
 
-// Manifest
+// Manifest del addon
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "1.0.3",
+  version: "1.0.4",
   name: "Primer Latino",
   description: "Películas y series LATINO desde Real-Debrid y Magnet Links.",
   logo: "https://i.imgur.com/lE2FQIk.png",
@@ -27,7 +26,7 @@ const manifest = {
 
 const builder = new addonBuilder(manifest);
 
-// 📚 Obtener datos desde OMDb (IMDb)
+// 📚 Obtener datos desde IMDb (OMDb)
 async function getMetaFromIMDb(imdbID) {
   try {
     const res = await axios.get(`https://www.omdbapi.com/?i=${imdbID}&apikey=8b6c8c8a`);
@@ -51,7 +50,7 @@ async function getMetaFromIMDb(imdbID) {
 }
 
 // 🎬 Catalog Handler
-builder.defineCatalogHandler(async ({ type, id }) => {
+builder.defineCatalogHandler(async ({ type }) => {
   try {
     const items = type === "movie" ? movies : series;
     const metas = [];
@@ -125,29 +124,12 @@ builder.defineMetaHandler(async ({ id }) => {
   }
 });
 
-// 🌐 Servidor HTTP con soporte completo de rutas
-const addonInterface = builder.getInterface();
+// 🚀 Servidor final
 const PORT = process.env.PORT || 7000;
+serveHTTP(builder.getInterface(), { port: PORT });
+console.log(`✅ Primer Latino Addon corriendo en puerto ${PORT}`);
 
-http
-  .createServer((req, res) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-    if (req.method === "OPTIONS") {
-      res.writeHead(204);
-      res.end();
-      return;
-    }
-
-    // Redirigir cualquier ruta a serveHTTP
-    serveHTTP(addonInterface, { port: PORT })(req, res);
-  })
-  .listen(PORT, () => {
-    console.log(`✅ Primer Latino corriendo en el puerto ${PORT}`);
-  });
-
-// Captura global de errores
+// 🧱 Captura global de errores
 process.on("unhandledRejection", (reason) => {
   console.error("⚠️ Unhandled Rejection:", reason);
 });
