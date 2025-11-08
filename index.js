@@ -1,4 +1,4 @@
-const { addonBuilder } = require("stremio-addon-sdk");
+const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
 const axios = require("axios");
 const fs = require("fs");
 const http = require("http");
@@ -11,7 +11,7 @@ const { movies, series } = data;
 // Manifest
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "1.0.2",
+  version: "1.0.3",
   name: "Primer Latino",
   description: "Películas y series LATINO desde Real-Debrid y Magnet Links.",
   logo: "https://i.imgur.com/lE2FQIk.png",
@@ -45,13 +45,13 @@ async function getMetaFromIMDb(imdbID) {
       imdbRating: d.imdbRating
     };
   } catch (err) {
-    console.error("❌ Error IMDb:", err.message);
+    console.error("❌ IMDb Error:", err.message);
     return null;
   }
 }
 
 // 🎬 Catalog Handler
-builder.defineCatalogHandler(async ({ type }) => {
+builder.defineCatalogHandler(async ({ type, id }) => {
   try {
     const items = type === "movie" ? movies : series;
     const metas = [];
@@ -71,7 +71,7 @@ builder.defineCatalogHandler(async ({ type }) => {
 
     return { metas };
   } catch (err) {
-    console.error("❌ Error en defineCatalogHandler:", err);
+    console.error("❌ Catalog Handler:", err);
     return { metas: [] };
   }
 });
@@ -107,7 +107,7 @@ builder.defineStreamHandler(async ({ id }) => {
       ]
     };
   } catch (err) {
-    console.error("❌ Error en defineStreamHandler:", err);
+    console.error("❌ Stream Handler:", err);
     return { streams: [] };
   }
 });
@@ -120,53 +120,36 @@ builder.defineMetaHandler(async ({ id }) => {
     if (!meta) return { meta: { id, name: "No encontrado" } };
     return { meta };
   } catch (err) {
-    console.error("❌ Error en defineMetaHandler:", err);
+    console.error("❌ Meta Handler:", err);
     return { meta: { id, name: "Error al obtener metadatos" } };
   }
 });
 
-// 🌐 Servidor HTTP
-const PORT = process.env.PORT || 7000;
+// 🌐 Servidor HTTP con soporte completo de rutas
 const addonInterface = builder.getInterface();
+const PORT = process.env.PORT || 7000;
 
 http
   .createServer((req, res) => {
-    try {
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-      if (req.method === "OPTIONS") {
-        res.writeHead(204);
-        res.end();
-        return;
-      }
-
-      if (req.url === "/manifest.json") {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify(addonInterface.manifest));
-      } else if (
-        req.url.startsWith("/catalog/") ||
-        req.url.startsWith("/stream/") ||
-        req.url.startsWith("/meta/")
-      ) {
-        addonInterface.get(req, res);
-      } else {
-        res.writeHead(404);
-        res.end("Not Found");
-      }
-    } catch (err) {
-      console.error("❌ Error en el servidor HTTP:", err);
-      res.writeHead(500);
-      res.end("Internal Server Error");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    if (req.method === "OPTIONS") {
+      res.writeHead(204);
+      res.end();
+      return;
     }
+
+    // Redirigir cualquier ruta a serveHTTP
+    serveHTTP(addonInterface, { port: PORT })(req, res);
   })
   .listen(PORT, () => {
     console.log(`✅ Primer Latino corriendo en el puerto ${PORT}`);
   });
 
-// 🧱 Captura global de errores no manejados
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("⚠️ Unhandled Promise Rejection:", reason);
+// Captura global de errores
+process.on("unhandledRejection", (reason) => {
+  console.error("⚠️ Unhandled Rejection:", reason);
 });
 process.on("uncaughtException", (err) => {
   console.error("⚠️ Uncaught Exception:", err);
