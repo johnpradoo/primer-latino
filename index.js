@@ -1,16 +1,17 @@
-const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
+const { addonBuilder } = require("stremio-addon-sdk");
 const axios = require("axios");
 const fs = require("fs");
+const http = require("http");
 require("dotenv").config();
 
-// Leer los datos del archivo JSON
+// Leer movies.json
 const data = JSON.parse(fs.readFileSync("./movies.json", "utf-8"));
 const { movies, series } = data;
 
-// Configuración del manifiesto
+// Manifiesto del addon
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "1.0.0",
+  version: "1.0.1",
   name: "Primer Latino",
   description: "Películas y series LATINO desde Real-Debrid y Magnet Links.",
   logo: "https://i.imgur.com/lE2FQIk.png",
@@ -26,12 +27,11 @@ const manifest = {
 
 const builder = new addonBuilder(manifest);
 
-// 📚 Obtener datos desde OMDb (IMDb)
+// Función auxiliar IMDb (OMDb)
 async function getMetaFromIMDb(imdbID) {
   try {
     const res = await axios.get(`https://www.omdbapi.com/?i=${imdbID}&apikey=8b6c8c8a`);
     const d = res.data;
-
     if (!d || d.Response === "False") return null;
 
     return {
@@ -44,18 +44,17 @@ async function getMetaFromIMDb(imdbID) {
       releaseInfo: d.Year,
       imdbRating: d.imdbRating
     };
-  } catch (err) {
-    console.error("Error IMDb:", err.message);
+  } catch {
     return null;
   }
 }
 
-// 🎬 Catalog Handler
+// Catalog Handler
 builder.defineCatalogHandler(async ({ type }) => {
-  let items = type === "movie" ? movies : series;
+  const items = type === "movie" ? movies : series;
   const metas = [];
 
-  for (let item of items) {
+  for (const item of items) {
     const meta = await getMetaFromIMDb(item.id.split(":")[0]);
     if (!meta) continue;
 
@@ -71,7 +70,7 @@ builder.defineCatalogHandler(async ({ type }) => {
   return { metas };
 });
 
-// 🔗 Stream Handler
+// Stream Handler
 builder.defineStreamHandler(async ({ id }) => {
   const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
   if (!found) return { streams: [] };
@@ -88,7 +87,7 @@ builder.defineStreamHandler(async ({ id }) => {
       );
       rdLink = res.data.download;
     } catch (err) {
-      console.warn("Real-Debrid error:", err.response?.data || err.message);
+      console.warn("⚠️ Real-Debrid:", err.response?.data || err.message);
     }
   }
 
@@ -102,7 +101,7 @@ builder.defineStreamHandler(async ({ id }) => {
   };
 });
 
-// 🧠 Meta Handler
+// Meta Handler
 builder.defineMetaHandler(async ({ id }) => {
   const imdbID = id.split(":")[0];
   const meta = await getMetaFromIMDb(imdbID);
@@ -110,6 +109,26 @@ builder.defineMetaHandler(async ({ id }) => {
   return { meta };
 });
 
-// 🚀 Servidor activo
-serveHTTP(builder.getInterface(), { port: process.env.PORT || 7000 });
-console.log("✅ Primer Latino Addon corriendo...");
+// 🚀 Servidor HTTP manual (para compatibilidad total con Render)
+const PORT = process.env.PORT || 7000;
+const addonInterface = builder.getInterface();
+
+http
+  .createServer((req, res) => {
+    if (req.url === "/manifest.json") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(addonInterface.manifest));
+    } else if (req.url.startsWith("/catalog/")) {
+      addonInterface.get(req, res);
+    } else if (req.url.startsWith("/stream/")) {
+      addonInterface.get(req, res);
+    } else if (req.url.startsWith("/meta/")) {
+      addonInterface.get(req, res);
+    } else {
+      res.writeHead(404);
+      res.end("Not Found");
+    }
+  })
+  .listen(PORT, () => {
+    console.log(`✅ Primer Latino corriendo en el puerto ${PORT}`);
+  });
