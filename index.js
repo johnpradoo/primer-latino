@@ -1,15 +1,13 @@
-import { addonBuilder, serveHTTP } from "stremio-addon-sdk";
-import axios from "axios";
-import fs from "fs";
-import dotenv from "dotenv";
+const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
+const axios = require("axios");
+const fs = require("fs");
+require("dotenv").config();
 
-dotenv.config();
-
-// Cargar datos locales
+// Leer los datos del archivo JSON
 const data = JSON.parse(fs.readFileSync("./movies.json", "utf-8"));
 const { movies, series } = data;
 
-// Configurar manifiesto del addon
+// Configuración del manifiesto
 const manifest = {
   id: "org.primerlatino.addon",
   version: "1.0.0",
@@ -28,7 +26,7 @@ const manifest = {
 
 const builder = new addonBuilder(manifest);
 
-// 📚 Función para obtener metadatos desde IMDb (usando OMDb API)
+// 📚 Obtener datos desde OMDb (IMDb)
 async function getMetaFromIMDb(imdbID) {
   try {
     const res = await axios.get(`https://www.omdbapi.com/?i=${imdbID}&apikey=8b6c8c8a`);
@@ -52,10 +50,10 @@ async function getMetaFromIMDb(imdbID) {
   }
 }
 
-// 🎬 Catalog Handler (Películas y Series)
-builder.defineCatalogHandler(async ({ type, id }) => {
+// 🎬 Catalog Handler
+builder.defineCatalogHandler(async ({ type }) => {
   let items = type === "movie" ? movies : series;
-  let metas = [];
+  const metas = [];
 
   for (let item of items) {
     const meta = await getMetaFromIMDb(item.id.split(":")[0]);
@@ -66,24 +64,19 @@ builder.defineCatalogHandler(async ({ type, id }) => {
       type: item.type,
       name: `${item.title} (${item.quality})`,
       poster: item.poster || meta.poster,
-      description: `${meta.description || ""}\nIdioma: ${item.language}\nCodec: ${item.codec}`,
+      description: `${meta.description || ""}\nIdioma: ${item.language}\nCodec: ${item.codec}`
     });
   }
 
   return { metas };
 });
 
-// 🔗 Stream Handler (Generar enlaces de Real-Debrid o Magnet)
+// 🔗 Stream Handler
 builder.defineStreamHandler(async ({ id }) => {
-  const found =
-    movies.find((m) => m.id === id) ||
-    series.find((s) => s.id === id);
-
+  const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
   if (!found) return { streams: [] };
 
-  // Enlace magnet base
   const magnet = `magnet:?xt=urn:btih:${found.hash}`;
-
   let rdLink = null;
 
   if (process.env.REALDEBRID_API) {
@@ -99,27 +92,24 @@ builder.defineStreamHandler(async ({ id }) => {
     }
   }
 
-  const streams = [
-    {
-      title: found.language + " • " + found.quality,
-      url: rdLink || magnet,
-      behaviorHints: { bingeGroup: id }
-    }
-  ];
-
-  return { streams };
+  return {
+    streams: [
+      {
+        title: `${found.language} • ${found.quality}`,
+        url: rdLink || magnet
+      }
+    ]
+  };
 });
 
-// 🧠 Meta Handler (para descripción completa)
+// 🧠 Meta Handler
 builder.defineMetaHandler(async ({ id }) => {
   const imdbID = id.split(":")[0];
   const meta = await getMetaFromIMDb(imdbID);
-
   if (!meta) return { meta: { id, name: "No encontrado" } };
-
   return { meta };
 });
 
-// 🚀 Iniciar servidor HTTP
+// 🚀 Servidor activo
 serveHTTP(builder.getInterface(), { port: process.env.PORT || 7000 });
 console.log("✅ Primer Latino Addon corriendo...");
