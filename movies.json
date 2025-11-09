@@ -542,7 +542,8 @@
     "status": "aprobado",
     "poster": "https://image.tmdb.org/t/p/w1280/vC6LSYC8uhZPkPM01L6HKrr1lMD.jpg",
     "type": "series"
-    
+    },
+    {
     "id": "tt19244304:1:2",
     "title": "IT: Welcome to Derry",
     "season": 1,
@@ -554,6 +555,6 @@
     "status": "aprobado",
     "poster": "https://image.tmdb.org/t/p/w1280/vC6LSYC8uhZPkPM01L6HKrr1lMD.jpg",
     "type": "series"
-  }
+    }
 ]
 }
