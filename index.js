@@ -185,6 +185,19 @@ app.get(["/catalog/*", "/stream/*", "/meta/*"], (req, res) => {
   addonInterface.get(req, res);
 });
 
+// ruta universal para cualquier solicitud de Stremio
+app.use((req, res, next) => {
+  if (
+    req.url.startsWith("/catalog/") ||
+    req.url.startsWith("/stream/") ||
+    req.url.startsWith("/meta/")
+  ) {
+    addonInterface.get(req, res);
+  } else {
+    next();
+  }
+});
+
 // iniciar servidor
 app.listen(PORT, () => {
   // 🧱 Captura global de errores no manejados (evita que Render marque error)
