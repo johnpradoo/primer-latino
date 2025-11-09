@@ -542,6 +542,18 @@
     "status": "aprobado",
     "poster": "https://image.tmdb.org/t/p/w1280/vC6LSYC8uhZPkPM01L6HKrr1lMD.jpg",
     "type": "series"
+    
+    "id": "tt19244304:1:2",
+    "title": "IT: Welcome to Derry",
+    "season": 1,
+    "episode": 2,
+    "quality": "1080p WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.265",
+    "hash": "BB00057D6AB8C96F714BBE8BD1AAB10EB152A207",
+    "status": "aprobado",
+    "poster": "https://image.tmdb.org/t/p/w1280/vC6LSYC8uhZPkPM01L6HKrr1lMD.jpg",
+    "type": "series"
   }
 ]
 }
