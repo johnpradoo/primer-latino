@@ -494,7 +494,18 @@
       "status": "aprobado",
       "poster": "https://image.tmdb.org/t/p/w1280/3s0jkMh0YUhIeIeioH3kt2X4st4.jpg",
       "type": "movie"
-    }
+    },
+    {
+      "id": "tt26743210",
+      "title": "Cómo entrenar a tu dragón",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "49F24B950D01C81EFFBDAC7F07A5923B22090771",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/xLsMLfE0t0eyc8km2hAeSayUBa3.jpg",
+      "type": "movie"
+    },
   ],
   "series": [
   {
