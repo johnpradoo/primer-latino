@@ -29,7 +29,7 @@ const builder = new addonBuilder(manifest);
 // 📚 Obtener datos desde IMDb (OMDb)
 async function getMetaFromIMDb(imdbID) {
   try {
-    const res = await axios.get(`https://www.omdbapi.com/?i=${imdbID}&apikey=8b6c8c8a`);
+    const res = await axios.get(`https://www.omdbapi.com/?i=${imdbID}&apikey=${process.env.OMDB_API_KEY}`);
     const d = res.data;
     if (!d || d.Response === "False") return null;
 
