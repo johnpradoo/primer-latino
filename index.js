@@ -10,7 +10,7 @@ const { movies, series } = data;
 // Manifest del addon
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "1.0.4",
+  version: "1.0.5",
   name: "Primer Latino",
   description: "Películas y series LATINO desde Real-Debrid y Magnet Links.",
   logo: "https://i.imgur.com/lE2FQIk.png",
@@ -75,51 +75,59 @@ builder.defineCatalogHandler(async ({ type }) => {
   }
 });
 
-// 🔗 Stream Handler
+// 🔗 Stream Handler (con soporte completo Real-Debrid)
 builder.defineStreamHandler(async ({ id }) => {
   try {
     const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
     if (!found) return { streams: [] };
 
-    const magnet = `magnet:?xt=urn:btih:${found.hash}`;
+    const magnet = `magnet:?xt=urn:btih:${found.hash}&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://tracker.openbittorrent.com:6969/announce`;
     let rdLink = null;
 
     if (process.env.REALDEBRID_API) {
-  try {
-    // Paso 1: subir magnet a Real-Debrid
-    const addMag = await axios.post(
-      "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
-      new URLSearchParams({ magnet }),
-      { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
-    );
+      try {
+        // Paso 1: subir magnet
+        const addMag = await axios.post(
+          "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
+          new URLSearchParams({ magnet }),
+          { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+        );
 
-    // Paso 2: obtener info del torrent
-    const info = await axios.get(
-      `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-      { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
-    );
+        // Paso 2: obtener info del torrent
+        const info = await axios.get(
+          `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
+          { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+        );
 
-    // Paso 3: tomar el primer archivo de video (mp4, mkv, avi, etc.)
-    const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
-    if (file) {
-      // Paso 4: solicitar link directo
-      const select = await axios.post(
-        `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
-        new URLSearchParams({ files: file.id }),
-        { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
-      );
+        const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
+        if (file) {
+          // Paso 3: seleccionar archivo
+          await axios.post(
+            `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
+            new URLSearchParams({ files: file.id }),
+            { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+          );
 
-      const dl = await axios.get(
-        `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-        { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
-      );
+          // Paso 4: obtener enlace final
+          const dl = await axios.get(
+            `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
+            { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+          );
 
-      rdLink = dl.data.links?.[0];
+          if (dl.data.links && dl.data.links[0]) {
+            // Paso 5: solicitar link directo reproducible
+            const unrestricted = await axios.post(
+              "https://api.real-debrid.com/rest/1.0/unrestrict/link",
+              new URLSearchParams({ link: dl.data.links[0] }),
+              { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+            );
+            rdLink = unrestricted.data.download;
+          }
+        }
+      } catch (err) {
+        console.warn("⚠️ Real-Debrid:", err.response?.data || err.message);
+      }
     }
-  } catch (err) {
-    console.warn("⚠️ Real-Debrid:", err.response?.data || err.message);
-  }
-}
 
     return {
       streams: [
@@ -148,15 +156,11 @@ builder.defineMetaHandler(async ({ id }) => {
   }
 });
 
-// 🚀 Servidor final
+// 🚀 Servidor
 const PORT = process.env.PORT || 7000;
 serveHTTP(builder.getInterface(), { port: PORT });
 console.log(`✅ Primer Latino Addon corriendo en puerto ${PORT}`);
 
-// 🧱 Captura global de errores
-process.on("unhandledRejection", (reason) => {
-  console.error("⚠️ Unhandled Rejection:", reason);
-});
-process.on("uncaughtException", (err) => {
-  console.error("⚠️ Uncaught Exception:", err);
-});
+// 🧱 Errores globales
+process.on("unhandledRejection", (reason) => console.error("⚠️ Unhandled:", reason));
+process.on("uncaughtException", (err) => console.error("⚠️ Uncaught:", err));
