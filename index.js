@@ -184,5 +184,14 @@ app.get("/meta/:type/:id.json", (req, res) => addonInterface.get(req, res));
 
 // iniciar servidor
 app.listen(PORT, () => {
+  // 🧱 Captura global de errores no manejados (evita que Render marque error)
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("⚠️ Unhandled Promise Rejection:", reason);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("⚠️ Uncaught Exception:", err);
+});
+
   console.log(`✅ Primer Latino activo en puerto ${PORT}`);
 });
