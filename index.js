@@ -151,9 +151,16 @@ const addonInterface = builder.getInterface();
 
 // rutas del addon
 app.get("/manifest.json", (req, res) => res.json(addonInterface.manifest));
-app.get("/catalog/:type/:id.json", (req, res) => addonInterface.get(req, res));
-app.get("/meta/:type/:id.json", (req, res) => addonInterface.get(req, res));
-app.get("/stream/:type/:id.json", (req, res) => addonInterface.get(req, res));
+
+// Manejo universal para cualquier ruta de Stremio (catalog, meta, stream)
+app.get(["/catalog/*", "/meta/*", "/stream/*"], (req, res) => {
+  try {
+    addonInterface.get(req, res);
+  } catch (err) {
+    console.error("SDK handler error:", err);
+    res.status(500).send("Internal Server Error");
+  }
+});
 
 // iniciar servidor
 app.listen(PORT, () => console.log(`✅ Primer Latino activo en puerto ${PORT}`));
