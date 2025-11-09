@@ -177,10 +177,13 @@ app.use((req, res, next) => {
 
 // rutas del addon
 const addonInterface = builder.getInterface();
+// rutas directas del addon
 app.get("/manifest.json", (req, res) => res.json(addonInterface.manifest));
-app.get("/catalog/:type/:id.json", (req, res) => addonInterface.get(req, res));
-app.get("/stream/:type/:id.json", (req, res) => addonInterface.get(req, res));
-app.get("/meta/:type/:id.json", (req, res) => addonInterface.get(req, res));
+
+// cualquier otra ruta de Stremio la maneja el SDK automáticamente
+app.get(["/catalog/*", "/stream/*", "/meta/*"], (req, res) => {
+  addonInterface.get(req, res);
+});
 
 // iniciar servidor
 app.listen(PORT, () => {
