@@ -74,7 +74,19 @@ builder.defineStreamHandler(async ({ id, extra }) => {
     if (!found) return { streams: [] };
     const magnet = `magnet:?xt=urn:btih:${found.hash}`;
     let rdLink = null;
-    const userToken = extra?.token || process.env.REALDEBRID_API;
+    const userToken = extra?.token;
+
+if (!userToken) {
+  console.warn("❌ Falta token de usuario. Acceso denegado a Real-Debrid.");
+  return {
+    streams: [
+      {
+        title: "🔒 Este addon requiere tu token de Real-Debrid",
+        url: "https://johnpradoo.github.io/primer-latino-page/"
+      }
+    ]
+  };
+}
 
     if (userToken) {
       try {
