@@ -1,138 +1,139 @@
-import pkg from "stremio-addon-sdk";
-const { addonBuilder, serveHTTP } = pkg;
-import express from "express";
-import axios from "axios";
-import fs from "fs";
+const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
+const axios = require("axios");
+const fs = require("fs");
+require("dotenv").config();
 
-// Manifesto del addon
+const data = JSON.parse(fs.readFileSync("./movies.json", "utf-8"));
+const { movies, series } = data;
+
 const manifest = {
-  id: "org.primerlatino",
-  version: "1.0.0",
+  id: "org.primerlatino.addon",
+  version: "1.0.9",
   name: "Primer Latino",
-  description: "Addon de películas y series con soporte Real-Debrid",
+  description: "Películas y series LATINO desde Real-Debrid y Magnet Links.",
+  logo: "https://i.imgur.com/lE2FQIk.png",
+  background: "https://i.imgur.com/lE2FQIk.png",
   types: ["movie", "series"],
+  resources: ["catalog", "stream", "meta"],
   catalogs: [
-    {
-      type: "movie",
-      id: "primerlatino_movies",
-      name: "Primer Latino • Películas"
-    },
-    {
-      type: "series",
-      id: "primerlatino_series",
-      name: "Primer Latino • Series"
-    }
+    { type: "movie", id: "primerlatino_movies", name: "Películas LATINO" },
+    { type: "series", id: "primerlatino_series", name: "Series LATINO" }
   ],
-  resources: ["catalog", "meta", "stream"]
+  idPrefixes: ["tt"]
 };
 
-// Cargar lista de películas y series desde movies.json
-let movies = [];
-let series = [];
-
-try {
-  const data = fs.readFileSync("./movies.json");
-  const parsed = JSON.parse(data);
-  movies = parsed.filter((m) => m.type === "movie");
-  series = parsed.filter((m) => m.type === "series");
-} catch (err) {
-  console.error("❌ Error al cargar movies.json:", err.message);
-}
-
-// Crear builder del addon
 const builder = new addonBuilder(manifest);
 
-// Handler para los streams (usa token de Real-Debrid en el path)
-builder.defineStreamHandler(async ({ id }) => {
+async function getMetaFromIMDb(imdbID) {
   try {
-    // Buscar el token dentro del path (formato /realdebrid=TOKEN/)
-    const tokenMatch = id.match(/realdebrid=([A-Za-z0-9]+)/);
-    const userToken = tokenMatch ? tokenMatch[1] : null;
+    const r = await axios.get(`https://www.omdbapi.com/?i=${imdbID}&apikey=${process.env.OMDB_API_KEY}`);
+    if (r.data.Response === "False") return null;
+    const d = r.data;
+    return {
+      id: imdbID,
+      type: d.Type || "movie",
+      name: d.Title,
+      poster: d.Poster !== "N/A" ? d.Poster : undefined,
+      background: d.Poster,
+      description: d.Plot,
+      releaseInfo: d.Year,
+      imdbRating: d.imdbRating
+    };
+  } catch {
+    return null;
+  }
+}
 
-    if (!userToken) {
-      console.warn("❌ Falta token de usuario. Acceso denegado a Real-Debrid.");
-      return {
-        streams: [
-          {
-            title: "🔒 Este addon requiere tu token de Real-Debrid",
-            url: "https://johnpradoo.github.io/primer-latino-page/"
-          }
-        ]
-      };
+builder.defineCatalogHandler(async ({ type }) => {
+  try {
+    const items = type === "movie" ? movies : series;
+    const metas = [];
+
+    for (const item of items) {
+      const meta = await getMetaFromIMDb(item.id.split(":")[0]);
+      if (!meta) continue;
+      metas.push({
+        id: item.id,
+        type: item.type,
+        name: `${item.title} (${item.quality})`,
+        poster: item.poster || meta.poster,
+        description: `${meta.description || ""}\nIdioma: ${item.language}\nCodec: ${item.codec}`
+      });
     }
 
-    const found =
-      movies.find((m) => m.id === id) ||
-      series.find((s) => s.id === id);
+    return { metas };
+  } catch (err) {
+    console.error("CatalogHandler:", err);
+    return { metas: [] };
+  }
+});
 
+builder.defineStreamHandler(async ({ id, extra }) => {
+  try {
+    const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
     if (!found) return { streams: [] };
-
     const magnet = `magnet:?xt=urn:btih:${found.hash}`;
     let rdLink = null;
+const userToken = extra?.token || process.env.REALDEBRID_API;
 
-    try {
-      const addMag = await axios.post(
-        "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
-        new URLSearchParams({ magnet }),
-        { headers: { Authorization: `Bearer ${userToken}` } }
-      );
-
-      const info = await axios.get(
-        `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-        { headers: { Authorization: `Bearer ${userToken}` } }
-      );
-
-      const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
-
-      if (file) {
-        await axios.post(
-          `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
-          new URLSearchParams({ files: file.id }),
+    if (userToken) {
+      try {
+        const addMag = await axios.post(
+          "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
+          new URLSearchParams({ magnet }),
           { headers: { Authorization: `Bearer ${userToken}` } }
         );
-
-        const dl = await axios.get(
+        const info = await axios.get(
           `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
           { headers: { Authorization: `Bearer ${userToken}` } }
         );
-
-        if (dl.data.links && dl.data.links[0]) {
-          const unrestricted = await axios.post(
-            "https://api.real-debrid.com/rest/1.0/unrestrict/link",
-            new URLSearchParams({ link: dl.data.links[0] }),
+        const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
+        if (file) {
+          await axios.post(
+            `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
+            new URLSearchParams({ files: file.id }),
             { headers: { Authorization: `Bearer ${userToken}` } }
           );
-          rdLink = unrestricted.data.download;
+          const dl = await axios.get(
+            `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
+            { headers: { Authorization: `Bearer ${userToken}` } }
+          );
+          if (dl.data.links && dl.data.links[0]) {
+            const unrestricted = await axios.post(
+              "https://api.real-debrid.com/rest/1.0/unrestrict/link",
+              new URLSearchParams({ link: dl.data.links[0] }),
+              { headers: { Authorization: `Bearer ${userToken}` } }
+            );
+            rdLink = unrestricted.data.download;
+          }
         }
+      } catch (err) {
+        console.warn("Real-Debrid:", err.response?.data || err.message);
       }
-    } catch (err) {
-      console.warn("⚠️ Real-Debrid:", err.response?.data || err.message);
     }
 
     return {
       streams: [
         {
-          title: `${found.language || "Latino"} • ${found.quality || "HD"}`,
+          title: `${found.language} • ${found.quality}`,
           url: rdLink || magnet
         }
       ]
     };
   } catch (err) {
-    console.error("❌ Stream Handler:", err);
+    console.error("StreamHandler:", err);
     return { streams: [] };
   }
 });
 
-// Crear instancia de Express
-const app = express();
-
-// Rutas para servir el manifest normal y con token
-app.get(["/manifest.json", "/realdebrid=:token/manifest.json"], (req, res) => {
-  res.setHeader("Content-Type", "application/json");
-  res.json(manifest);
+builder.defineMetaHandler(async ({ id }) => {
+  const imdbID = id.split(":")[0];
+  const meta = await getMetaFromIMDb(imdbID);
+  return { meta: meta || { id, name: "No encontrado" } };
 });
 
-// Iniciar servidor del addon
-serveHTTP(builder.getInterface(), { app, port: process.env.PORT || 10000 });
+// 🚀 Servidor original del SDK (sin Express)
+serveHTTP(builder.getInterface(), { port: process.env.PORT || 7000 });
 
-console.log("✅ Primer Latino corriendo en puerto", process.env.PORT || 10000);
+process.on("unhandledRejection", (r) => console.error("⚠️ Unhandled:", r));
+process.on("uncaughtException", (e) => console.error("⚠️ Uncaught:", e));
