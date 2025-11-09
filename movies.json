@@ -581,6 +581,19 @@
     "status": "aprobado",
     "poster": "https://image.tmdb.org/t/p/w1280/5OLUjOrgXzXrPl2PEgZGHgpQSO9.jpg",
     "type": "series"
+    },
+    {
+    "id": "tt33550045:1:1",
+    "title": "As You Stood By",
+    "season": 1,
+    "episode": 1,
+    "quality": "1080p WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇰🇷 COREANO",
+    "codec": "H.264",
+    "hash": "A4E31AAF61B71771773111DBCF7DCA089F97DDAB",
+    "status": "aprobado",
+    "poster": "https://image.tmdb.org/t/p/w1280/1mCAo5XkkaW67xeF2aAW26HaPFh.jpg",
+    "type": "series"
     }
 ]
 }
