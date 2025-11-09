@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Primer Latino • Activar Addon</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #101010;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .box {
+      background: #1b1b1b;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 0 15px rgba(255,255,255,0.1);
+      text-align: center;
+      max-width: 400px;
+    }
+    input {
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 0.5rem;
+      border: none;
+      margin-bottom: 1rem;
+      background: #2b2b2b;
+      color: #fff;
+    }
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      background: #d23c3c;
+      border: none;
+      border-radius: 0.5rem;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #ff4a4a;
+    }
+    small {
+      display: block;
+      margin-top: 1rem;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Primer Latino</h2>
+    <p>Introduce tu token de <b>Real-Debrid</b> para generar el addon personalizado:</p>
+    <input type="text" id="token" placeholder="Ejemplo: eyJhbGciOiJIUz..." />
+    <button onclick="generate()">Activar Addon</button>
+    <small>No guardamos tu token. Se usa solo para vincular tu cuenta.</small>
+  </div>
+
+  <script>
+    function generate() {
+      const token = document.getElementById("token").value.trim();
+      if (!token) return alert("Por favor ingresa tu token de Real-Debrid");
+      const url = `${window.location.origin}/manifest.json?token=${encodeURIComponent(token)}`;
+      navigator.clipboard.writeText(url);
+      alert("✅ Enlace copiado:\n\n" + url + "\n\nPégalo en Stremio → Añadir Addon → Por URL.");
+    }
+  </script>
+</body>
+</html>
