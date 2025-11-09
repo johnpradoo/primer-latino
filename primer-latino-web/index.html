@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Primer Latino • Activar Addon</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0c0c0c;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: #1a1a1a;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+    h1 {
+      color: #e63946;
+      margin-bottom: 1rem;
+      font-size: 1.8rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 8px;
+      background: #2c2c2c;
+      color: #fff;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      background: #e63946;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover {
+      background: #ff4a4a;
+    }
+    small {
+      display: block;
+      margin-top: 1rem;
+      color: #aaa;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Primer Latino</h1>
+    <p>Introduce tu token de <b>Real-Debrid</b> para generar tu enlace personalizado:</p>
+    <input type="text" id="token" placeholder="Ejemplo: eyJhbGciOiJIUz..." />
+    <button onclick="generate()">Generar enlace</button>
+    <small>Tu token no se guarda, se usa solo para crear el enlace.</small>
+  </div>
+
+  <script>
+    function generate() {
+      const token = document.getElementById("token").value.trim();
+      if (!token) {
+        alert("Por favor, ingresa tu token de Real-Debrid.");
+        return;
+      }
+      const base = "https://primer-latino.onrender.com/manifest.json";
+      const finalURL = `${base}?token=${encodeURIComponent(token)}`;
+      navigator.clipboard.writeText(finalURL);
+      alert(
+        "✅ Enlace copiado:\n\n" +
+          finalURL +
+          "\n\nPégalo en Stremio → Añadir Addon → Por URL."
+      );
+    }
+  </script>
+</body>
+</html>
