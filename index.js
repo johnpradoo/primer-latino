@@ -1,5 +1,4 @@
-const express = require("express");
-const { addonBuilder } = require("stremio-addon-sdk");
+const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
 const axios = require("axios");
 const fs = require("fs");
 require("dotenv").config();
@@ -9,7 +8,7 @@ const { movies, series } = data;
 
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "1.0.8",
+  version: "1.0.9",
   name: "Primer Latino",
   description: "Películas y series LATINO desde Real-Debrid y Magnet Links.",
   logo: "https://i.imgur.com/lE2FQIk.png",
@@ -40,8 +39,7 @@ async function getMetaFromIMDb(imdbID) {
       releaseInfo: d.Year,
       imdbRating: d.imdbRating
     };
-  } catch (err) {
-    console.warn("IMDb Error:", err.message);
+  } catch {
     return null;
   }
 }
@@ -50,6 +48,7 @@ builder.defineCatalogHandler(async ({ type }) => {
   try {
     const items = type === "movie" ? movies : series;
     const metas = [];
+
     for (const item of items) {
       const meta = await getMetaFromIMDb(item.id.split(":")[0]);
       if (!meta) continue;
@@ -61,9 +60,10 @@ builder.defineCatalogHandler(async ({ type }) => {
         description: `${meta.description || ""}\nIdioma: ${item.language}\nCodec: ${item.codec}`
       });
     }
+
     return { metas };
-  } catch (e) {
-    console.error("CatalogHandler:", e);
+  } catch (err) {
+    console.error("CatalogHandler:", err);
     return { metas: [] };
   }
 });
@@ -120,8 +120,8 @@ builder.defineStreamHandler(async ({ id, extra }) => {
         }
       ]
     };
-  } catch (e) {
-    console.error("StreamHandler:", e);
+  } catch (err) {
+    console.error("StreamHandler:", err);
     return { streams: [] };
   }
 });
@@ -132,39 +132,8 @@ builder.defineMetaHandler(async ({ id }) => {
   return { meta: meta || { id, name: "No encontrado" } };
 });
 
-const app = express();
-const PORT = process.env.PORT || 7000;
+// 🚀 Servidor original del SDK (sin Express)
+serveHTTP(builder.getInterface(), { port: process.env.PORT || 7000 });
 
-// servir la interfaz
-app.use(express.static("public"));
-
-// permitir CORS
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === "OPTIONS") return res.sendStatus(204);
-  next();
-});
-
-const addonInterface = builder.getInterface();
-
-// rutas del addon
-app.get("/manifest.json", (req, res) => res.json(addonInterface.manifest));
-
-// Manejo universal para cualquier ruta de Stremio (catalog, meta, stream)
-app.get(["/catalog/*", "/meta/*", "/stream/*"], (req, res) => {
-  try {
-    addonInterface.get(req, res);
-  } catch (err) {
-    console.error("SDK handler error:", err);
-    res.status(500).send("Internal Server Error");
-  }
-});
-
-// iniciar servidor
-app.listen(PORT, () => console.log(`✅ Primer Latino activo en puerto ${PORT}`));
-
-// capturar errores globales
 process.on("unhandledRejection", (r) => console.error("⚠️ Unhandled:", r));
 process.on("uncaughtException", (e) => console.error("⚠️ Uncaught:", e));
