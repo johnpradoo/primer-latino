@@ -68,18 +68,11 @@ builder.defineCatalogHandler(async ({ type }) => {
   }
 });
 
-builder.defineStreamHandler(async (args) => {
+builder.defineStreamHandler(async ({ id }) => {
   try {
-    // Obtener token directamente desde la URL del manifest
-    const userToken = (() => {
-      if (args.extra && args.extra.token) return args.extra.token;
-
-      // Si no viene en extra, intentar leerlo de la URL completa (args.extra?.search no existe)
-      const match = args.id && args.id.includes("?token=")
-        ? args.id.split("?token=")[1]
-        : null;
-      return match || null;
-    })();
+    // Obtener token del path del addon
+    const match = id.match(/realdebrid=([A-Za-z0-9]+)/);
+    const userToken = match ? match[1] : null;
 
     if (!userToken) {
       console.warn("❌ Falta token de usuario. Acceso denegado a Real-Debrid.");
@@ -93,7 +86,7 @@ builder.defineStreamHandler(async (args) => {
       };
     }
 
-    const found = movies.find((m) => m.id === args.id) || series.find((s) => s.id === args.id);
+    const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
     if (!found) return { streams: [] };
 
     const magnet = `magnet:?xt=urn:btih:${found.hash}`;
