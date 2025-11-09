@@ -76,7 +76,7 @@ builder.defineCatalogHandler(async ({ type }) => {
 });
 
 // 🔗 Stream Handler (con soporte completo Real-Debrid)
-builder.defineStreamHandler(async ({ id }) => {
+builder.defineStreamHandler(async ({ id, extra }) => {
   try {
     const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
     if (!found) return { streams: [] };
@@ -84,42 +84,40 @@ builder.defineStreamHandler(async ({ id }) => {
     const magnet = `magnet:?xt=urn:btih:${found.hash}&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://tracker.openbittorrent.com:6969/announce`;
     let rdLink = null;
 
-    if (process.env.REALDEBRID_API) {
+    // leer token de la query string (?token=...)
+    const userToken = extra?.token || process.env.REALDEBRID_API;
+
+    if (userToken) {
       try {
-        // Paso 1: subir magnet
         const addMag = await axios.post(
           "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
           new URLSearchParams({ magnet }),
-          { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+          { headers: { Authorization: `Bearer ${userToken}` } }
         );
 
-        // Paso 2: obtener info del torrent
         const info = await axios.get(
           `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-          { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+          { headers: { Authorization: `Bearer ${userToken}` } }
         );
 
         const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
         if (file) {
-          // Paso 3: seleccionar archivo
           await axios.post(
             `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
             new URLSearchParams({ files: file.id }),
-            { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+            { headers: { Authorization: `Bearer ${userToken}` } }
           );
 
-          // Paso 4: obtener enlace final
           const dl = await axios.get(
             `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-            { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+            { headers: { Authorization: `Bearer ${userToken}` } }
           );
 
           if (dl.data.links && dl.data.links[0]) {
-            // Paso 5: solicitar link directo reproducible
             const unrestricted = await axios.post(
               "https://api.real-debrid.com/rest/1.0/unrestrict/link",
               new URLSearchParams({ link: dl.data.links[0] }),
-              { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+              { headers: { Authorization: `Bearer ${userToken}` } }
             );
             rdLink = unrestricted.data.download;
           }
