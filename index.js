@@ -156,7 +156,11 @@ builder.defineMetaHandler(async ({ id }) => {
 
 // 🚀 Servidor
 const PORT = process.env.PORT || 7000;
-serveHTTP(builder.getInterface(), { port: PORT });
+const express = require("express");
+const app = express();
+app.use(express.static("public"));
+app.listen(3000, () => console.log("🌐 Página de configuración activa en /public"));
+serveHTTP(builder.getInterface(), { port: process.env.PORT || 7000 });
 console.log(`✅ Primer Latino Addon corriendo en puerto ${PORT}`);
 
 // 🧱 Errores globales
