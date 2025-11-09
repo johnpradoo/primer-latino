@@ -85,17 +85,41 @@ builder.defineStreamHandler(async ({ id }) => {
     let rdLink = null;
 
     if (process.env.REALDEBRID_API) {
-      try {
-        const res = await axios.post(
-          "https://api.real-debrid.com/rest/1.0/unrestrict/link",
-          new URLSearchParams({ link: magnet }),
-          { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
-        );
-        rdLink = res.data.download;
-      } catch (err) {
-        console.warn("⚠️ Real-Debrid:", err.response?.data || err.message);
-      }
+  try {
+    // Paso 1: subir magnet a Real-Debrid
+    const addMag = await axios.post(
+      "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
+      new URLSearchParams({ magnet }),
+      { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+    );
+
+    // Paso 2: obtener info del torrent
+    const info = await axios.get(
+      `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
+      { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+    );
+
+    // Paso 3: tomar el primer archivo de video (mp4, mkv, avi, etc.)
+    const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
+    if (file) {
+      // Paso 4: solicitar link directo
+      const select = await axios.post(
+        `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
+        new URLSearchParams({ files: file.id }),
+        { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+      );
+
+      const dl = await axios.get(
+        `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
+        { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+      );
+
+      rdLink = dl.data.links?.[0];
     }
+  } catch (err) {
+    console.warn("⚠️ Real-Debrid:", err.response?.data || err.message);
+  }
+}
 
     return {
       streams: [
