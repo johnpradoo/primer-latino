@@ -1,5 +1,5 @@
 const express = require("express");
-const { addonBuilder } = require("stremio-addon-sdk");
+const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
 const axios = require("axios");
 const fs = require("fs");
 require("dotenv").config();
@@ -11,7 +11,7 @@ const { movies, series } = data;
 // Manifest
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "1.0.6",
+  version: "1.0.7",
   name: "Primer Latino",
   description: "Películas y series LATINO desde Real-Debrid y Magnet Links.",
   logo: "https://i.imgur.com/lE2FQIk.png",
@@ -27,12 +27,10 @@ const manifest = {
 
 const builder = new addonBuilder(manifest);
 
-// Función para obtener metadatos desde IMDb (OMDb)
+// Función para obtener metadatos desde IMDb
 async function getMetaFromIMDb(imdbID) {
   try {
-    const res = await axios.get(
-      `https://www.omdbapi.com/?i=${imdbID}&apikey=${process.env.OMDB_API_KEY}`
-    );
+    const res = await axios.get(`https://www.omdbapi.com/?i=${imdbID}&apikey=${process.env.OMDB_API_KEY}`);
     const d = res.data;
     if (!d || d.Response === "False") return null;
 
@@ -46,8 +44,7 @@ async function getMetaFromIMDb(imdbID) {
       releaseInfo: d.Year,
       imdbRating: d.imdbRating
     };
-  } catch (err) {
-    console.error("❌ IMDb Error:", err.message);
+  } catch {
     return null;
   }
 }
@@ -72,13 +69,12 @@ builder.defineCatalogHandler(async ({ type }) => {
     }
 
     return { metas };
-  } catch (err) {
-    console.error("❌ Catalog Handler:", err);
+  } catch {
     return { metas: [] };
   }
 });
 
-// Stream Handler (soporta tokens personalizados)
+// Stream Handler (token personalizado)
 builder.defineStreamHandler(async ({ id, extra }) => {
   try {
     const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
@@ -86,7 +82,6 @@ builder.defineStreamHandler(async ({ id, extra }) => {
 
     const magnet = `magnet:?xt=urn:btih:${found.hash}&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://tracker.openbittorrent.com:6969/announce`;
     let rdLink = null;
-
     const userToken = extra?.token || process.env.REALDEBRID_API;
 
     if (userToken) {
@@ -137,77 +132,44 @@ builder.defineStreamHandler(async ({ id, extra }) => {
         }
       ]
     };
-  } catch (err) {
-    console.error("❌ Stream Handler:", err);
+  } catch {
     return { streams: [] };
   }
 });
 
 // Meta Handler
 builder.defineMetaHandler(async ({ id }) => {
-  try {
-    const imdbID = id.split(":")[0];
-    const meta = await getMetaFromIMDb(imdbID);
-    if (!meta) return { meta: { id, name: "No encontrado" } };
-    return { meta };
-  } catch (err) {
-    console.error("❌ Meta Handler:", err);
-    return { meta: { id, name: "Error al obtener metadatos" } };
-  }
+  const imdbID = id.split(":")[0];
+  const meta = await getMetaFromIMDb(imdbID);
+  if (!meta) return { meta: { id, name: "No encontrado" } };
+  return { meta };
 });
 
-// 🚀 Servidor combinado (Express + Stremio SDK)
+// 🚀 Configurar Express y Stremio en el mismo servidor
 const app = express();
 const PORT = process.env.PORT || 7000;
 
-// servir carpeta pública
+// servir HTML
 app.use(express.static("public"));
 
-// cabeceras CORS para Stremio
+// permitir CORS
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === "OPTIONS") {
-    res.sendStatus(204);
-  } else {
-    next();
-  }
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
 });
 
-// rutas del addon
-const addonInterface = builder.getInterface();
-// rutas directas del addon
-app.get("/manifest.json", (req, res) => res.json(addonInterface.manifest));
-
-// cualquier otra ruta de Stremio la maneja el SDK automáticamente
-app.get(["/catalog/*", "/stream/*", "/meta/*"], (req, res) => {
-  addonInterface.get(req, res);
+// redirigir todo lo demás al SDK automáticamente
+app.use((req, res) => {
+  serveHTTP(builder.getInterface(), { port: PORT })(req, res);
 });
 
-// ruta universal para cualquier solicitud de Stremio
-app.use((req, res, next) => {
-  if (
-    req.url.startsWith("/catalog/") ||
-    req.url.startsWith("/stream/") ||
-    req.url.startsWith("/meta/")
-  ) {
-    addonInterface.get(req, res);
-  } else {
-    next();
-  }
-});
-
-// iniciar servidor
 app.listen(PORT, () => {
-  // 🧱 Captura global de errores no manejados (evita que Render marque error)
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("⚠️ Unhandled Promise Rejection:", reason);
-});
-
-process.on("uncaughtException", (err) => {
-  console.error("⚠️ Uncaught Exception:", err);
-});
-
   console.log(`✅ Primer Latino activo en puerto ${PORT}`);
 });
+
+// Captura global de errores
+process.on("unhandledRejection", (reason) => console.error("⚠️ Unhandled:", reason));
+process.on("uncaughtException", (err) => console.error("⚠️ Uncaught:", err));
