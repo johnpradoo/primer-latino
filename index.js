@@ -1,17 +1,15 @@
 const express = require("express");
-const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
+const { addonBuilder } = require("stremio-addon-sdk");
 const axios = require("axios");
 const fs = require("fs");
 require("dotenv").config();
 
-// Leer movies.json
 const data = JSON.parse(fs.readFileSync("./movies.json", "utf-8"));
 const { movies, series } = data;
 
-// Manifest
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "1.0.7",
+  version: "1.0.8",
   name: "Primer Latino",
   description: "Películas y series LATINO desde Real-Debrid y Magnet Links.",
   logo: "https://i.imgur.com/lE2FQIk.png",
@@ -27,13 +25,11 @@ const manifest = {
 
 const builder = new addonBuilder(manifest);
 
-// Función para obtener metadatos desde IMDb
 async function getMetaFromIMDb(imdbID) {
   try {
-    const res = await axios.get(`https://www.omdbapi.com/?i=${imdbID}&apikey=${process.env.OMDB_API_KEY}`);
-    const d = res.data;
-    if (!d || d.Response === "False") return null;
-
+    const r = await axios.get(`https://www.omdbapi.com/?i=${imdbID}&apikey=${process.env.OMDB_API_KEY}`);
+    if (r.data.Response === "False") return null;
+    const d = r.data;
     return {
       id: imdbID,
       type: d.Type || "movie",
@@ -44,21 +40,19 @@ async function getMetaFromIMDb(imdbID) {
       releaseInfo: d.Year,
       imdbRating: d.imdbRating
     };
-  } catch {
+  } catch (err) {
+    console.warn("IMDb Error:", err.message);
     return null;
   }
 }
 
-// Catalog Handler
 builder.defineCatalogHandler(async ({ type }) => {
   try {
     const items = type === "movie" ? movies : series;
     const metas = [];
-
     for (const item of items) {
       const meta = await getMetaFromIMDb(item.id.split(":")[0]);
       if (!meta) continue;
-
       metas.push({
         id: item.id,
         type: item.type,
@@ -67,20 +61,18 @@ builder.defineCatalogHandler(async ({ type }) => {
         description: `${meta.description || ""}\nIdioma: ${item.language}\nCodec: ${item.codec}`
       });
     }
-
     return { metas };
-  } catch {
+  } catch (e) {
+    console.error("CatalogHandler:", e);
     return { metas: [] };
   }
 });
 
-// Stream Handler (token personalizado)
 builder.defineStreamHandler(async ({ id, extra }) => {
   try {
     const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
     if (!found) return { streams: [] };
-
-    const magnet = `magnet:?xt=urn:btih:${found.hash}&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://tracker.openbittorrent.com:6969/announce`;
+    const magnet = `magnet:?xt=urn:btih:${found.hash}`;
     let rdLink = null;
     const userToken = extra?.token || process.env.REALDEBRID_API;
 
@@ -91,12 +83,10 @@ builder.defineStreamHandler(async ({ id, extra }) => {
           new URLSearchParams({ magnet }),
           { headers: { Authorization: `Bearer ${userToken}` } }
         );
-
         const info = await axios.get(
           `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
           { headers: { Authorization: `Bearer ${userToken}` } }
         );
-
         const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
         if (file) {
           await axios.post(
@@ -104,12 +94,10 @@ builder.defineStreamHandler(async ({ id, extra }) => {
             new URLSearchParams({ files: file.id }),
             { headers: { Authorization: `Bearer ${userToken}` } }
           );
-
           const dl = await axios.get(
             `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
             { headers: { Authorization: `Bearer ${userToken}` } }
           );
-
           if (dl.data.links && dl.data.links[0]) {
             const unrestricted = await axios.post(
               "https://api.real-debrid.com/rest/1.0/unrestrict/link",
@@ -120,7 +108,7 @@ builder.defineStreamHandler(async ({ id, extra }) => {
           }
         }
       } catch (err) {
-        console.warn("⚠️ Real-Debrid:", err.response?.data || err.message);
+        console.warn("Real-Debrid:", err.response?.data || err.message);
       }
     }
 
@@ -132,24 +120,22 @@ builder.defineStreamHandler(async ({ id, extra }) => {
         }
       ]
     };
-  } catch {
+  } catch (e) {
+    console.error("StreamHandler:", e);
     return { streams: [] };
   }
 });
 
-// Meta Handler
 builder.defineMetaHandler(async ({ id }) => {
   const imdbID = id.split(":")[0];
   const meta = await getMetaFromIMDb(imdbID);
-  if (!meta) return { meta: { id, name: "No encontrado" } };
-  return { meta };
+  return { meta: meta || { id, name: "No encontrado" } };
 });
 
-// 🚀 Configurar Express y Stremio en el mismo servidor
 const app = express();
 const PORT = process.env.PORT || 7000;
 
-// servir HTML
+// servir la interfaz
 app.use(express.static("public"));
 
 // permitir CORS
@@ -161,15 +147,17 @@ app.use((req, res, next) => {
   next();
 });
 
-// redirigir todo lo demás al SDK automáticamente
-app.use((req, res) => {
-  serveHTTP(builder.getInterface(), { port: PORT })(req, res);
-});
+const addonInterface = builder.getInterface();
 
-app.listen(PORT, () => {
-  console.log(`✅ Primer Latino activo en puerto ${PORT}`);
-});
+// rutas del addon
+app.get("/manifest.json", (req, res) => res.json(addonInterface.manifest));
+app.get("/catalog/:type/:id.json", (req, res) => addonInterface.get(req, res));
+app.get("/meta/:type/:id.json", (req, res) => addonInterface.get(req, res));
+app.get("/stream/:type/:id.json", (req, res) => addonInterface.get(req, res));
 
-// Captura global de errores
-process.on("unhandledRejection", (reason) => console.error("⚠️ Unhandled:", reason));
-process.on("uncaughtException", (err) => console.error("⚠️ Uncaught:", err));
+// iniciar servidor
+app.listen(PORT, () => console.log(`✅ Primer Latino activo en puerto ${PORT}`));
+
+// capturar errores globales
+process.on("unhandledRejection", (r) => console.error("⚠️ Unhandled:", r));
+process.on("uncaughtException", (e) => console.error("⚠️ Uncaught:", e));
