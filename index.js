@@ -1,8 +1,10 @@
-import { addonBuilder, serveHTTP } from "stremio-addon-sdk";
+import pkg from "stremio-addon-sdk";
+const { addonBuilder, serveHTTP } = pkg;
 import express from "express";
 import axios from "axios";
 import fs from "fs";
 
+// Manifesto del addon
 const manifest = {
   id: "org.primerlatino",
   version: "1.0.0",
@@ -24,26 +26,26 @@ const manifest = {
   resources: ["catalog", "meta", "stream"]
 };
 
-// Cargar lista de películas y series
+// Cargar lista de películas y series desde movies.json
 let movies = [];
 let series = [];
 
 try {
   const data = fs.readFileSync("./movies.json");
-  movies = JSON.parse(data);
-  series = movies.filter((m) => m.type === "series");
-  movies = movies.filter((m) => m.type === "movie");
+  const parsed = JSON.parse(data);
+  movies = parsed.filter((m) => m.type === "movie");
+  series = parsed.filter((m) => m.type === "series");
 } catch (err) {
   console.error("❌ Error al cargar movies.json:", err.message);
 }
 
-// Crear builder
+// Crear builder del addon
 const builder = new addonBuilder(manifest);
 
-// Handler de streams con soporte Real-Debrid
-builder.defineStreamHandler(async ({ id, type }) => {
+// Handler para los streams (usa token de Real-Debrid en el path)
+builder.defineStreamHandler(async ({ id }) => {
   try {
-    // Extraer token desde la URL
+    // Buscar el token dentro del path (formato /realdebrid=TOKEN/)
     const tokenMatch = id.match(/realdebrid=([A-Za-z0-9]+)/);
     const userToken = tokenMatch ? tokenMatch[1] : null;
 
@@ -59,7 +61,6 @@ builder.defineStreamHandler(async ({ id, type }) => {
       };
     }
 
-    // Buscar contenido
     const found =
       movies.find((m) => m.id === id) ||
       series.find((s) => s.id === id);
@@ -69,7 +70,6 @@ builder.defineStreamHandler(async ({ id, type }) => {
     const magnet = `magnet:?xt=urn:btih:${found.hash}`;
     let rdLink = null;
 
-    // Real-Debrid
     try {
       const addMag = await axios.post(
         "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
@@ -126,13 +126,13 @@ builder.defineStreamHandler(async ({ id, type }) => {
 // Crear instancia de Express
 const app = express();
 
-// Rutas para manifest
+// Rutas para servir el manifest normal y con token
 app.get(["/manifest.json", "/realdebrid=:token/manifest.json"], (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.json(manifest);
 });
 
-// Integrar addon SDK con Express
+// Iniciar servidor del addon
 serveHTTP(builder.getInterface(), { app, port: process.env.PORT || 10000 });
 
 console.log("✅ Primer Latino corriendo en puerto", process.env.PORT || 10000);
