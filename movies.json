@@ -506,6 +506,17 @@
       "poster": "https://image.tmdb.org/t/p/w1280/xLsMLfE0t0eyc8km2hAeSayUBa3.jpg",
       "type": "movie"
     },
+    {
+      "id": "tt26584495",
+      "title": "Compañera Perfecta",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "D5E0B609BFEECA2B09099D07A7AAB530EA11BA4A",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/nyloao2GWttUvS7KVcEM2eSDwUn.jpg",
+      "type": "movie"
+    }
   ],
   "series": [
   {
