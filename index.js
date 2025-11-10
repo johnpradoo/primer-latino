@@ -21,7 +21,11 @@ const manifest = {
     { type: "movie", id: "primerlatino_movies", name: "Películas LATINO" },
     { type: "series", id: "primerlatino_series", name: "Series LATINO" }
   ],
-  idPrefixes: ["tt"]
+  idPrefixes: ["tt"],
+  behaviorHints: {
+    configurable: true,
+    configurationRequired: true
+  }
 };
 
 const builder = new addonBuilder(manifest);
