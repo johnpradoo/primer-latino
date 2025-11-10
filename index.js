@@ -95,7 +95,7 @@ builder.defineStreamHandler(async (args, req) => {
     const headers = { Authorization: `Bearer ${token.trim()}` };
 
     // 2️⃣ URL RAW del movies.json (sin token de GitHub)
-    const DATA_URL = "https://raw.githubusercontent.com/johnpradoo/primer-latino/refs/heads/main/movies.json";
+    const DATA_URL = "https://raw.githubusercontent.com/johnpradoo/primer-latino/main/movies.json";
 
     // 3️⃣ Obtener JSON remoto
     const res = await axios.get(DATA_URL);
