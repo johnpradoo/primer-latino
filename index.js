@@ -84,7 +84,12 @@ builder.defineStreamHandler(async ({ id }) => {
     const magnet = `magnet:?xt=urn:btih:${found.hash}&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://tracker.openbittorrent.com:6969/announce`;
     let rdLink = null;
 
-    if (process.env.REALDEBRID_API) {
+   // Extraer el token desde la URL (modo estricto)
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const token = url.searchParams.get("token");
+    if (!token) throw new Error("❌ Falta token de Real-Debrid en la URL");
+    const headers = { Authorization: `Bearer ${token.trim()}` };
+
       try {
         // Paso 1: subir magnet
         const addMag = await axios.post(
