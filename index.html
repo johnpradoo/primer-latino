@@ -17,11 +17,7 @@
       margin: 0;
       text-align: center;
     }
-    h1 {
-      color: #ffcc00;
-      margin-bottom: 10px;
-      font-size: 2rem;
-    }
+    h1 { color: #ffcc00; margin-bottom: 10px; font-size: 2rem; }
     p { opacity: 0.8; margin: 5px 0 15px; }
     input {
       padding: 10px;
@@ -82,7 +78,7 @@
   <h1>🔗 Primer Latino</h1>
   <p>Genera tu enlace personalizado con tu token Real-Debrid</p>
 
-  <input id="token" placeholder="Ejemplo: CKWSHTQDR7Y..." />
+  <input id="token" placeholder="Ejemplo: ABC123..." />
   <button onclick="generate()">Generar enlace</button>
 
   <div class="result" id="result"></div>
@@ -97,15 +93,18 @@
         result.innerHTML = '<p style="color:#f55;">⚠️ Ingresa un token válido</p>';
         return;
       }
+
       const base = "https://primer-latino.onrender.com";
-      const link = \`\${base}/realdebrid=\${token}/manifest.json\`;
-      result.innerHTML = \`
+      // Aquí generamos el link como quieres: /realdebrid=TOKEN/manifest.json
+      const link = `${base}/realdebrid=${token}/manifest.json`;
+
+      result.innerHTML = `
         <p>✅ Tu enlace generado:</p>
-        <input type="text" value="\${link}" readonly id="copyField">
+        <input type="text" value="${link}" readonly id="copyField">
         <button class="copy" onclick="copyLink()">Copiar enlace</button>
-        <p><a href="\${link}" target="_blank" style="color:#00ccff;">Abrir manifest.json</a></p>
+        <p><a href="${link}" target="_blank" style="color:#00ccff;">Abrir manifest.json</a></p>
         <p>Usa este enlace en Stremio: <em>Añadir complemento por URL</em></p>
-      \`;
+      `;
     }
 
     function copyLink() {
