@@ -10,9 +10,9 @@ const { movies, series } = data;
 // Manifest del addon
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "1.0.5",
+  version: "1.0.6",
   name: "Primer Latino",
-  description: "Películas y series LATINO desde Real-Debrid y Magnet Links.",
+  description: "Películas y series LATINO desde Real-Debrid y Magnet Links (token por usuario).",
   logo: "https://i.imgur.com/lE2FQIk.png",
   background: "https://i.imgur.com/lE2FQIk.png",
   types: ["movie", "series"],
@@ -25,6 +25,15 @@ const manifest = {
 };
 
 const builder = new addonBuilder(manifest);
+
+// 🧠 Función para extraer el token del usuario
+function getUserToken(req) {
+  const auth = (req?.headers?.authorization || "").trim();
+  if (!auth.startsWith("Bearer ")) {
+    throw new Error("Token de Real-Debrid requerido en el encabezado Authorization.");
+  }
+  return auth.slice(7).trim();
+}
 
 // 📚 Obtener datos desde IMDb (OMDb)
 async function getMetaFromIMDb(imdbID) {
@@ -75,58 +84,55 @@ builder.defineCatalogHandler(async ({ type }) => {
   }
 });
 
-// 🔗 Stream Handler (con soporte completo Real-Debrid)
-builder.defineStreamHandler(async ({ id }) => {
+// 🔗 Stream Handler con token obligatorio del usuario
+builder.defineStreamHandler(async (args, req) => {
   try {
-    const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
+    const token = getUserToken(req); // 🚨 Si no hay token lanza error
+    const found = movies.find((m) => m.id === args.id) || series.find((s) => s.id === args.id);
     if (!found) return { streams: [] };
 
     const magnet = `magnet:?xt=urn:btih:${found.hash}&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://tracker.openbittorrent.com:6969/announce`;
     let rdLink = null;
 
-    if (process.env.REALDEBRID_API) {
-      try {
-        // Paso 1: subir magnet
-        const addMag = await axios.post(
-          "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
-          new URLSearchParams({ magnet }),
-          { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
-        );
+    const headers = { Authorization: `Bearer ${token}` };
 
-        // Paso 2: obtener info del torrent
-        const info = await axios.get(
-          `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-          { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
-        );
+    // Paso 1: subir magnet
+    const addMag = await axios.post(
+      "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
+      new URLSearchParams({ magnet }),
+      { headers }
+    );
 
-        const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
-        if (file) {
-          // Paso 3: seleccionar archivo
-          await axios.post(
-            `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
-            new URLSearchParams({ files: file.id }),
-            { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
-          );
+    // Paso 2: obtener info del torrent
+    const info = await axios.get(
+      `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
+      { headers }
+    );
 
-          // Paso 4: obtener enlace final
-          const dl = await axios.get(
-            `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-            { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
-          );
+    const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
+    if (!file) throw new Error("No se encontró archivo de video válido en el torrent.");
 
-          if (dl.data.links && dl.data.links[0]) {
-            // Paso 5: solicitar link directo reproducible
-            const unrestricted = await axios.post(
-              "https://api.real-debrid.com/rest/1.0/unrestrict/link",
-              new URLSearchParams({ link: dl.data.links[0] }),
-              { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
-            );
-            rdLink = unrestricted.data.download;
-          }
-        }
-      } catch (err) {
-        console.warn("⚠️ Real-Debrid:", err.response?.data || err.message);
-      }
+    // Paso 3: seleccionar archivo
+    await axios.post(
+      `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
+      new URLSearchParams({ files: file.id }),
+      { headers }
+    );
+
+    // Paso 4: obtener links del torrent
+    const dl = await axios.get(
+      `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
+      { headers }
+    );
+
+    if (dl.data.links && dl.data.links[0]) {
+      // Paso 5: solicitar link directo reproducible
+      const unrestricted = await axios.post(
+        "https://api.real-debrid.com/rest/1.0/unrestrict/link",
+        new URLSearchParams({ link: dl.data.links[0] }),
+        { headers }
+      );
+      rdLink = unrestricted.data.download;
     }
 
     return {
@@ -138,7 +144,15 @@ builder.defineStreamHandler(async ({ id }) => {
       ]
     };
   } catch (err) {
-    console.error("❌ Stream Handler:", err);
+    if (err.message.includes("Token de Real-Debrid requerido")) {
+      return {
+        streams: [],
+        behaviorHints: {
+          notHandled: true
+        }
+      };
+    }
+    console.error("❌ Stream Handler:", err.response?.data || err.message);
     return { streams: [] };
   }
 });
@@ -159,7 +173,7 @@ builder.defineMetaHandler(async ({ id }) => {
 // 🚀 Servidor
 const PORT = process.env.PORT || 7000;
 serveHTTP(builder.getInterface(), { port: PORT });
-console.log(`✅ Primer Latino Addon corriendo en puerto ${PORT}`);
+console.log(`✅ Primer Latino Addon corriendo en puerto ${PORT} (token obligatorio Real-Debrid)`);
 
 // 🧱 Errores globales
 process.on("unhandledRejection", (reason) => console.error("⚠️ Unhandled:", reason));
