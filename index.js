@@ -2,15 +2,15 @@ const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
 const axios = require("axios");
 require("dotenv").config();
 
-// 📦 URL remota de tu movies.json en GitHub (RAW)
+// 📦 URL REAL del movies.json en tu GitHub (RAW)
 const DATA_URL = "https://raw.githubusercontent.com/johnpradoo/primer-latino/refs/heads/main/movies.json?token=GHSAT0AAAAAADN6F24PLXNRZ7KTVMQ25HY42ISDVBA";
 
 // 🧠 Manifest del addon
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "1.1.0",
+  version: "1.1.1",
   name: "Primer Latino (Real-Debrid Personalizado)",
-  description: "Películas y series LATINO desde Real-Debrid. Instálalo con ?token=<TU_TOKEN_RD>",
+  description: "Addon LATINO que usa tu token Real-Debrid. Instálalo con ?token=<TU_TOKEN_RD>",
   logo: "https://i.imgur.com/lE2FQIk.png",
   background: "https://i.imgur.com/lE2FQIk.png",
   types: ["movie", "series"],
@@ -24,7 +24,7 @@ const manifest = {
 
 const builder = new addonBuilder(manifest);
 
-// 🧩 Utilidad para leer el token desde la URL (?token=...)
+// 🧩 Función para leer el token desde la URL (?token=...)
 function extractTokenFromUrl(req) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const token = url.searchParams.get("token");
@@ -76,6 +76,8 @@ builder.defineStreamHandler(async (args, req) => {
       );
 
       for (const movie of matches) {
+        if (!movie || !movie.hash) continue;
+
         const magnet = `magnet:?xt=urn:btih:${movie.hash}`;
         try {
           // Paso 1: subir magnet
@@ -116,11 +118,11 @@ builder.defineStreamHandler(async (args, req) => {
 
             streams.push({
               title: `LATINOTOP • ${movie.quality} • ${movie.language}`,
-              url: unrestricted.data.download
+              url: unrestricted?.data?.download || magnet
             });
           }
         } catch (err) {
-          console.warn("⚠️ Real-Debrid:", err.response?.data || err.message);
+          console.warn("⚠️ Real-Debrid (movie):", err.response?.data || err.message);
         }
       }
     }
@@ -135,6 +137,8 @@ builder.defineStreamHandler(async (args, req) => {
       );
 
       for (const serie of matches) {
+        if (!serie || !serie.hash) continue;
+
         const magnet = `magnet:?xt=urn:btih:${serie.hash}`;
         try {
           const addMag = await axios.post(
@@ -171,7 +175,7 @@ builder.defineStreamHandler(async (args, req) => {
 
             streams.push({
               title: `LATINOTOP • ${serie.quality} • ${serie.language}`,
-              url: unrestricted.data.download
+              url: unrestricted?.data?.download || magnet
             });
           }
         } catch (err) {
@@ -188,7 +192,7 @@ builder.defineStreamHandler(async (args, req) => {
   }
 });
 
-// 🧠 Meta Handler (opcional)
+// 🧠 Meta Handler (mínimo)
 builder.defineMetaHandler(async ({ id }) => ({
   meta: { id, name: "Película / Serie LATINO", poster: "https://i.imgur.com/lE2FQIk.png" }
 }));
