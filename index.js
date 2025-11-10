@@ -3,7 +3,7 @@ const axios = require("axios");
 require("dotenv").config();
 
 // 📦 URL remota de tu movies.json en GitHub (RAW)
-const DATA_URL = "https://github.com/johnpradoo/primer-latino/blob/main/movies.json";
+const DATA_URL = "https://raw.githubusercontent.com/johnpradoo/primer-latino/refs/heads/main/movies.json?token=GHSAT0AAAAAADN6F24PLXNRZ7KTVMQ25HY42ISDVBA";
 
 // 🧠 Manifest del addon
 const manifest = {
