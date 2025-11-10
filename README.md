@@ -1,2 +1,2 @@
-https://primer-latino.onrender.com/manifest.json
-https://primer-latino.onrender.com
+Gera el **link** con tu API de __Real Debrid__
+https://johnpradoo.github.io/primer-latino/
