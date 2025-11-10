@@ -75,71 +75,106 @@ builder.defineCatalogHandler(async ({ type }) => {
   }
 });
 
-// 🔗 Stream Handler (con soporte completo Real-Debrid)
-builder.defineStreamHandler(async ({ id }) => {
+// 🔗 Stream Handler (token del usuario desde la URL)
+builder.defineStreamHandler(async ({ id }, req) => {
   try {
-    const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
-    if (!found) return { streams: [] };
+    // 1️⃣ Leer token desde la URL
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const token = url.searchParams.get("token");
 
-    const magnet = `magnet:?xt=urn:btih:${found.hash}&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://tracker.openbittorrent.com:6969/announce`;
+    if (!token) {
+      console.warn("⚠️ Falta token Real-Debrid");
+      return {
+        streams: [
+          {
+            title: "⚠️ Falta token Real-Debrid (?token=...)",
+            url: "https://stremio-addons-demo.vercel.app/no-stream.mp4"
+          }
+        ]
+      };
+    }
+
+    const headers = { Authorization: `Bearer ${token.trim()}` };
+
+    // 2️⃣ Buscar el contenido
+    const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
+    if (!found) {
+      console.warn("⚠️ ID no encontrado:", id);
+      return { streams: [] };
+    }
+
+    const magnet = `magnet:?xt=urn:btih:${found.hash}`;
     let rdLink = null;
 
-    if (process.env.REALDEBRID_API) {
-      try {
-        // Paso 1: subir magnet
-        const addMag = await axios.post(
-          "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
-          new URLSearchParams({ magnet }),
-          { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+    // 3️⃣ Procesar con el token del usuario
+    try {
+      const addMag = await axios.post(
+        "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
+        new URLSearchParams({ magnet }),
+        { headers }
+      );
+
+      const info = await axios.get(
+        `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
+        { headers }
+      );
+
+      const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
+      if (file) {
+        await axios.post(
+          `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
+          new URLSearchParams({ files: file.id }),
+          { headers }
         );
 
-        // Paso 2: obtener info del torrent
-        const info = await axios.get(
+        const dl = await axios.get(
           `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-          { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+          { headers }
         );
 
-        const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
-        if (file) {
-          // Paso 3: seleccionar archivo
-          await axios.post(
-            `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
-            new URLSearchParams({ files: file.id }),
-            { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
+        if (dl.data.links && dl.data.links[0]) {
+          const unrestricted = await axios.post(
+            "https://api.real-debrid.com/rest/1.0/unrestrict/link",
+            new URLSearchParams({ link: dl.data.links[0] }),
+            { headers }
           );
-
-          // Paso 4: obtener enlace final
-          const dl = await axios.get(
-            `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-            { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
-          );
-
-          if (dl.data.links && dl.data.links[0]) {
-            // Paso 5: solicitar link directo reproducible
-            const unrestricted = await axios.post(
-              "https://api.real-debrid.com/rest/1.0/unrestrict/link",
-              new URLSearchParams({ link: dl.data.links[0] }),
-              { headers: { Authorization: `Bearer ${process.env.REALDEBRID_API}` } }
-            );
-            rdLink = unrestricted.data.download;
-          }
+          rdLink = unrestricted?.data?.download || null;
         }
-      } catch (err) {
-        console.warn("⚠️ Real-Debrid:", err.response?.data || err.message);
       }
+    } catch (err) {
+      console.warn("⚠️ Real-Debrid:", err.response?.data || err.message);
+    }
+
+    // 4️⃣ Devolver stream
+    if (!rdLink) {
+      return {
+        streams: [
+          {
+            title: "⚠️ No se generó enlace válido (verifica tu token RD)",
+            url: "https://stremio-addons-demo.vercel.app/no-stream.mp4"
+          }
+        ]
+      };
     }
 
     return {
       streams: [
         {
           title: `${found.language} • ${found.quality}`,
-          url: rdLink || magnet
+          url: rdLink
         }
       ]
     };
   } catch (err) {
     console.error("❌ Stream Handler:", err);
-    return { streams: [] };
+    return {
+      streams: [
+        {
+          title: "❌ Error interno del addon",
+          url: "https://stremio-addons-demo.vercel.app/no-stream.mp4"
+        }
+      ]
+    };
   }
 });
 
