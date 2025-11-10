@@ -83,35 +83,26 @@ builder.defineCatalogHandler(async ({ type }) => {
   }
 });
 
-// 🎥 Stream Handler — versión final estricta + validaciones y RAW fijo
+// 🎥 Stream Handler — versión robusta + retry + dummy
 builder.defineStreamHandler(async (args, req) => {
   console.log("🛰️ Buscando stream para:", args);
 
   try {
-    // 1️⃣ Token del usuario (obligatorio)
+    // 1️⃣ Token obligatorio
     const url = new URL(req.url, `http://${req.headers.host}`);
     const token = url.searchParams.get("token");
     if (!token) throw new Error("❌ Falta token de Real-Debrid en la URL");
     const headers = { Authorization: `Bearer ${token.trim()}` };
 
-    // 2️⃣ URL RAW del movies.json (sin token de GitHub)
+    // 2️⃣ JSON remoto (público y fijo)
     const DATA_URL = "https://raw.githubusercontent.com/johnpradoo/primer-latino/main/movies.json";
-
-    // 3️⃣ Obtener JSON remoto
     const res = await axios.get(DATA_URL);
-    const data = res.data;
-    const { movies = [], series = [] } = data || {};
+    const { movies = [], series = [] } = res.data || {};
     const streams = [];
 
-    // 4️⃣ Verificación inicial
-    console.log("👉 DATA_URL:", DATA_URL);
-    console.log("👉 Películas cargadas:", movies.length);
-    console.log("👉 Series cargadas:", series.length);
-
     const rawId = args.id || "";
-    const idClean = rawId.replace("tmdb", "").replace(":", "").trim();
+    const idClean = rawId.replace(/^(movie:|series:|tmdb:)/, "").trim();
 
-    // 5️⃣ Buscar coincidencias
     const matches =
       args.type === "movie"
         ? movies.filter(
@@ -121,52 +112,48 @@ builder.defineStreamHandler(async (args, req) => {
               m.tmdb_id === idClean ||
               m.id.endsWith(idClean)
           )
-        : series.filter(
-            (s) =>
-              (s.id === rawId ||
-                s.id === idClean ||
-                s.tmdb_id === idClean ||
-                s.id.endsWith(idClean)) &&
-              s.season == args.season &&
-              s.episode == args.episode
-          );
+        : [];
 
     console.log(`👉 Coincidencias encontradas: ${matches.length}`);
 
-    // 6️⃣ Generar enlaces con Real-Debrid
-    for (const item of matches) {
-      if (!item?.hash) continue;
-      const magnet = `magnet:?xt=urn:btih:${item.hash}`;
+    for (const movie of matches) {
+      if (!movie?.hash) continue;
+      const magnet = `magnet:?xt=urn:btih:${movie.hash}`;
 
       try {
+        // Subir magnet
         const addMag = await axios.post(
           "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
           new URLSearchParams({ magnet }),
           { headers }
         );
 
+        // Info inicial
         const info = await axios.get(
           `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
           { headers }
         );
 
-        const file = info.data.files.find((f) =>
-          /\.(mp4|mkv|avi)$/i.test(f.path)
-        );
+        const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
         if (!file) continue;
 
+        // Seleccionar archivo
         await axios.post(
           `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
           new URLSearchParams({ files: file.id }),
           { headers }
         );
 
+        // Esperar 3 segundos (para que Real-Debrid procese)
+        await new Promise((r) => setTimeout(r, 3000));
+
+        // Obtener links finales
         const dl = await axios.get(
           `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
           { headers }
         );
 
-        if (dl.data.links?.[0]) {
+        if (dl.data.links && dl.data.links.length > 0) {
           const unrestricted = await axios.post(
             "https://api.real-debrid.com/rest/1.0/unrestrict/link",
             new URLSearchParams({ link: dl.data.links[0] }),
@@ -175,7 +162,7 @@ builder.defineStreamHandler(async (args, req) => {
 
           if (unrestricted?.data?.download) {
             streams.push({
-              title: `LATINOTOP • ${item.quality} • ${item.language}`,
+              title: `LATINOTOP • ${movie.quality} • ${movie.language}`,
               url: unrestricted.data.download,
             });
           }
@@ -187,8 +174,17 @@ builder.defineStreamHandler(async (args, req) => {
 
     console.log(`✅ Streams construidos: ${streams.length}`);
 
+    // Dummy stream para evitar crash de Stremio
     if (!streams.length) {
-      console.warn("⚠️ Ningún stream válido encontrado para:", args.id);
+      console.warn("⚠️ Sin streams válidos, devolviendo dummy");
+      return {
+        streams: [
+          {
+            title: "⚠️ No se encontró enlace disponible (verifica tu token RD)",
+            url: "https://stremio-addons-demo.vercel.app/no-stream.mp4",
+          },
+        ],
+      };
     }
 
     return { streams };
@@ -197,7 +193,6 @@ builder.defineStreamHandler(async (args, req) => {
     return { streams: [] };
   }
 });
-
 
 // 🧠 Meta Handler (mínimo)
 builder.defineMetaHandler(async ({ id }) => ({
