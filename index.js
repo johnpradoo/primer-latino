@@ -80,6 +80,7 @@ builder.defineStreamHandler(async ({ id }, req) => {
   try {
     // 1️⃣ Leer token desde la URL
     const url = new URL(req.url, `http://${req.headers.host}`);
+    ...
     const token = url.searchParams.get("token");
 
     if (!token) {
