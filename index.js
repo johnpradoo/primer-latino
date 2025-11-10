@@ -80,9 +80,19 @@ builder.defineStreamHandler(async ({ id }, req) => {
   try {
     console.log("🛰️ Stream request para:", id);
 
-    // 1️⃣ Leer token desde la URL
-    const url = new URL(req.url, `http://${req.headers.host}`);
-    const token = url.searchParams.get("token");
+    // 1️⃣ Obtener token de forma segura, incluso si req no existe
+    let token = null;
+    try {
+      const fullUrl =
+        req?.url && req?.headers?.host
+          ? new URL(req.url, `http://${req.headers.host}`)
+          : new URL(request?.url || "http://localhost"); // fallback
+      token = fullUrl.searchParams.get("token");
+    } catch {
+      // fallback si viene directo desde navegador
+      const raw = id.includes("?token=") ? id.split("?token=")[1] : null;
+      token = raw ? raw.trim() : null;
+    }
 
     if (!token) {
       console.warn("⚠️ Falta token de Real-Debrid");
@@ -96,7 +106,7 @@ builder.defineStreamHandler(async ({ id }, req) => {
       };
     }
 
-    const headers = { Authorization: `Bearer ${token.trim()}` };
+    const headers = { Authorization: `Bearer ${token}` };
     console.log("🧩 Token activo recibido:", token.slice(-6));
 
     // 2️⃣ Buscar la película/serie en el JSON
