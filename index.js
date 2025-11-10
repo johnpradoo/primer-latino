@@ -75,7 +75,7 @@ builder.defineCatalogHandler(async ({ type }) => {
   }
 });
 
-// 🔥 Stream Handler — versión 1.0.5 estricta (usa solo el token del usuario)
+// 🔥 Stream Handler — versión estricta y estable (solo token del usuario + dummy seguro)
 builder.defineStreamHandler(async ({ id }, req) => {
   try {
     // 🎯 1️⃣ Token obligatorio desde la URL (?token=...)
@@ -86,7 +86,17 @@ builder.defineStreamHandler(async ({ id }, req) => {
 
     // 🎬 2️⃣ Buscar la película o serie en tu JSON local
     const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
-    if (!found) return { streams: [] };
+    if (!found) {
+      console.warn("⚠️ No se encontró ID:", id);
+      return {
+        streams: [
+          {
+            title: "⚠️ Película no encontrada en catálogo",
+            url: "https://stremio-addons-demo.vercel.app/no-stream.mp4"
+          }
+        ]
+      };
+    }
 
     const magnet = `magnet:?xt=urn:btih:${found.hash}&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://tracker.openbittorrent.com:6969/announce`;
     let rdLink = null;
@@ -114,6 +124,9 @@ builder.defineStreamHandler(async ({ id }, req) => {
           { headers }
         );
 
+        // Esperar un poco para que Real-Debrid procese
+        await new Promise((r) => setTimeout(r, 2500));
+
         // Paso 4: Obtener enlace final
         const dl = await axios.get(
           `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
@@ -127,27 +140,46 @@ builder.defineStreamHandler(async ({ id }, req) => {
             new URLSearchParams({ link: dl.data.links[0] }),
             { headers }
           );
-          rdLink = unrestricted.data.download;
+          rdLink = unrestricted?.data?.download || null;
         }
       }
     } catch (err) {
       console.warn("⚠️ Real-Debrid:", err.response?.data || err.message);
     }
 
-    // 🎥 3️⃣ Devolver el stream al cliente
+    // 🎥 3️⃣ Devolver el stream al cliente o dummy si no hay link
+    if (rdLink) {
+      console.log("✅ Enlace Real-Debrid generado:", rdLink);
+      return {
+        streams: [
+          {
+            title: `${found.language} • ${found.quality}`,
+            url: rdLink
+          }
+        ]
+      };
+    }
+
+    // 🔒 Dummy seguro para evitar crash de Stremio
+    console.warn("⚠️ Sin enlace Real-Debrid válido, devolviendo dummy");
     return {
-      streams: rdLink
-        ? [
-            {
-              title: `${found.language} • ${found.quality}`,
-              url: rdLink
-            }
-          ]
-        : []
+      streams: [
+        {
+          title: "⚠️ No se encontró enlace disponible (verifica tu token RD)",
+          url: "https://stremio-addons-demo.vercel.app/no-stream.mp4"
+        }
+      ]
     };
   } catch (err) {
     console.error("❌ Stream Handler:", err);
-    return { streams: [] };
+    return {
+      streams: [
+        {
+          title: "❌ Error interno del addon",
+          url: "https://stremio-addons-demo.vercel.app/no-stream.mp4"
+        }
+      ]
+    };
   }
 });
 
