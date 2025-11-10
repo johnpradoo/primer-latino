@@ -75,16 +75,17 @@ builder.defineCatalogHandler(async ({ type }) => {
   }
 });
 
-// 🔗 Stream Handler (token del usuario desde la URL)
+// 🔗 Stream Handler con token de usuario + debug detallado
 builder.defineStreamHandler(async ({ id }, req) => {
   try {
+    console.log("🛰️ Stream request para:", id);
+
     // 1️⃣ Leer token desde la URL
     const url = new URL(req.url, `http://${req.headers.host}`);
-    ...
     const token = url.searchParams.get("token");
 
     if (!token) {
-      console.warn("⚠️ Falta token Real-Debrid");
+      console.warn("⚠️ Falta token de Real-Debrid");
       return {
         streams: [
           {
@@ -96,62 +97,82 @@ builder.defineStreamHandler(async ({ id }, req) => {
     }
 
     const headers = { Authorization: `Bearer ${token.trim()}` };
+    console.log("🧩 Token activo recibido:", token.slice(-6));
 
-    // 2️⃣ Buscar el contenido
-    const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
+    // 2️⃣ Buscar la película/serie en el JSON
+    const found =
+      movies.find((m) => m.id === id) || series.find((s) => s.id === id);
     if (!found) {
-      console.warn("⚠️ ID no encontrado:", id);
+      console.warn("⚠️ No se encontró ID:", id);
       return { streams: [] };
     }
+
+    console.log("🎬 Encontrado en catálogo:", found.title, "HASH:", found.hash);
 
     const magnet = `magnet:?xt=urn:btih:${found.hash}`;
     let rdLink = null;
 
-    // 3️⃣ Procesar con el token del usuario
+    // 3️⃣ Intentar generar enlace Real-Debrid
     try {
+      console.log("📡 Enviando magnet a RD...");
       const addMag = await axios.post(
         "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
         new URLSearchParams({ magnet }),
         { headers }
       );
 
+      console.log("✅ Torrent agregado, ID:", addMag.data.id);
+
       const info = await axios.get(
         `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
         { headers }
       );
 
-      const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
-      if (file) {
-        await axios.post(
-          `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
-          new URLSearchParams({ files: file.id }),
-          { headers }
-        );
+      const file = info.data.files?.find((f) =>
+        /\.(mp4|mkv|avi)$/i.test(f.path)
+      );
+      if (!file) throw new Error("⚠️ No se encontró archivo reproducible");
 
-        const dl = await axios.get(
-          `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-          { headers }
-        );
+      console.log("🎞️ Archivo seleccionado:", file.path);
 
-        if (dl.data.links && dl.data.links[0]) {
-          const unrestricted = await axios.post(
-            "https://api.real-debrid.com/rest/1.0/unrestrict/link",
-            new URLSearchParams({ link: dl.data.links[0] }),
-            { headers }
-          );
-          rdLink = unrestricted?.data?.download || null;
-        }
-      }
+      await axios.post(
+        `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
+        new URLSearchParams({ files: file.id }),
+        { headers }
+      );
+
+      console.log("✅ Archivos seleccionados, obteniendo enlaces...");
+
+      const dl = await axios.get(
+        `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
+        { headers }
+      );
+
+      const link = dl.data?.links?.[0];
+      if (!link) throw new Error("⚠️ Real-Debrid no devolvió enlaces válidos");
+
+      console.log("🔗 Link RD encontrado, liberando...");
+
+      const unrestricted = await axios.post(
+        "https://api.real-debrid.com/rest/1.0/unrestrict/link",
+        new URLSearchParams({ link }),
+        { headers }
+      );
+
+      rdLink = unrestricted?.data?.download || null;
+
+      console.log("✅ Link final obtenido:", rdLink);
     } catch (err) {
-      console.warn("⚠️ Real-Debrid:", err.response?.data || err.message);
+      console.error("💥 Error en flujo Real-Debrid:", err.response?.data || err.message);
     }
 
     // 4️⃣ Devolver stream
     if (!rdLink) {
+      console.warn("⚠️ No se generó enlace válido (posible token o hash inválido)");
       return {
         streams: [
           {
-            title: "⚠️ No se generó enlace válido (verifica tu token RD)",
+            title: "⚠️ No se generó enlace válido (verifica token o hash)",
             url: "https://stremio-addons-demo.vercel.app/no-stream.mp4"
           }
         ]
@@ -167,7 +188,7 @@ builder.defineStreamHandler(async ({ id }, req) => {
       ]
     };
   } catch (err) {
-    console.error("❌ Stream Handler:", err);
+    console.error("❌ Stream Handler (Error general):", err.message);
     return {
       streams: [
         {
