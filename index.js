@@ -91,7 +91,7 @@ builder.defineStreamHandler(async (args, req) => {
     const headers = { Authorization: `Bearer ${token}` };
 
     // 1️⃣ Cargar datos de películas/series desde GitHub
-    const res = await axios.get(./movies.json);
+    const res = await axios.get("./movies.json");
     const data = res.data;
     const streams = [];
 
