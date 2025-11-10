@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generador de Link | Primer Latino</title>
+  <style>
+    body {
+      background: #0a0a0a;
+      color: #fff;
+      font-family: "Segoe UI", Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    h1 {
+      color: #ffcc00;
+      margin-bottom: 10px;
+      font-size: 2rem;
+    }
+    p { opacity: 0.8; margin: 5px 0 15px; }
+    input {
+      padding: 10px;
+      width: 80%;
+      max-width: 400px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      text-align: center;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: #ffcc00;
+      color: #111;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover { background: #ffaa00; }
+    .result {
+      margin-top: 20px;
+      background: #1a1a1a;
+      padding: 15px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      word-wrap: break-word;
+    }
+    .result input {
+      width: 100%;
+      background: #000;
+      color: #0f0;
+      border: 1px solid #333;
+      margin-bottom: 10px;
+    }
+    .copy {
+      margin-top: 5px;
+      background: #00ccff;
+      color: #000;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .copy:hover { background: #00aaff; }
+    footer {
+      position: absolute;
+      bottom: 15px;
+      opacity: 0.5;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔗 Primer Latino</h1>
+  <p>Genera tu enlace personalizado con tu token Real-Debrid</p>
+
+  <input id="token" placeholder="Ejemplo: TD5D6N24WPCKWSHTQDR7Y..." />
+  <button onclick="generate()">Generar enlace</button>
+
+  <div class="result" id="result"></div>
+
+  <footer>© Primer Latino Addon • 2025</footer>
+
+  <script>
+    function generate() {
+      const token = document.getElementById("token").value.trim();
+      const result = document.getElementById("result");
+      if (!token) {
+        result.innerHTML = '<p style="color:#f55;">⚠️ Ingresa un token válido</p>';
+        return;
+      }
+      const base = "https://primer-latino.onrender.com";
+      const link = \`\${base}/realdebrid=\${token}/manifest.json\`;
+      result.innerHTML = \`
+        <p>✅ Tu enlace generado:</p>
+        <input type="text" value="\${link}" readonly id="copyField">
+        <button class="copy" onclick="copyLink()">Copiar enlace</button>
+        <p><a href="\${link}" target="_blank" style="color:#00ccff;">Abrir manifest.json</a></p>
+        <p>Usa este enlace en Stremio: <em>Añadir complemento por URL</em></p>
+      \`;
+    }
+
+    function copyLink() {
+      const copyText = document.getElementById("copyField");
+      copyText.select();
+      document.execCommand("copy");
+      alert("✅ Enlace copiado al portapapeles");
+    }
+  </script>
+</body>
+</html>
