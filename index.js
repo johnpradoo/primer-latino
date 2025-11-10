@@ -1,158 +1,238 @@
-import pkg from "stremio-addon-sdk";
-const { addonBuilder, serveHTTP } = pkg;
-import express from "express";
-import fs from "fs";
-import axios from "axios";
+// index.js — LATINOTOP (estructura limpia con frontend separado)
+// Autor: @johnpradoo
 
-// ──────────────────────────────
-// MANIFEST
-// ──────────────────────────────
-const manifest = {
-  id: "org.primerlatino",
-  version: "2.0.0",
-  name: "Primer Latino",
-  description: "Addon de películas y series con soporte Real-Debrid (multiusuario, sin dependencias externas)",
-  types: ["movie", "series"],
-  catalogs: [
-    { type: "movie", id: "primerlatino_movies", name: "Primer Latino • Películas" },
-    { type: "series", id: "primerlatino_series", name: "Primer Latino • Series" },
-  ],
-  resources: ["catalog", "meta", "stream"],
-};
+const { addonBuilder, getRouter } = require("stremio-addon-sdk");
+const fetch = require("node-fetch");
+const express = require("express");
+const path = require("path");
 
-// ──────────────────────────────
-// CARGA DE MOVIES.JSON
-// ──────────────────────────────
-let movies = [];
-let series = [];
-
-try {
-  const data = fs.readFileSync("./movies.json");
-  const parsed = JSON.parse(data);
-  movies = parsed.filter((m) => m.type === "movie");
-  series = parsed.filter((m) => m.type === "series");
-  console.log(`🎬 Cargadas ${movies.length} películas y ${series.length} series.`);
-} catch (err) {
-  console.error("❌ Error al cargar movies.json:", err.message);
-}
-
-// ──────────────────────────────
-// FUNCIÓN REAL-DEBRID API (sin librería externa)
-// ──────────────────────────────
-async function getRDLink(token, infoHash) {
-  const headers = { Authorization: `Bearer ${token}` };
-
-  try {
-    // 🔍 Revisar torrents existentes
-    const torrentsList = await axios.get("https://api.real-debrid.com/rest/1.0/torrents", { headers });
-    const existing = torrentsList.data.find(
-      (t) => t.hash.toLowerCase() === infoHash.toLowerCase()
-    );
-
-    let torrentId;
-
-    if (existing) {
-      torrentId = existing.id;
-    } else {
-      // ➕ Subir magnet si no existe
-      const addMagnet = await axios.post(
-        "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
-        new URLSearchParams({ magnet: `magnet:?xt=urn:btih:${infoHash}` }),
-        { headers }
-      );
-      torrentId = addMagnet.data.id;
-    }
-
-    // 🧩 Obtener info del torrent
-    const info = await axios.get(
-      `https://api.real-debrid.com/rest/1.0/torrents/info/${torrentId}`,
-      { headers }
-    );
-
-    // 🎞 Buscar archivo de video válido
-    const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
-    if (!file) throw new Error("No se encontró archivo de video válido en el torrent");
-
-    // 🧠 Seleccionar archivo
-    await axios.post(
-      `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${torrentId}`,
-      new URLSearchParams({ files: file.id }),
-      { headers }
-    );
-
-    // 🔁 Obtener link de descarga
-    const info2 = await axios.get(
-      `https://api.real-debrid.com/rest/1.0/torrents/info/${torrentId}`,
-      { headers }
-    );
-
-    const link = info2.data.links?.[0];
-    if (!link) throw new Error("No se generó link de descarga");
-
-    // 🔓 Desbloquear el link
-    const unrestricted = await axios.post(
-      "https://api.real-debrid.com/rest/1.0/unrestrict/link",
-      new URLSearchParams({ link }),
-      { headers }
-    );
-
-    return unrestricted.data.download;
-  } catch (err) {
-    console.warn("⚠️ Error en Real-Debrid:", err.response?.data || err.message);
-    return null;
-  }
-}
-
-// ──────────────────────────────
-// ADDON BUILDER
-// ──────────────────────────────
+const manifest = require("./static/manifest.json");
 const builder = new addonBuilder(manifest);
+const app = express();
 
-// STREAM HANDLER
-builder.defineStreamHandler(async ({ id }) => {
+// URL RAW del JSON principal
+const DATA_URL = "https://raw.githubusercontent.com/johnpradoo/LATINOTOP/main/data/movies.json";
+
+// --- HANDLER PRINCIPAL STREMIO ---
+builder.defineStreamHandler(async (args) => {
+  console.log("🛰️ Buscando stream para:", args);
+
   try {
-    const [userToken, imdbId] = id.split("/");
+    const response = await fetch(DATA_URL);
+    const data = await response.json();
+    const streams = [];
 
-    // Validación de token
-    if (!userToken || userToken.length < 10) {
-      return {
-        streams: [
-          {
-            title: "🔒 Este addon requiere tu token de Real-Debrid",
-            url: "https://johnpradoo.github.io/primer-latino-page/",
-          },
-        ],
-      };
+    const rawId = args.id || "";
+    const idClean = rawId.replace("tmdb", "").replace(":", "").trim();
+
+    if (args.type === "movie") {
+      const matches = data.movies.filter(
+        (m) => m.id === rawId || m.id === idClean || m.tmdb_id === idClean
+      );
+
+      matches.forEach((movie) => {
+        streams.push({
+          title: `LATINOTOP • ${movie.quality} • ${movie.language} • ${movie.codec}`,
+          url: movie.url,
+          filename: `${sanitizeFilename(movie.title)}.${movie.quality}.${slugLang(movie.language)}.${movie.codec}.mkv`,
+        });
+      });
     }
 
-    const found = movies.find((m) => m.id === imdbId) || series.find((s) => s.id === imdbId);
-    if (!found) return { streams: [] };
+    if (args.type === "series") {
+      const matches = data.series.filter(
+        (s) =>
+          (s.id === rawId || s.id === idClean || s.tmdb_id === idClean) &&
+          s.season == args.season &&
+          s.episode == args.episode
+      );
 
-    const rdLink = await getRDLink(userToken, found.hash);
+      matches.forEach((serie) => {
+        streams.push({
+          title: `LATINOTOP • ${serie.quality} • ${serie.language} • ${serie.codec}`,
+          url: serie.url,
+          filename: `${sanitizeFilename(serie.title)}.S${serie.season}E${serie.episode}.${serie.quality}.${slugLang(serie.language)}.${serie.codec}.mkv`,
+        });
+      });
+    }
 
-    return {
-      streams: [
-        {
-          title: `${found.language || "Latino"} • ${found.quality || "HD"}`,
-          url: rdLink || `magnet:?xt=urn:btih:${found.hash}`,
-        },
-      ],
-    };
+    console.log(`✅ Streams encontrados: ${streams.length}`);
+    return { streams };
   } catch (err) {
-    console.error("❌ Stream Handler:", err.message);
+    console.error("❌ Error cargando datos:", err);
     return { streams: [] };
   }
 });
 
-// ──────────────────────────────
-// EXPRESS + SERVIDOR
-// ──────────────────────────────
-const app = express();
+// --- FUNCIONES AUXILIARES ---
+function sanitizeFilename(name) {
+  return name.replace(/[<>:"/\\|?*\u0000-\u001F]/g, "").replace(/\s+/g, "_");
+}
+function slugLang(lang) {
+  return (lang || "").replace(/[^\w\-]/g, "_").replace(/\s+/g, "_");
+}
 
-app.get(["/manifest.json", "/:token/manifest.json"], (req, res) => {
-  res.setHeader("Content-Type", "application/json");
-  res.json(manifest);
+// --------------------
+// CONFIGURACIÓN EXPRESS
+// --------------------
+app.use(express.json());
+
+// --- SERVIR INTERFAZ PRINCIPAL Y PANELES ---
+app.use("/", express.static(path.join(__dirname, "public"))); // home.html
+app.use("/admin", express.static(path.join(__dirname, "public"))); // admin.html
+app.use("/community", express.static(path.join(__dirname, "public"))); // index.html si lo tienes
+
+// --- ENDPOINTS DE LA COMUNIDAD ---
+app.post("/community/submit", async (req, res) => {
+  try {
+    const { title, type, url, quality, language, codec } = req.body;
+    if (!title || !url || !type)
+      return res.status(400).json({ success: false, message: "Faltan campos obligatorios (title, type, url)." });
+
+    const submission = {
+      id: Date.now().toString(),
+      title: title.trim(),
+      type: type.trim(),
+      quality: (quality || "").trim(),
+      language: (language || "").trim(),
+      codec: (codec || "").trim(),
+      url: url.trim(),
+      status: "pendiente",
+      date: new Date().toISOString(),
+    };
+
+    const repo = "johnpradoo/LATINOTOP";
+    const pathFile = "data/community_submissions.json";
+    const token = process.env.GITHUB_TOKEN;
+    const headers = {
+      Accept: "application/vnd.github+json",
+      Authorization: `token ${token}`,
+      "User-Agent": "LATINOTOP-BOT",
+    };
+
+    const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/${pathFile}`, { headers });
+    const getData = await getRes.json();
+    if (!getData.content) throw new Error("No se pudo obtener el archivo desde GitHub.");
+
+    const content = Buffer.from(getData.content, "base64").toString("utf8");
+    const data = content.trim() ? JSON.parse(content) : [];
+
+    const existe = data.find(
+      (item) =>
+        item.title.toLowerCase() === submission.title.toLowerCase() ||
+        item.url.trim() === submission.url.trim()
+    );
+    if (existe)
+      return res.json({ success: false, message: "⚠️ Este archivo ya fue enviado o está en revisión." });
+
+    data.push(submission);
+    const newContent = Buffer.from(JSON.stringify(data, null, 2)).toString("base64");
+
+    const updateRes = await fetch(`https://api.github.com/repos/${repo}/contents/${pathFile}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({
+        message: `Nuevo envío comunitario: ${submission.title}`,
+        content: newContent,
+        sha: getData.sha,
+      }),
+    });
+
+    const updateData = await updateRes.json();
+    if (updateData.commit)
+      return res.json({
+        success: true,
+        message: "✅ Envío guardado correctamente. Tu aporte está en revisión.",
+      });
+
+    throw new Error("No se pudo subir el archivo a GitHub.");
+  } catch (err) {
+    console.error("❌ Error al guardar envío:", err);
+    res.status(500).json({ success: false, message: "Error al procesar el envío." });
+  }
 });
 
-serveHTTP(builder.getInterface(), { app, port: process.env.PORT || 10000 });
-console.log("✅ Primer Latino activo en puerto", process.env.PORT || 10000);
+// --- LISTAR ENVÍOS ---
+app.get("/community/list", async (req, res) => {
+  try {
+    const repo = "johnpradoo/LATINOTOP";
+    const pathFile = "data/community_submissions.json";
+    const headers = {
+      Accept: "application/vnd.github+json",
+      Authorization: `token ${process.env.GITHUB_TOKEN}`,
+      "User-Agent": "LATINOTOP-BOT",
+    };
+
+    const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/${pathFile}`, { headers });
+    const getData = await getRes.json();
+    if (!getData.content)
+      return res.status(404).json({ success: false, message: "No se encontró el archivo de comunidad." });
+
+    const content = Buffer.from(getData.content, "base64").toString("utf8");
+    const data = content.trim() ? JSON.parse(content) : [];
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error("❌ Error al obtener lista:", err);
+    res.status(500).json({ success: false, message: "Error al obtener la lista." });
+  }
+});
+
+// --- APROBAR / ELIMINAR ENVÍOS ---
+app.post("/community/update", async (req, res) => {
+  try {
+    const { id, action } = req.body;
+    if (!id || !action) return res.status(400).json({ success: false, message: "Datos incompletos." });
+
+    const repo = "johnpradoo/LATINOTOP";
+    const pathFile = "data/community_submissions.json";
+    const headers = {
+      Accept: "application/vnd.github+json",
+      Authorization: `token ${process.env.GITHUB_TOKEN}`,
+      "User-Agent": "LATINOTOP-BOT",
+    };
+
+    const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/${pathFile}`, { headers });
+    const getData = await getRes.json();
+    if (!getData.content) throw new Error("No se pudo leer el archivo.");
+
+    const content = Buffer.from(getData.content, "base64").toString("utf8");
+    let data = content.trim() ? JSON.parse(content) : [];
+    const index = data.findIndex((i) => i.id === id);
+    if (index === -1) return res.json({ success: false, message: "No se encontró el envío." });
+
+    if (action === "eliminar") data.splice(index, 1);
+    else data[index].status = action;
+
+    const newContent = Buffer.from(JSON.stringify(data, null, 2)).toString("base64");
+    const updateRes = await fetch(`https://api.github.com/repos/${repo}/contents/${pathFile}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({
+        message: `Actualizado: ${action.toUpperCase()} -> ${data[index]?.title || "Eliminado"}`,
+        content: newContent,
+        sha: getData.sha,
+      }),
+    });
+
+    const updateData = await updateRes.json();
+    if (updateData.commit)
+      return res.json({ success: true, message: "✅ Estado actualizado correctamente." });
+    throw new Error("Error al subir a GitHub.");
+  } catch (err) {
+    console.error("❌ Error en update:", err);
+    res.status(500).json({ success: false, message: "Error al actualizar el estado." });
+  }
+});
+
+// --- RUTA DEL ADDON SDK ---
+const addonInterface = builder.getInterface();
+app.use("/", getRouter(addonInterface, { manifestUrl: "https://latinotop.onrender.com/manifest.json" }));
+
+// --- PANTALLA DE CARGA AL ENTRAR A "/" ---
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "loading.html"));
+});
+
+// --- INICIAR SERVIDOR ---
+const PORT = process.env.PORT || 7000;
+app.listen(PORT, () => console.log(`✅ LATINOTOP corriendo en puerto ${PORT}`));
