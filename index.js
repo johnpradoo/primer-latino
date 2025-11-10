@@ -83,7 +83,7 @@ builder.defineCatalogHandler(async ({ type }) => {
   }
 });
 
-// 🎥 Stream Handler — versión estricta (requiere ?token=...)
+// 🎥 Stream Handler — versión final estricta + validaciones y RAW fijo
 builder.defineStreamHandler(async (args, req) => {
   console.log("🛰️ Buscando stream para:", args);
 
@@ -94,138 +94,110 @@ builder.defineStreamHandler(async (args, req) => {
     if (!token) throw new Error("❌ Falta token de Real-Debrid en la URL");
     const headers = { Authorization: `Bearer ${token.trim()}` };
 
-    // 2️⃣ Cargar JSON remoto (movies/series)
-    const DATA_URL =
-      "https://raw.githubusercontent.com/johnpradoo/primer-latino/refs/heads/main/movies.json?token=GHSAT0AAAAAADN6F24PLXNRZ7KTVMQ25HY42ISDVBA";
+    // 2️⃣ URL RAW del movies.json (sin token de GitHub)
+    const DATA_URL = "https://raw.githubusercontent.com/johnpradoo/primer-latino/main/movies.json";
+
+    // 3️⃣ Obtener JSON remoto
     const res = await axios.get(DATA_URL);
-    const { movies, series } = res.data;
+    const data = res.data;
+    const { movies = [], series = [] } = data || {};
+    const streams = [];
+
+    // 4️⃣ Verificación inicial
+    console.log("👉 DATA_URL:", DATA_URL);
+    console.log("👉 Películas cargadas:", movies.length);
+    console.log("👉 Series cargadas:", series.length);
 
     const rawId = args.id || "";
     const idClean = rawId.replace("tmdb", "").replace(":", "").trim();
-    const streams = [];
 
-    // 3️⃣ Películas
-    if (args.type === "movie") {
-      const matches = movies.filter(
-        (m) => m.id === rawId || m.id === idClean || m.tmdb_id === idClean
-      );
+    // 5️⃣ Buscar coincidencias
+    const matches =
+      args.type === "movie"
+        ? movies.filter(
+            (m) =>
+              m.id === rawId ||
+              m.id === idClean ||
+              m.tmdb_id === idClean ||
+              m.id.endsWith(idClean)
+          )
+        : series.filter(
+            (s) =>
+              (s.id === rawId ||
+                s.id === idClean ||
+                s.tmdb_id === idClean ||
+                s.id.endsWith(idClean)) &&
+              s.season == args.season &&
+              s.episode == args.episode
+          );
 
-      for (const movie of matches) {
-        if (!movie?.hash) continue;
-        const magnet = `magnet:?xt=urn:btih:${movie.hash}`;
+    console.log(`👉 Coincidencias encontradas: ${matches.length}`);
 
-        try {
-          const addMag = await axios.post(
-            "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
-            new URLSearchParams({ magnet }),
+    // 6️⃣ Generar enlaces con Real-Debrid
+    for (const item of matches) {
+      if (!item?.hash) continue;
+      const magnet = `magnet:?xt=urn:btih:${item.hash}`;
+
+      try {
+        const addMag = await axios.post(
+          "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
+          new URLSearchParams({ magnet }),
+          { headers }
+        );
+
+        const info = await axios.get(
+          `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
+          { headers }
+        );
+
+        const file = info.data.files.find((f) =>
+          /\.(mp4|mkv|avi)$/i.test(f.path)
+        );
+        if (!file) continue;
+
+        await axios.post(
+          `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
+          new URLSearchParams({ files: file.id }),
+          { headers }
+        );
+
+        const dl = await axios.get(
+          `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
+          { headers }
+        );
+
+        if (dl.data.links?.[0]) {
+          const unrestricted = await axios.post(
+            "https://api.real-debrid.com/rest/1.0/unrestrict/link",
+            new URLSearchParams({ link: dl.data.links[0] }),
             { headers }
           );
 
-          const info = await axios.get(
-            `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-            { headers }
-          );
-
-          const file = info.data.files.find((f) =>
-            /\.(mp4|mkv|avi)$/i.test(f.path)
-          );
-          if (!file) continue;
-
-          await axios.post(
-            `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
-            new URLSearchParams({ files: file.id }),
-            { headers }
-          );
-
-          const dl = await axios.get(
-            `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-            { headers }
-          );
-
-          if (dl.data.links?.[0]) {
-            const unrestricted = await axios.post(
-              "https://api.real-debrid.com/rest/1.0/unrestrict/link",
-              new URLSearchParams({ link: dl.data.links[0] }),
-              { headers }
-            );
-
+          if (unrestricted?.data?.download) {
             streams.push({
-              title: `LATINOTOP • ${movie.quality} • ${movie.language}`,
-              url: unrestricted?.data?.download || magnet,
+              title: `LATINOTOP • ${item.quality} • ${item.language}`,
+              url: unrestricted.data.download,
             });
           }
-        } catch (err) {
-          console.warn("⚠️ Real-Debrid (movie):", err.response?.data || err.message);
         }
+      } catch (err) {
+        console.warn("⚠️ Real-Debrid:", err.response?.data || err.message);
       }
     }
 
-    // 4️⃣ Series
-    if (args.type === "series") {
-      const matches = series.filter(
-        (s) =>
-          (s.id === rawId || s.id === idClean || s.tmdb_id === idClean) &&
-          s.season == args.season &&
-          s.episode == args.episode
-      );
+    console.log(`✅ Streams construidos: ${streams.length}`);
 
-      for (const serie of matches) {
-        if (!serie?.hash) continue;
-        const magnet = `magnet:?xt=urn:btih:${serie.hash}`;
-
-        try {
-          const addMag = await axios.post(
-            "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
-            new URLSearchParams({ magnet }),
-            { headers }
-          );
-
-          const info = await axios.get(
-            `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-            { headers }
-          );
-
-          const file = info.data.files.find((f) =>
-            /\.(mp4|mkv|avi)$/i.test(f.path)
-          );
-          if (!file) continue;
-
-          await axios.post(
-            `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
-            new URLSearchParams({ files: file.id }),
-            { headers }
-          );
-
-          const dl = await axios.get(
-            `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-            { headers }
-          );
-
-          if (dl.data.links?.[0]) {
-            const unrestricted = await axios.post(
-              "https://api.real-debrid.com/rest/1.0/unrestrict/link",
-              new URLSearchParams({ link: dl.data.links[0] }),
-              { headers }
-            );
-
-            streams.push({
-              title: `LATINOTOP • ${serie.quality} • ${serie.language}`,
-              url: unrestricted?.data?.download || magnet,
-            });
-          }
-        } catch (err) {
-          console.warn("⚠️ Real-Debrid (series):", err.response?.data || err.message);
-        }
-      }
+    if (!streams.length) {
+      console.warn("⚠️ Ningún stream válido encontrado para:", args.id);
     }
 
-    console.log(`✅ Streams encontrados: ${streams.length}`);
     return { streams };
   } catch (err) {
     console.error("❌ Error en Stream Handler:", err.message);
     return { streams: [] };
   }
 });
+
 
 // 🧠 Meta Handler (mínimo)
 builder.defineMetaHandler(async ({ id }) => ({
