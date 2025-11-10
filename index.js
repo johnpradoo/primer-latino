@@ -1,9 +1,11 @@
 const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
 const axios = require("axios");
+const fs = require("fs");
 require("dotenv").config();
 
-// 📦 URL REAL del movies.json en tu GitHub (RAW)
-const DATA_URL = "https://raw.githubusercontent.com/johnpradoo/primer-latino/refs/heads/main/movies.json?token=GHSAT0AAAAAADN6F24PLXNRZ7KTVMQ25HY42ISDVBA";
+// Leer movies.json
+const data = JSON.parse(fs.readFileSync("./movies.json", "utf-8"));
+const { movies, series } = data;
 
 // 🧠 Manifest del addon
 const manifest = {
@@ -24,6 +26,29 @@ const manifest = {
 
 const builder = new addonBuilder(manifest);
 
+// 📚 Obtener datos desde IMDb (OMDb)
+async function getMetaFromIMDb(imdbID) {
+  try {
+    const res = await axios.get(`https://www.omdbapi.com/?i=${imdbID}&apikey=${process.env.OMDB_API_KEY}`);
+    const d = res.data;
+    if (!d || d.Response === "False") return null;
+
+    return {
+      id: imdbID,
+      type: d.Type || "movie",
+      name: d.Title,
+      poster: d.Poster !== "N/A" ? d.Poster : undefined,
+      background: d.Poster,
+      description: d.Plot,
+      releaseInfo: d.Year,
+      imdbRating: d.imdbRating
+    };
+  } catch (err) {
+    console.error("❌ IMDb Error:", err.message);
+    return null;
+  }
+}
+
 // 🧩 Función para leer el token desde la URL (?token=...)
 function extractTokenFromUrl(req) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -35,21 +60,25 @@ function extractTokenFromUrl(req) {
 // 🎬 Catalog Handler
 builder.defineCatalogHandler(async ({ type }) => {
   try {
-    const res = await axios.get(DATA_URL);
-    const data = res.data;
-    const items = type === "movie" ? data.movies : data.series;
+    const items = type === "movie" ? movies : series;
+    const metas = [];
 
-    const metas = items.map((item) => ({
-      id: item.id,
-      type: item.type,
-      name: `${item.title} (${item.quality})`,
-      poster: item.poster || "https://i.imgur.com/lE2FQIk.png",
-      description: `Idioma: ${item.language} | Codec: ${item.codec}`
-    }));
+    for (const item of items) {
+      const meta = await getMetaFromIMDb(item.id.split(":")[0]);
+      if (!meta) continue;
+
+      metas.push({
+        id: item.id,
+        type: item.type,
+        name: `${item.title} (${item.quality})`,
+        poster: item.poster || meta.poster,
+        description: `${meta.description || ""}\nIdioma: ${item.language}\nCodec: ${item.codec}`
+      });
+    }
 
     return { metas };
   } catch (err) {
-    console.error("❌ Error cargando catálogo:", err.message);
+    console.error("❌ Catalog Handler:", err);
     return { metas: [] };
   }
 });
