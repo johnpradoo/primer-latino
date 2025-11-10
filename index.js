@@ -24,7 +24,7 @@ const manifest = {
   idPrefixes: ["tt"],
   behaviorHints: {
     configurable: true,
-    configurationRequired: true
+    configurationRequired: false
   }
 };
 
