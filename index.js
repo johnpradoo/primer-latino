@@ -83,56 +83,60 @@ builder.defineCatalogHandler(async ({ type }) => {
   }
 });
 
-// 🎥 Stream Handler (usa token del usuario y JSON remoto)
+// 🎥 Stream Handler — versión estricta (requiere ?token=...)
 builder.defineStreamHandler(async (args, req) => {
   console.log("🛰️ Buscando stream para:", args);
-  try {
-    const token = extractTokenFromUrl(req);
-    const headers = { Authorization: `Bearer ${token}` };
 
-    // 1️⃣ Cargar datos de películas/series desde GitHub
-    const res = await axios.get("./movies.json");
-    const data = res.data;
-    const streams = [];
+  try {
+    // 1️⃣ Token del usuario (obligatorio)
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const token = url.searchParams.get("token");
+    if (!token) throw new Error("❌ Falta token de Real-Debrid en la URL");
+    const headers = { Authorization: `Bearer ${token.trim()}` };
+
+    // 2️⃣ Cargar JSON remoto (movies/series)
+    const DATA_URL =
+      "https://raw.githubusercontent.com/johnpradoo/primer-latino/refs/heads/main/movies.json?token=GHSAT0AAAAAADN6F24PLXNRZ7KTVMQ25HY42ISDVBA";
+    const res = await axios.get(DATA_URL);
+    const { movies, series } = res.data;
 
     const rawId = args.id || "";
     const idClean = rawId.replace("tmdb", "").replace(":", "").trim();
+    const streams = [];
 
-    // 2️⃣ Buscar coincidencia en movies
+    // 3️⃣ Películas
     if (args.type === "movie") {
-      const matches = data.movies.filter(
+      const matches = movies.filter(
         (m) => m.id === rawId || m.id === idClean || m.tmdb_id === idClean
       );
 
       for (const movie of matches) {
-        if (!movie || !movie.hash) continue;
-
+        if (!movie?.hash) continue;
         const magnet = `magnet:?xt=urn:btih:${movie.hash}`;
+
         try {
-          // Paso 1: subir magnet
           const addMag = await axios.post(
             "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
             new URLSearchParams({ magnet }),
             { headers }
           );
 
-          // Paso 2: obtener info del torrent
           const info = await axios.get(
             `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
             { headers }
           );
 
-          const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
+          const file = info.data.files.find((f) =>
+            /\.(mp4|mkv|avi)$/i.test(f.path)
+          );
           if (!file) continue;
 
-          // Paso 3: seleccionar archivo
           await axios.post(
             `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
             new URLSearchParams({ files: file.id }),
             { headers }
           );
 
-          // Paso 4: obtener links y liberar
           const dl = await axios.get(
             `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
             { headers }
@@ -147,7 +151,7 @@ builder.defineStreamHandler(async (args, req) => {
 
             streams.push({
               title: `LATINOTOP • ${movie.quality} • ${movie.language}`,
-              url: unrestricted?.data?.download || magnet
+              url: unrestricted?.data?.download || magnet,
             });
           }
         } catch (err) {
@@ -156,9 +160,9 @@ builder.defineStreamHandler(async (args, req) => {
       }
     }
 
-    // 3️⃣ Buscar coincidencia en series
+    // 4️⃣ Series
     if (args.type === "series") {
-      const matches = data.series.filter(
+      const matches = series.filter(
         (s) =>
           (s.id === rawId || s.id === idClean || s.tmdb_id === idClean) &&
           s.season == args.season &&
@@ -166,9 +170,9 @@ builder.defineStreamHandler(async (args, req) => {
       );
 
       for (const serie of matches) {
-        if (!serie || !serie.hash) continue;
-
+        if (!serie?.hash) continue;
         const magnet = `magnet:?xt=urn:btih:${serie.hash}`;
+
         try {
           const addMag = await axios.post(
             "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
@@ -181,7 +185,9 @@ builder.defineStreamHandler(async (args, req) => {
             { headers }
           );
 
-          const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
+          const file = info.data.files.find((f) =>
+            /\.(mp4|mkv|avi)$/i.test(f.path)
+          );
           if (!file) continue;
 
           await axios.post(
@@ -204,7 +210,7 @@ builder.defineStreamHandler(async (args, req) => {
 
             streams.push({
               title: `LATINOTOP • ${serie.quality} • ${serie.language}`,
-              url: unrestricted?.data?.download || magnet
+              url: unrestricted?.data?.download || magnet,
             });
           }
         } catch (err) {
