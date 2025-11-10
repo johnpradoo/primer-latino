@@ -1,16 +1,17 @@
-const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
+const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
+const { addonBuilder } = require("stremio-addon-sdk");
 require("dotenv").config();
 
-// Leer movies.json
+// 🧱 Cargar catálogo
 const data = JSON.parse(fs.readFileSync("./movies.json", "utf-8"));
-const { movies, series } = data;
+const { movies = [], series = [] } = data;
 
-// Manifest del addon
+// 🧩 Manifest base
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "1.0.5",
+  version: "2.0.0",
   name: "Primer Latino",
   description: "Películas y series LATINO desde Real-Debrid y Magnet Links.",
   logo: "https://i.imgur.com/lE2FQIk.png",
@@ -21,19 +22,15 @@ const manifest = {
     { type: "movie", id: "primerlatino_movies", name: "Películas LATINO" },
     { type: "series", id: "primerlatino_series", name: "Series LATINO" }
   ],
-  idPrefixes: ["tt"],
-  behaviorHints: {
-    configurable: true,
-    configurationRequired: false
-  }
+  idPrefixes: ["tt"]
 };
 
-const builder = new addonBuilder(manifest);
-
-// 📚 Obtener datos desde IMDb (OMDb)
+// 🧠 Función para obtener metadata desde IMDb
 async function getMetaFromIMDb(imdbID) {
   try {
-    const res = await axios.get(`https://www.omdbapi.com/?i=${imdbID}&apikey=${process.env.OMDB_API_KEY}`);
+    const res = await axios.get(
+      `https://www.omdbapi.com/?i=${imdbID}&apikey=${process.env.OMDB_API_KEY}`
+    );
     const d = res.data;
     if (!d || d.Response === "False") return null;
 
@@ -53,8 +50,19 @@ async function getMetaFromIMDb(imdbID) {
   }
 }
 
-// 🎬 Catalog Handler
-builder.defineCatalogHandler(async ({ type }) => {
+// 🚀 Servidor Express
+const app = express();
+
+// 📜 MANIFEST con token embebido
+app.get("/realdebrid=:token/manifest.json", (req, res) => {
+  const token = req.params.token.trim();
+  console.log(`🧩 Manifest solicitado con token: ${token.slice(-6)}`);
+  res.json(manifest);
+});
+
+// 🎬 CATALOGO
+app.get("/realdebrid=:token/catalog/:type/:id.json", async (req, res) => {
+  const { type } = req.params;
   try {
     const items = type === "movie" ? movies : series;
     const metas = [];
@@ -62,7 +70,6 @@ builder.defineCatalogHandler(async ({ type }) => {
     for (const item of items) {
       const meta = await getMetaFromIMDb(item.id.split(":")[0]);
       if (!meta) continue;
-
       metas.push({
         id: item.id,
         type: item.type,
@@ -72,166 +79,127 @@ builder.defineCatalogHandler(async ({ type }) => {
       });
     }
 
-    return { metas };
+    res.json({ metas });
   } catch (err) {
     console.error("❌ Catalog Handler:", err);
-    return { metas: [] };
+    res.json({ metas: [] });
   }
 });
 
-// 🔗 Stream Handler con token de usuario + debug detallado
-builder.defineStreamHandler(async ({ id }, req) => {
+// 🔗 STREAM
+app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
+  const { id, token } = req.params;
+  const RD_TOKEN = token.trim();
+
+  console.log(`🛰️ Stream request para: ${id}`);
+  if (!RD_TOKEN) {
+    console.warn("⚠️ Falta token de Real-Debrid");
+    return res.json({
+      streams: [
+        {
+          title: "⚠️ Falta token Real-Debrid",
+          url: "https://stremio-addons-demo.vercel.app/no-stream.mp4"
+        }
+      ]
+    });
+  }
+
   try {
-    console.log("🛰️ Stream request para:", id);
-
-    // 1️⃣ Obtener token de forma segura, incluso si req no existe
-    let token = null;
-    try {
-      const fullUrl =
-        req?.url && req?.headers?.host
-          ? new URL(req.url, `http://${req.headers.host}`)
-          : new URL(request?.url || "http://localhost"); // fallback
-      token = fullUrl.searchParams.get("token");
-    } catch {
-      // fallback si viene directo desde navegador
-      const raw = id.includes("?token=") ? id.split("?token=")[1] : null;
-      token = raw ? raw.trim() : null;
-    }
-
-    if (!token) {
-      console.warn("⚠️ Falta token de Real-Debrid");
-      return {
-        streams: [
-          {
-            title: "⚠️ Falta token Real-Debrid (?token=...)",
-            url: "https://stremio-addons-demo.vercel.app/no-stream.mp4"
-          }
-        ]
-      };
-    }
-
-    const headers = { Authorization: `Bearer ${token}` };
-    console.log("🧩 Token activo recibido:", token.slice(-6));
-
-    // 2️⃣ Buscar la película/serie en el JSON
-    const found =
-      movies.find((m) => m.id === id) || series.find((s) => s.id === id);
+    const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
     if (!found) {
-      console.warn("⚠️ No se encontró ID:", id);
-      return { streams: [] };
+      console.warn("❌ No se encontró el hash en movies.json");
+      return res.json({ streams: [] });
     }
 
-    console.log("🎬 Encontrado en catálogo:", found.title, "HASH:", found.hash);
+    const magnet = `magnet:?xt=urn:btih:${found.hash}&tr=udp://tracker.opentrackr.org:1337/announce`;
 
-    const magnet = `magnet:?xt=urn:btih:${found.hash}`;
     let rdLink = null;
 
-    // 3️⃣ Intentar generar enlace Real-Debrid
+    // Subir magnet a Real-Debrid con el token del usuario
     try {
-      console.log("📡 Enviando magnet a RD...");
+      // Paso 1: Subir el magnet
       const addMag = await axios.post(
         "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
         new URLSearchParams({ magnet }),
-        { headers }
+        { headers: { Authorization: `Bearer ${RD_TOKEN}` } }
       );
 
-      console.log("✅ Torrent agregado, ID:", addMag.data.id);
-
+      // Paso 2: Obtener info
       const info = await axios.get(
         `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-        { headers }
+        { headers: { Authorization: `Bearer ${RD_TOKEN}` } }
       );
 
-      const file = info.data.files?.find((f) =>
-        /\.(mp4|mkv|avi)$/i.test(f.path)
-      );
-      if (!file) throw new Error("⚠️ No se encontró archivo reproducible");
+      const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
+      if (!file) throw new Error("No se encontró archivo reproducible.");
 
-      console.log("🎞️ Archivo seleccionado:", file.path);
-
+      // Paso 3: Seleccionar archivo
       await axios.post(
         `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
         new URLSearchParams({ files: file.id }),
-        { headers }
+        { headers: { Authorization: `Bearer ${RD_TOKEN}` } }
       );
 
-      console.log("✅ Archivos seleccionados, obteniendo enlaces...");
-
+      // Paso 4: Obtener enlace directo
       const dl = await axios.get(
         `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-        { headers }
+        { headers: { Authorization: `Bearer ${RD_TOKEN}` } }
       );
 
-      const link = dl.data?.links?.[0];
-      if (!link) throw new Error("⚠️ Real-Debrid no devolvió enlaces válidos");
-
-      console.log("🔗 Link RD encontrado, liberando...");
-
-      const unrestricted = await axios.post(
-        "https://api.real-debrid.com/rest/1.0/unrestrict/link",
-        new URLSearchParams({ link }),
-        { headers }
-      );
-
-      rdLink = unrestricted?.data?.download || null;
-
-      console.log("✅ Link final obtenido:", rdLink);
+      if (dl.data.links && dl.data.links[0]) {
+        const unrestricted = await axios.post(
+          "https://api.real-debrid.com/rest/1.0/unrestrict/link",
+          new URLSearchParams({ link: dl.data.links[0] }),
+          { headers: { Authorization: `Bearer ${RD_TOKEN}` } }
+        );
+        rdLink = unrestricted.data.download;
+      }
     } catch (err) {
-      console.error("💥 Error en flujo Real-Debrid:", err.response?.data || err.message);
+      console.warn("⚠️ Real-Debrid Error:", err.response?.data || err.message);
     }
 
-    // 4️⃣ Devolver stream
-    if (!rdLink) {
-      console.warn("⚠️ No se generó enlace válido (posible token o hash inválido)");
-      return {
-        streams: [
-          {
-            title: "⚠️ No se generó enlace válido (verifica token o hash)",
-            url: "https://stremio-addons-demo.vercel.app/no-stream.mp4"
-          }
-        ]
-      };
-    }
-
-    return {
+    // Si todo falla, devolver magnet
+    res.json({
       streams: [
         {
           title: `${found.language} • ${found.quality}`,
-          url: rdLink
+          url: rdLink || magnet
         }
       ]
-    };
+    });
   } catch (err) {
     console.error("❌ Stream Handler (Error general):", err.message);
-    return {
+    res.json({
       streams: [
         {
           title: "❌ Error interno del addon",
           url: "https://stremio-addons-demo.vercel.app/no-stream.mp4"
         }
       ]
-    };
+    });
   }
 });
 
-// 🧠 Meta Handler
-builder.defineMetaHandler(async ({ id }) => {
+// 🧠 META
+app.get("/realdebrid=:token/meta/:type/:id.json", async (req, res) => {
+  const { id } = req.params;
   try {
     const imdbID = id.split(":")[0];
     const meta = await getMetaFromIMDb(imdbID);
-    if (!meta) return { meta: { id, name: "No encontrado" } };
-    return { meta };
+    if (!meta) return res.json({ meta: { id, name: "No encontrado" } });
+    res.json({ meta });
   } catch (err) {
     console.error("❌ Meta Handler:", err);
-    return { meta: { id, name: "Error al obtener metadatos" } };
+    res.json({ meta: { id, name: "Error al obtener metadatos" } });
   }
 });
-
-// 🚀 Servidor
-const PORT = process.env.PORT || 7000;
-serveHTTP(builder.getInterface(), { port: PORT });
-console.log(`✅ Primer Latino Addon corriendo en puerto ${PORT}`);
 
 // 🧱 Errores globales
 process.on("unhandledRejection", (reason) => console.error("⚠️ Unhandled:", reason));
 process.on("uncaughtException", (err) => console.error("⚠️ Uncaught:", err));
+
+// 🚀 Iniciar servidor
+const PORT = process.env.PORT || 7000;
+app.listen(PORT, () =>
+  console.log(`✅ Primer Latino Addon corriendo en puerto ${PORT}`)
+);
