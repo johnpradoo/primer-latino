@@ -133,6 +133,17 @@
       "type": "movie"
     },
     {
+      "id": "tt4216984",
+      "title": "Hombre lobo",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "4CDDE435D66CDDB9D93C15CCC3DBC27EB2456562",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/k6VBhNc66CdGTEdw7sR7GBt7AFY.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt32063098",
       "title": "Maldita suerte",
       "quality": "1080p WEB-DL",
