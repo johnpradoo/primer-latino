@@ -221,6 +221,17 @@
       "type": "movie"
     },
     {
+      "id": "tt8350360",
+      "title": "Annabelle 3: Viene a casa",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "B595992A9480EA67E9FF24C641A930622C5B121D",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/zxwPksbRKGaAi06rapPfFTVsMHv.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt10676052",
       "title": "Los 4 fantásticos: primeros pasos",
       "quality": "4K | Dolby Vision | Dolby Atmos",
@@ -229,6 +240,17 @@
       "hash": "C06CC01EEF27452E57F4997FC3A430C1BDC26899",
       "status": "aprobado",
       "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/ckfiXWGEMWrUP53cc6QyHijLlhl.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt6320628",
+      "title": "Spider-Man: Lejos de casa",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "721E96EAF9349A1547AD23CA27A06F9A20130CDF",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/o59zDVJDIehGcWZsMUGU5SN0V0D.jpg",
       "type": "movie"
     },
     {
