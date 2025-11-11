@@ -571,6 +571,17 @@
       "status": "aprobado",
       "poster": "https://image.tmdb.org/t/p/w1280/hTj8x0ElKldJyAjTYvaqxkQNxxN.jpg",
       "type": "movie"
+    },
+    {
+      "id": "tt1630029",
+      "title": "Avatar: El Camino Del Agua",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "344ADFF7761C7021002B9C3CBF32FCC2012BFE29",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/8htEc0NimXTzTDdxScpCupdSgT9.jpg",
+      "type": "movie"
     }
   ],
   "series": [
