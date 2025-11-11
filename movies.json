@@ -527,6 +527,50 @@
       "status": "aprobado",
       "poster": "https://image.tmdb.org/t/p/w1280/nyloao2GWttUvS7KVcEM2eSDwUn.jpg",
       "type": "movie"
+    },
+    {
+      "id": "tt6644200",
+      "title": "Un lugar en silencio",
+      "quality": "4K | HDR | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "9C5DEF95F180CC4C96295D646658F1EF7D9C660F",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/t2vTV22xZJwqpdxepNLZWeVTkjV.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt8332922",
+      "title": "Un lugar en silencio: Parte II",
+      "quality": "1080p | FULL-HD | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "31E33FCE25B2CED026218600EAF42CC972A186B9",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/6uRb5axnwAd17h4ak4ENHcJqHVr.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt13433802",
+      "title": "Un Lugar En Silencio: Día Uno",
+      "quality": "4K | HDR | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "E08F9F31E22B282D36F576C7CFCDF107A725A4A0",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/6efQJ7pu9GPketUDBAhJtgZLkvD.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt1312221",
+      "title": "Frankenstein",
+      "quality": "1080p | WED-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "B1FB5A53C92C954AEBD2A381D759B7A3721979C7",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/hTj8x0ElKldJyAjTYvaqxkQNxxN.jpg",
+      "type": "movie"
     }
   ],
   "series": [
