@@ -34,6 +34,17 @@
       "type": "movie"
     },
     {
+      "id": "tt3566834",
+      "title": "Una Película de Minecraft",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "E7B81C1187ADCB84C2091D67E48B0A678B80F609",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/mFjtmmh4RtK9tLv1aPnUsl6st3m.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt30955489",
       "title": "Until Dawn: Noche de terror",
       "quality": "4K | Dolby Vision | Dolby Atmos",
