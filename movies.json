@@ -1,6 +1,17 @@
 {
   "movies": [
     {
+      "id": "tt28671344",
+      "title": "Los extraños: capítulo 2",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "7B7CC9869155546ECB45AC42DAC2248950B060A0",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/n15p8S1ISkIm30w6H8mHGdGJCWe.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt31425731",
       "title": "Un dia fuera de control",
       "quality": "1080p | WEB-DL | Dolby Atmos",
