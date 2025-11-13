@@ -397,6 +397,17 @@
       "type": "movie"
     },
     {
+      "id": "tt28996126",
+      "title": "Nadie 2",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "0029A91FFAF11B474933660A41F7ADD80F58CFE7",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/qwdBh0102NX5fslXv3L9MSlXqKc.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt31184028",
       "title": "Together: Juntos Hasta La Muerte",
       "quality": "1080p | WEB-DLL | Dolby Atmos",
