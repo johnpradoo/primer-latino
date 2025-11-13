@@ -122,6 +122,17 @@
       "type": "movie"
     },
     {
+      "id": "tt17676734",
+      "title": "Americana",
+      "quality": "1080p | FullHD | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "49AEA9019F00E9D4AE351FE4593A5B608693303F",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/83Gis9pOKCvAdaKXCNChey4IZyL.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt27075958",
       "title": "La fuente de la juventud",
       "quality": "4K | Dolby Vision | Dolby Atmos",
