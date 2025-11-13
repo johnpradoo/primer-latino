@@ -1,173 +1,277 @@
-const express = require("express");
-const axios = require("axios");
-const fs = require("fs");
+import pkg from "stremio-addon-sdk";
+const { addonBuilder, serveHTTP } = pkg;
+import express from "express";
+import fs from "fs";
+import axios from "axios";
 
-const app = express();
-app.use(express.json());
+/* ───────────────────────────────────────────────
+    1. CARGAR ARCHIVOS JSON (movies, series, episodes)
+─────────────────────────────────────────────── */
 
-// ✅ CORS y JSON
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  res.type("application/json");
-  next();
-});
+let movies = [];
+let series = [];
+let episodes = [];
 
-// 🧩 Prueba rápida
-app.get("/", (req, res) => {
-  res.json({ status: "OK", message: "Servidor activo de Primer Latino Addon" });
-});
+function loadData() {
+  try {
+    movies = JSON.parse(fs.readFileSync("./movies.json"));
+  } catch {
+    movies = [];
+  }
 
-// Leer catálogo local
-const data = JSON.parse(fs.readFileSync("./movies.json", "utf-8"));
-const { movies = [], series = [] } = data;
+  try {
+    series = JSON.parse(fs.readFileSync("./series.json"));
+  } catch {
+    series = [];
+  }
 
-// Manifest base
+  try {
+    episodes = JSON.parse(fs.readFileSync("./episodes.json"));
+  } catch {
+    episodes = [];
+  }
+
+  console.log("📁 Datos cargados:");
+  console.log("Películas:", movies.length);
+  console.log("Series:", series.length);
+  console.log("Episodios:", episodes.length);
+}
+
+loadData();
+
+/* ───────────────────────────────────────────────
+    2. MANIFEST
+─────────────────────────────────────────────── */
+
 const manifest = {
-  id: "org.primerlatino.addon",
-  version: "2.0.2",
+  id: "org.primerlatino",
+  version: "3.0.0",
   name: "Primer Latino",
-  description: "Películas y series LATINO desde Real-Debrid (token en URL).",
-  logo: "https://i.imgur.com/lE2FQIk.png",
-  background: "https://i.imgur.com/lE2FQIk.png",
+  description: "Addon de películas y series con soporte Real-Debrid multiusuario",
+  resources: ["catalog", "meta", "stream"],
   types: ["movie", "series"],
-  resources: ["catalog", "stream", "meta"],
   catalogs: [
-    { type: "movie", id: "primerlatino_movies", name: "Películas LATINO" },
-    { type: "series", id: "primerlatino_series", name: "Series LATINO" }
-  ],
-  idPrefixes: ["tt"]
+    { type: "movie", id: "pl_movies", name: "Primer Latino • Películas" },
+    { type: "series", id: "pl_series", name: "Primer Latino • Series" }
+  ]
 };
 
-// Manifest dinámico
-app.get("/realdebrid=:token/manifest.json", (req, res) => {
-  const token = req.params.token.trim();
-  console.log(`🧩 Manifest solicitado (token: ${token.slice(0, 6)}...)`);
+/* ───────────────────────────────────────────────
+    3. FUNCIÓN REAL-DEBRID (SIN LIBRERÍAS EXTERNAS)
+─────────────────────────────────────────────── */
+
+async function getRDLink(token, infoHash) {
+  const headers = { Authorization: `Bearer ${token}` };
+
+  try {
+    // 1) Ver si ya existe el torrent
+    const list = await axios.get(
+      "https://api.real-debrid.com/rest/1.0/torrents",
+      { headers }
+    );
+
+    const found = list.data.find(
+      (t) => t.hash.toLowerCase() === infoHash.toLowerCase()
+    );
+
+    let torrentId;
+
+    // 2) Si existe, usarlo
+    if (found) {
+      torrentId = found.id;
+    } else {
+      // 3) Crear nuevo torrent
+      const add = await axios.post(
+        "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
+        new URLSearchParams({
+          magnet: `magnet:?xt=urn:btih:${infoHash}`
+        }),
+        { headers }
+      );
+      torrentId = add.data.id;
+    }
+
+    // 4) Obtener info
+    const info = await axios.get(
+      `https://api.real-debrid.com/rest/1.0/torrents/info/${torrentId}`,
+      { headers }
+    );
+
+    const file = info.data.files.find((f) =>
+      /\.(mp4|mkv|avi)$/i.test(f.path)
+    );
+
+    if (!file) return null;
+
+    // 5) Seleccionar archivo
+    await axios.post(
+      `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${torrentId}`,
+      new URLSearchParams({ files: file.id }),
+      { headers }
+    );
+
+    const info2 = await axios.get(
+      `https://api.real-debrid.com/rest/1.0/torrents/info/${torrentId}`,
+      { headers }
+    );
+
+    const link = info2.data.links?.[0];
+    if (!link) return null;
+
+    // 6) Desbloquear link
+    const unrestricted = await axios.post(
+      "https://api.real-debrid.com/rest/1.0/unrestrict/link",
+      new URLSearchParams({ link }),
+      { headers }
+    );
+
+    return unrestricted.data.download;
+  } catch (err) {
+    console.log("⚠️ RD Error:", err.response?.data || err.message);
+    return null;
+  }
+}
+
+/* ───────────────────────────────────────────────
+    4. BUILDER DEL ADDON
+─────────────────────────────────────────────── */
+
+const builder = new addonBuilder(manifest);
+
+/* ───────────────────────────────────────────────
+    5. CATALOGO (MOVIES & SERIES)
+─────────────────────────────────────────────── */
+
+builder.defineCatalogHandler(({ type }) => {
+  if (type === "movie") {
+    return Promise.resolve({
+      metas: movies.map((m) => ({
+        id: m.id,
+        type: "movie",
+        name: m.title,
+        poster: m.poster
+      }))
+    });
+  }
+
+  if (type === "series") {
+    return Promise.resolve({
+      metas: series.map((s) => ({
+        id: s.id,
+        type: "series",
+        name: s.title,
+        poster: s.poster
+      }))
+    });
+  }
+
+  return Promise.resolve({ metas: [] });
+});
+
+/* ───────────────────────────────────────────────
+    6. META-HANDLER (SERIES → EPISODIOS)
+─────────────────────────────────────────────── */
+
+builder.defineMetaHandler(({ type, id }) => {
+  if (type === "movie") {
+    const movie = movies.find((m) => m.id === id);
+    if (!movie) return Promise.resolve({ meta: {} });
+
+    return Promise.resolve({
+      meta: {
+        id: movie.id,
+        type: "movie",
+        name: movie.title,
+        poster: movie.poster,
+        videos: [
+          {
+            id: movie.id,
+            title: movie.title
+          }
+        ]
+      }
+    });
+  }
+
+  if (type === "series") {
+    const serie = series.find((s) => s.id === id);
+    if (!serie) return Promise.resolve({ meta: {} });
+
+    const eps = episodes
+      .filter((e) => e.id === id)
+      .map((e) => ({
+        id: `${e.id}:${e.season}:${e.episode}`,
+        title: `S${e.season} • E${e.episode} (${e.quality})`,
+        season: e.season,
+        episode: e.episode
+      }));
+
+    return Promise.resolve({
+      meta: {
+        id: serie.id,
+        type: "series",
+        name: serie.title,
+        poster: serie.poster,
+        videos: eps
+      }
+    });
+  }
+
+  return Promise.resolve({ meta: {} });
+});
+
+/* ───────────────────────────────────────────────
+    7. STREAM HANDLER (EPISODIOS)
+─────────────────────────────────────────────── */
+
+builder.defineStreamHandler(async ({ id }) => {
+  const [userToken, fullId] = id.split("/");
+
+  if (!userToken || userToken.length < 10) {
+    return {
+      streams: [
+        {
+          title: "🔒 Debes ingresar tu token de Real-Debrid",
+          url: "https://johnpradoo.github.io/primer-latino-page/"
+        }
+      ]
+    };
+  }
+
+  const [serieId, season, episode] = fullId.split(":");
+
+  const ep = episodes.find(
+    (e) =>
+      e.id === serieId &&
+      e.season == season &&
+      e.episode == episode
+  );
+
+  if (!ep) return { streams: [] };
+
+  const link = await getRDLink(userToken, ep.hash);
+
+  return {
+    streams: [
+      {
+        title: `S${season}E${episode} • ${ep.quality}`,
+        url: link
+      }
+    ]
+  };
+});
+
+/* ───────────────────────────────────────────────
+    8. SERVIDOR EXPRESS
+─────────────────────────────────────────────── */
+
+const app = express();
+
+app.get(["/manifest.json", "/:token/manifest.json"], (req, res) => {
+  res.setHeader("Content-Type", "application/json");
   res.json(manifest);
 });
 
-// Catálogo
-app.get("/realdebrid=:token/catalog/:type/:id.json", (req, res) => {
-  const { type } = req.params;
-  const items = type === "movie" ? movies : series;
-  const metas = items.map(item => ({
-    id: item.id,
-    type: item.type,
-    name: `${item.title} (${item.quality})`,
-    poster: item.poster,
-    description: `Idioma: ${item.language} • ${item.codec}`
-  }));
-  res.json({ metas });
-});
+serveHTTP(builder.getInterface(), { app, port: process.env.PORT || 10000 });
 
-// 🎬 STREAM HANDLER CON TOKEN DEL USUARIO
-app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
-  const { id, token } = req.params;
-  const RD_TOKEN = token.trim();
-
-  console.log(`🛰️ Stream request para: ${id} con token ${RD_TOKEN.slice(0, 6)}...`);
-
-  if (!RD_TOKEN) {
-    return res.json({
-      streams: [
-        {
-          title: "⚠️ Falta token de Real-Debrid",
-          url: "https://stremio-addons-demo.vercel.app/no-stream.mp4"
-        }
-      ]
-    });
-  }
-
-  const found = movies.find((m) => m.id === id) || series.find((s) => s.id === id);
-  if (!found) {
-    return res.json({
-      streams: [
-        {
-          title: "❌ No encontrado en catálogo",
-          url: "https://stremio-addons-demo.vercel.app/no-stream.mp4"
-        }
-      ]
-    });
-  }
-
-  const magnet = `magnet:?xt=urn:btih:${found.hash}`;
-
-  try {
-    // Paso 1: subir magnet al usuario
-    const addMag = await axios.post(
-      "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
-      new URLSearchParams({ magnet }),
-      { headers: { Authorization: `Bearer ${RD_TOKEN}` } }
-    );
-
-    // Paso 2: obtener info del torrent
-    const info = await axios.get(
-      `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-      { headers: { Authorization: `Bearer ${RD_TOKEN}` } }
-    );
-
-    const file = info.data.files.find((f) => /\.(mp4|mkv|avi)$/i.test(f.path));
-    if (!file) throw new Error("No se encontró archivo reproducible");
-
-    // Paso 3: seleccionar archivo
-    await axios.post(
-      `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${addMag.data.id}`,
-      new URLSearchParams({ files: file.id }),
-      { headers: { Authorization: `Bearer ${RD_TOKEN}` } }
-    );
-
-    // Paso 4: obtener link liberado
-    const dl = await axios.get(
-      `https://api.real-debrid.com/rest/1.0/torrents/info/${addMag.data.id}`,
-      { headers: { Authorization: `Bearer ${RD_TOKEN}` } }
-    );
-
-    if (!dl.data.links || !dl.data.links[0]) throw new Error("No se generó link de descarga");
-
-    const unrestricted = await axios.post(
-      "https://api.real-debrid.com/rest/1.0/unrestrict/link",
-      new URLSearchParams({ link: dl.data.links[0] }),
-      { headers: { Authorization: `Bearer ${RD_TOKEN}` } }
-    );
-
-    const streamUrl = unrestricted.data.download;
-
-    console.log("✅ Stream liberado:", streamUrl);
-
-    res.json({
-      streams: [
-        {
-          title: `🎞️ ${found.title} • ${found.quality}`,
-          url: streamUrl
-        }
-      ]
-    });
-  } catch (err) {
-    console.error("❌ Error en Real-Debrid:", err.response?.data || err.message);
-    res.json({
-      streams: [
-        {
-          title: "❌ Error al liberar stream",
-          url: "https://stremio-addons-demo.vercel.app/no-stream.mp4"
-        }
-      ]
-    });
-  }
-});
-
-// Meta simple
-app.get("/realdebrid=:token/meta/:type/:id.json", (req, res) => {
-  const { id } = req.params;
-  res.json({
-    meta: {
-      id,
-      name: "Película LATINO",
-      type: "movie",
-      poster: "https://i.imgur.com/lE2FQIk.png"
-    }
-  });
-});
-
-// Iniciar servidor
-const PORT = process.env.PORT || 7000;
-app.listen(PORT, () => console.log(`✅ Addon activo en puerto ${PORT}`));
+console.log("🔥 PRIMER LATINO LISTO — PUERTO:", process.env.PORT || 10000);
