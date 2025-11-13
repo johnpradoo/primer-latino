@@ -1,6 +1,17 @@
 {
   "movies": [
     {
+      "id": "tt31425731",
+      "title": "Un dia fuera de control",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "5F84DC1CF55CA66B2C976B95B258B605390751F4",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/nWprcqzpw41jslTgGrGcf4QhZ7Z.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt32843349",
       "title": "Lo siento, cariño",
       "quality": "1080p | WEB-DL | Dolby Atmos",
@@ -97,6 +108,17 @@
       "hash": "1CD6D15A56AF95124764754C987D9A5F2CA8BFCE",
       "status": "aprobado",
       "poster": "https://image.tmdb.org/t/p/w1280/9bhDUyOCrcwPLKbPyHM4uKOa65T.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt32299316",
+      "title": "Animales Peligrosos",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "1D34E1ECFAF3E8860F5716F72DD3DC0F50B51CEE",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/g503dkeJY67PK3lGhN6yZ6J1zbU.jpg",
       "type": "movie"
     },
     {
