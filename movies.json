@@ -974,6 +974,45 @@
     "status": "aprobado",
     "poster": "https://image.tmdb.org/t/p/w1280/2RVFksm4DF17XZSXMVbNh1qDSOr.jpg",
     "type": "series"
+    },
+    {
+    "id": "tt30444310:1:1",
+    "title": "Matabot (2025)",
+    "season": 1,
+    "episode": 1,
+    "quality": "1080p WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "88DFD05968ED181561CA5C3BB2A94A586B141A7F",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/4LRVCaeFLmQOCd05jSaZE5N8Wi.jpg",
+    "type": "series"
+    },
+    {
+    "id": "tt30444310:1:2",
+    "title": "Matabot (2025)",
+    "season": 1,
+    "episode": 2,
+    "quality": "1080p WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "615A88B2873014864CC32786BA7AEA8FF9205CEB",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/4LRVCaeFLmQOCd05jSaZE5N8Wi.jpg",
+    "type": "series"
+    },
+    {
+    "id": "tt30444310:1:3",
+    "title": "Matabot (2025)",
+    "season": 1,
+    "episode": 3,
+    "quality": "1080p WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "615A88B2873014864CC32786BA7AEA8FF9205CEB",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/4LRVCaeFLmQOCd05jSaZE5N8Wi.jpg",
+    "type": "series"
     }
 ]
 }
