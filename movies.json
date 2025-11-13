@@ -78,6 +78,17 @@
       "type": "movie"
     },
     {
+      "id": "tt32621553",
+      "title": "Dora y la búsqueda del Sol Dorado (2025)",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "E816992B02D451C86C8BDBA4D5310F2178A6AA13",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/sVLSOnGfNXj7VVGBgOz5cNa0lDz.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt21103218",
       "title": "A través del fuego",
       "quality": "1080p | WEB-DL | Dolby Atmos",
@@ -119,6 +130,17 @@
       "hash": "7F82BD8BE7C6D88C0B0DFB8494DBDA14E76C9A10",
       "status": "aprobado",
       "poster": "https://image.tmdb.org/t/p/w1280/2VQ6GLJh9GkFDMLwBw5zJPzoU0F.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt20969586",
+      "title": "Thunderbolts*",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "9C4BFDA78203D764DEC7824B366DA1D9599A6B1C",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/zLbhKNJGDSfBCXFNtypM7ZuPTaW.jpg",
       "type": "movie"
     },
     {
