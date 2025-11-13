@@ -155,6 +155,17 @@
       "type": "movie"
     },
     {
+      "id": "tt0816692",
+      "title": "Interestelar",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "EDC74AE0675EA4F67DE0B11F0EBE7E0D362E6F07",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/fbUwSqYIP0isCiJXey3staY3DNn.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt1396484",
       "title": "It (Eso)",
       "quality": "4K | Dolby Vision | Dolby Atmos",
