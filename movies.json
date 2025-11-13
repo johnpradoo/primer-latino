@@ -188,6 +188,28 @@
       "type": "movie"
     },
     {
+      "id": "tt1160419",
+      "title": "Duna",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "1B4BB824271CD0FE222708648DEE8F0938586BDD",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/70LHeeN5Nw9sdeQXiqvUeaVZVDr.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt15239678",
+      "title": "Duna: Parte Dos",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "2B7063641D134DC6FB507A923F0A6896392C2971",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/v2NN1TMK3ifuiEyawa3ukkcSOUQ.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt32299316",
       "title": "Animales Peligrosos",
       "quality": "1080p | WEB-DL | Dolby Atmos",
