@@ -838,6 +838,19 @@
     "status": "aprobado",
     "poster": "https://image.tmdb.org/t/p/w1280/vC6LSYC8uhZPkPM01L6HKrr1lMD.jpg",
     "type": "series"
+    },
+    {
+    "id": "tt13207736:1:1",
+    "title": "Monstruos: La historia de Lyle y Erik Menendez (2024)",
+    "season": 1,
+    "episode": 1,
+    "quality": "1080p WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "CECE501FD9034D8F96A136CBECB8DB5B781484C7",
+    "status": "aprobado",
+    "poster": "https://image.tmdb.org/t/p/w1280/2RVFksm4DF17XZSXMVbNh1qDSOr.jpg",
+    "type": "series"
     }
 ]
 }
