@@ -821,6 +821,19 @@
     "type": "series"
     },
     {
+    "id": "tt29457135:1:1",
+    "title": "El Monstruo de Florencia",
+    "season": 1,
+    "episode": 1,
+    "quality": "1080p | WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "942659E772DDFFEB80412A9CA4A17A13057F6CC4",
+    "status": "aprobado",
+    "poster": "https://image.tmdb.org/t/p/w1280/qApQlDaVcRKDrMasUFbMy6oQzPU.jpg",
+    "type": "series"
+    },
+    {
     "id": "tt22202452:1:1",
     "title": "Pluribus",
     "season": 1,
