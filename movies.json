@@ -931,6 +931,19 @@
     "type": "series"
     },
     {
+    "id": "tt19244304:1:3",
+    "title": "IT: Welcome to Derry",
+    "season": 1,
+    "episode": 3,
+    "quality": "1080p WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.265",
+    "hash": "DC1B4E72E46DE3FB31AA551E196A5222A318D7DD",
+    "status": "aprobado",
+    "poster": "https://image.tmdb.org/t/p/w1280/vC6LSYC8uhZPkPM01L6HKrr1lMD.jpg",
+    "type": "series"
+    },
+    {
     "id": "tt29457135:1:1",
     "title": "El Monstruo de Florencia",
     "season": 1,
@@ -970,6 +983,19 @@
     "type": "series"
     },
     {
+    "id": "tt22202452:1:3",
+    "title": "Pluribus",
+    "season": 1,
+    "episode": 3,
+    "quality": "1080p WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "2BBAAC2424429227BCD97D387F4E5FFE5C11886D",
+    "status": "aprobado",
+    "poster": "https://image.tmdb.org/t/p/w1280/5OLUjOrgXzXrPl2PEgZGHgpQSO9.jpg",
+    "type": "series"
+    },
+    {
     "id": "tt33550045:1:1",
     "title": "As You Stood By",
     "season": 1,
@@ -980,19 +1006,6 @@
     "hash": "A4E31AAF61B71771773111DBCF7DCA089F97DDAB",
     "status": "aprobado",
     "poster": "https://image.tmdb.org/t/p/w1280/1mCAo5XkkaW67xeF2aAW26HaPFh.jpg",
-    "type": "series"
-    },
-    {
-    "id": "tt19244304:1:3",
-    "title": "IT: Welcome to Derry",
-    "season": 1,
-    "episode": 3,
-    "quality": "1080p WEB-DL | Dolby Atmos",
-    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
-    "codec": "H.265",
-    "hash": "DC1B4E72E46DE3FB31AA551E196A5222A318D7DD",
-    "status": "aprobado",
-    "poster": "https://image.tmdb.org/t/p/w1280/vC6LSYC8uhZPkPM01L6HKrr1lMD.jpg",
     "type": "series"
     },
     {
