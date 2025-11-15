@@ -961,10 +961,10 @@
     "title": "Pluribus",
     "season": 1,
     "episode": 1,
-    "quality": "1080p WEB-DL | Dolby Atmos",
+    "quality": "4K | Dolby Vision | Dolby Atmos",
     "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
-    "codec": "H.264",
-    "hash": "F9A2A2AECB9A250210EB4F6FFA4D1AFC1E1D2DA6",
+    "codec": "H.265",
+    "hash": "9070D4EC06F87E5F8DB434A0C01B124517A07F7B",
     "status": "aprobado",
     "poster": "https://image.tmdb.org/t/p/w1280/5OLUjOrgXzXrPl2PEgZGHgpQSO9.jpg",
     "type": "series"
