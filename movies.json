@@ -188,6 +188,17 @@
       "type": "movie"
     },
     {
+      "id": "tt9682428",
+      "title": "Aguas Siniestras",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "A21ECC1F11516C4F2517FA145361B009581B2F51",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/73wQy0eqijesk0y0wbLUiw5wVZN.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt1396484",
       "title": "It (Eso)",
       "quality": "4K | Dolby Vision | Dolby Atmos",
@@ -954,6 +965,19 @@
     "hash": "942659E772DDFFEB80412A9CA4A17A13057F6CC4",
     "status": "aprobado",
     "poster": "https://image.tmdb.org/t/p/w1280/qApQlDaVcRKDrMasUFbMy6oQzPU.jpg",
+    "type": "series"
+    },
+    {
+    "id": "tt26862142:1:1",
+    "title": "The Last Frontier: Conspiración en Alaska (2025)",
+    "season": 1,
+    "episode": 1,
+    "quality": "1080p | WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "0C1B27BA61F85CC45D430E6EEE9656EDB592EB8C",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/hTq2lnLXxotkI9BPnrwyA3LXA0E.jpg",
     "type": "series"
     },
     {
