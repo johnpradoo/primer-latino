@@ -12,6 +12,17 @@
       "type": "movie"
     },
     {
+      "id": "tt29247040",
+      "title": "Baramulla (2025)",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "FB74C57A14610C69E8C06F2899A0AAE3C4A45621",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/xm5ER19nTk7iuWFaiNRUYe3Zlz.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt31434639",
       "title": "Warfare: Tiempo de guerra",
       "quality": "4K | Dolby Vision | Dolby Atmos",
@@ -31,6 +42,17 @@
       "hash": "BEC90F0438EEDA7FE8BF03E28F9B636FBFA70C9F",
       "status": "aprobado",
       "poster": "https://image.tmdb.org/t/p/w1280/aCh3KvC7abbNex2d4dKMnIeQs3Q.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt30876483",
+      "title": "Extraterritorial (2025)",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "8909358BC7CA14677E12CE63B9766648664EF08A",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/7tWkxxiqraVx1IzYd4DHv6FIvhS.jpg",
       "type": "movie"
     },
     {
@@ -965,6 +987,19 @@
     "hash": "942659E772DDFFEB80412A9CA4A17A13057F6CC4",
     "status": "aprobado",
     "poster": "https://image.tmdb.org/t/p/w1280/qApQlDaVcRKDrMasUFbMy6oQzPU.jpg",
+    "type": "series"
+    },
+    {
+    "id": "tt9737326:1:9",
+    "title": "Invasión",
+    "season": 1,
+    "episode": 9,
+    "quality": "1080p | WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.265",
+    "hash": "FA9891C61B75BB3540CCD255E63D136AFE056ECB",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/2iDGTCLRz1oWxU7cVRDsTqgJv7u.jpg",
     "type": "series"
     },
     {
