@@ -232,6 +232,17 @@
       "type": "movie"
     },
     {
+      "id": "tt1396484",
+      "title": "It (Eso)",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "C465B235D1097926A9EC4ECF8A2B66F597A72352",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/sSrj4lnhrb113DOPEPTaO2jaDk3.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt17676734",
       "title": "Americana",
       "quality": "1080p | FullHD | Dolby Atmos",
@@ -1033,6 +1044,19 @@
     "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
     "codec": "H.264",
     "hash": "FA9891C61B75BB3540CCD255E63D136AFE056ECB",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/2iDGTCLRz1oWxU7cVRDsTqgJv7u.jpg",
+    "type": "series"
+    },
+    {
+    "id": "tt9737326:2:2",
+    "title": "Invasión",
+    "season": 2,
+    "episode": 2,
+    "quality": "1080p | WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "E1A4299544006DE45B0E13F8F6C9FAA9C32FA90D",
     "status": "aprobado",
     "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/2iDGTCLRz1oWxU7cVRDsTqgJv7u.jpg",
     "type": "series"
