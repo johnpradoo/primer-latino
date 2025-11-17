@@ -945,6 +945,17 @@
       "status": "aprobado",
       "poster": "https://image.tmdb.org/t/p/w1280/8htEc0NimXTzTDdxScpCupdSgT9.jpg",
       "type": "movie"
+    },
+    {
+      "id": "tt14445366",
+      "title": "La chica perdida (2025)",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "3479D3B6312CE615C20AFD90F99400966D1F6FCDD",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/cHLTwNaH3jAmrDKZ0Tjy1oZR3T8.jpg",
+      "type": "movie"
     }
   ],
   "series": [
