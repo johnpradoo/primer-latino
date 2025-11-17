@@ -999,6 +999,19 @@
     "type": "series"
     },
     {
+    "id": "tt19244304:1:4",
+    "title": "IT: Welcome to Derry",
+    "season": 1,
+    "episode": 4,
+    "quality": "1080p WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "C457B97DF7875D992EB419A6C9B1429CABDE1114",
+    "status": "aprobado",
+    "poster": "https://image.tmdb.org/t/p/w1280/vC6LSYC8uhZPkPM01L6HKrr1lMD.jpg",
+    "type": "series"
+    },
+    {
     "id": "tt29457135:1:1",
     "title": "El Monstruo de Florencia",
     "season": 1,
