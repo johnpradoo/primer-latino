@@ -21,7 +21,29 @@ const seriesList = JSON.parse(fs.readFileSync(path.join(__dirname, "series.json"
 const episodes = JSON.parse(fs.readFileSync(path.join(__dirname, "episodes.json"), "utf-8")).episodes || [];
 
 // Manifest (igual que antes)
-const manifest = { /* copia tu manifest original aquí, sin cambios */ };
+// Manifest base
+const manifest = {
+  id: "org.primerlatino.addon",
+  version: "2.0.2",
+  name: "Primer Latino",
+  description: "Películas y series LATINO desde Real-Debrid (token en URL).",
+  logo: "https://i.imgur.com/lE2FQIk.png",
+  background: "https://i.imgur.com/lE2FQIk.png",
+  types: ["movie", "series"],
+  resources: ["catalog", "stream", "meta"],
+  catalogs: [
+    { type: "movie", id: "primerlatino_movies", name: "Películas LATINO" },
+    { type: "series", id: "primerlatino_series", name: "Series LATINO" }
+  ],
+  idPrefixes: ["tt"]
+};
+
+// Manifest dinámico
+app.get("/realdebrid=:token/manifest.json", (req, res) => {
+  const token = req.params.token.trim();
+  console.log(`🧩 Manifest solicitado (token: ${token.slice(0, 6)}...)`);
+  res.json(manifest);
+});
 
 // === CACHÉ + UNRESTRICT (misma función brutal que antes) ===
 async function getStreamUrl(hash, token) {
