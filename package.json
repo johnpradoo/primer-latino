@@ -1,6 +1,6 @@
 {
   "name": "primer-latino",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Addon de Stremio con contenido LATINO desde Real-Debrid y Magnet Links.",
   "main": "index.js",
   "scripts": {
