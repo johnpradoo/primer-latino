@@ -45,6 +45,20 @@ app.get("/realdebrid=:token/manifest.json", (req, res) => {
   res.json(manifest);
 });
 
+// Catálogo
+app.get("/realdebrid=:token/catalog/:type/:id.json", (req, res) => {
+  const { type } = req.params;
+  const items = type === "movie" ? movies : series;
+  const metas = items.map(item => ({
+    id: item.id,
+    type: item.type,
+    name: `${item.title} (${item.quality})`,
+    poster: item.poster,
+    description: `Idioma: ${item.language} • ${item.codec}`
+  }));
+  res.json({ metas });
+});
+
 // === CACHÉ + UNRESTRICT (misma función brutal que antes) ===
 async function getStreamUrl(hash, token) {
   const headers = { Authorization: `Bearer ${token}` };
