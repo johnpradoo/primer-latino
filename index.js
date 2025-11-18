@@ -14,22 +14,27 @@ app.use((req, res, next) => {
   next();
 });
 
-// Ruta raíz
 app.get("/", (req, res) => {
-  res.json({ status: "OK", message: "Primer Latino Addon - Versión FINAL funcionando al 100%" });
+  res.json({ status: "OK", message: "Primer Latino Addon FINAL + LOGS activado" });
 });
 
-// Cargar archivos JSON
-const movies = JSON.parse(fs.readFileSync(path.join(__dirname, "movies.json"), "utf-8")).movies || [];
-const seriesList = JSON.parse(fs.readFileSync(path.join(__dirname, "series.json"), "utf-8")).series || [];
-const episodes = JSON.parse(fs.readFileSync(path.join(__dirname, "episodes.json"), "utf-8")).episodes || [];
+// Cargar JSONs
+let movies = [], seriesList = [], episodes = [];
+try {
+  movies = JSON.parse(fs.readFileSync(path.join(__dirname, "movies.json"), "utf-8")).movies || [];
+  seriesList = JSON.parse(fs.readFileSync(path.join(__dirname, "series.json"), "utf-8")).series || [];
+  episodes = JSON.parse(fs.readFileSync(path.join(__dirname, "episodes.json"), "utf-8")).episodes || [];
+  console.log(`Cargados: ${movies.length} películas | ${seriesList.length} series | ${episodes.length} episodios`);
+} catch (err) {
+  console.error("ERROR al cargar JSONs:", err.message);
+}
 
 // MANIFEST
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "3.2.0",
+  version: "4.0.0",
   name: "Primer Latino",
-  description: "Películas y series LATINO con Real-Debrid - Sin duplicados",
+  description: "Películas y series LATINO - 100% funcional",
   logo: "https://i.imgur.com/lE2FQIk.png",
   background: "https://i.imgur.com/lE2FQIk.png",
   types: ["movie", "series"],
@@ -41,72 +46,59 @@ const manifest = {
   idPrefixes: ["tt"]
 };
 
-// Manifest con token
-app.get("/realdebrid=:token/manifest.json", (req, res) => {
-  res.json(manifest);
-});
+app.get("/realdebrid=:token/manifest.json", (req, res) => res.json(manifest));
 
-// Catálogo películas
+// CATÁLOGO PELÍCULAS
 app.get("/realdebrid=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
+  console.log("Catálogo de películas solicitado");
   const metas = movies.map(m => ({
     id: m.id,
     type: "movie",
     name: m.title + (m.quality ? ` (${m.quality.split("|")[0].trim()})` : ""),
-    poster: m.poster
+    poster: m.poster || "https://i.imgur.com/lE2FQIk.png"
   }));
   res.json({ metas });
 });
 
-// Catálogo series (solo una vez por serie)
+// CATÁLOGO SERIES (una sola vez)
 app.get("/realdebrid=:token/catalog/series/primerlatino_series.json", (req, res) => {
+  console.log("Catálogo de series solicitado");
   const metas = seriesList.map(s => ({
     id: s.id,
     type: "series",
     name: s.title,
-    poster: s.poster
+    poster: s.poster || "https://i.imgur.com/lE2FQIk.png"
   }));
   res.json({ metas });
 });
 
-// Meta películas
+// META PELÍCULAS
 app.get("/realdebrid=:token/meta/movie/:id.json", (req, res) => {
-  const movie = movies.find(m => m.id === req.params.id);
-  if (!movie) return res.json({ meta: null });
-  res.json({
-    meta: {
-      id: movie.id,
-      type: "movie",
-      name: movie.title,
-      poster: movie.poster
-    }
-  });
+  console.log(`Meta película: ${req.params.id}`);
+  const m = movies.find(x => x.id === req.params.id);
+  if (!m) return res.json({ meta: null });
+  res.json({ meta: { id: m.id, type: "movie", name: m.title, poster: m.poster } });
 });
 
-// Meta series (muestra temporadas y episodios)
+// META SERIES (con temporadas y episodios)
 app.get("/realdebrid=:token/meta/series/:id.json", (req, res) => {
+  console.log(`Meta serie: ${req.params.id}`);
   const baseId = req.params.id.split(":")[0];
   const serie = seriesList.find(s => s.id === baseId);
   if (!serie) return res.json({ meta: null });
 
   const seasonMap = {};
-  episodes
-    .filter(e => e.id.startsWith(baseId + ":"))
-    .forEach(e => {
-      const parts = e.id.split(":");
-      const season = parseInt(parts[1]);
-      const episode = parseInt(parts[2]);
-      if (!seasonMap[season]) seasonMap[season] = [];
-      seasonMap[season].push({
-        id: e.id,
-        title: `Episodio ${episode}`,
-        episode: episode
-      });
-    });
+  episodes.filter(e => e.id.startsWith(baseId + ":")).forEach(e => {
+    const [ , seasonStr, episodeStr ] = e.id.split(":");
+    const season = parseInt(seasonStr);
+    const episode = parseInt(episodeStr);
+    if (!seasonMap[season]) seasonMap[season] = [];
+    seasonMap[season].push({ id: e.id, title: `Episodio ${episode}`, episode });
+  });
 
   const videos = {};
-  Object.keys(seasonMap).sort((a, b) => a - b).forEach(season => {
-    seasonMap[season].sort((a, b) => a.episode - b.episode);
-    videos[season] = { "0": seasonMap[season] };
+  Object.keys(seasonMap).sort((a,b)=>a-b).forEach(s => {
+    videos[s] = { "0": seasonMap[s].sort((a,b)=>a.episode-b.episode) };
   });
 
   res.json({
@@ -115,67 +107,61 @@ app.get("/realdebrid=:token/meta/series/:id.json", (req, res) => {
       type: "series",
       name: serie.title,
       poster: serie.poster,
-      videos: videos
+      videos
     }
   });
 });
 
-// Streams (películas y episodios)
+// STREAMS (con logs detallados)
 app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
-  const { token, id, type } = req.params;
-  const RD_TOKEN = token.trim();
+  const { token, type, id } = req.params;
+  console.log(`STREAM solicitado → ${type} ${id}`);
 
-  let item = null;
-  if (type === "movie") {
-    item = movies.find(m => m.id === id);
-  } else {
-    item = episodes.find(e => e.id === id);
-  }
+  const item = type === "movie" 
+    ? movies.find(m => m.id === id)
+    : episodes.find(e => e.id === id);
 
   if (!item || !item.hash) {
+    console.log("Item o hash no encontrado");
     return res.json({ streams: [] });
   }
 
   try {
     const magnet = `magnet:?xt=urn:btih:${item.hash}`;
-    const addRes = await axios.post(
-      "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
+    console.log(`Añadiendo magnet ${item.hash}...`);
+
+    const add = await axios.post("https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
       new URLSearchParams({ magnet }),
-      { headers: { Authorization: `Bearer ${RD_TOKEN}` } }
+      { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
     );
 
-    const torrentId = addRes.data.id;
-    let info = addRes.data;
+    const torrentId = add.data.id;
+    let info = add.data;
 
-    // Esperar a que esté listo
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 20; i++) {
       if (info.status === "downloaded") break;
       await new Promise(r => setTimeout(r, 3000));
-      info = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentId}`, {
-        headers: { Authorization: `Bearer ${RD_TOKEN}` }
-      })).data;
+      info = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )).data;
+      console.log(`Estado torrent: ${info.status} (${i+1}/20)`);
     }
 
     if (info.status !== "downloaded" || !info.links?.[0]) {
+      console.log("Torrent no descargado o sin links");
       return res.json({ streams: [] });
     }
 
-    // Unrestrict link
-    const unrestricted = await axios.post(
-      "https://api.real-debrid.com/rest/1.0/unrestrict/link",
+    const link = await axios.post("https://api.real-debrid.com/rest/1.0/unrestrict/link",
       new URLSearchParams({ link: info.links[0] }),
-      { headers: { Authorization: `Bearer ${RD_TOKEN}` } }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    res.json({
-      streams: [{
-        title: item.title || "LATINO",
-        url: unrestricted.data.download
-      }]
-    });
+    console.log(`LINK LIBERADO: ${link.data.download.substring(0, 60)}...`);
+    res.json({ streams: [{ title: "LATINO • Real-Debrid", url: link.data.download }] });
 
   } catch (err) {
-    console.error("Error RD:", err.response?.data || err.message);
+    console.error("ERROR en stream:", err.response?.data || err.message);
     res.json({ streams: [] });
   }
 });
@@ -183,5 +169,5 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
 // Iniciar
 const PORT = process.env.PORT || 7000;
 app.listen(PORT, () => {
-  console.log(`Primer Latino Addon FINAL activo en puerto ${PORT}`);
+  console.log(`Primer Latino Addon v4.0 corriendo en puerto ${PORT} - LOGS ACTIVADOS`);
 });
