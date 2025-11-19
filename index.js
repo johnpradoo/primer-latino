@@ -141,17 +141,42 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
       console.log(`Torrent YA EXISTE → Reutilizando ID: ${torrentInfo.id}`);
     }
 
-    // UNRESTRICT (siempre)
-    if (torrentInfo?.links?.[0]) {
-      console.log(`Liberando link...`);
-      const link = await axios.post("https://api.real-debrid.com/rest/1.0/unrestrict/link",
-        new URLSearchParams({ link: torrentInfo.links[0] }), auth);
+    // UNRESTRICT INTELIGENTE (funciona siempre, exista o no)
+    if (torrentInfo && torrentInfo.status === "downloaded") {
 
-      const finalUrl = link.data.download;
-      cache.set(hash, { url: finalUrl, expires: Date.now() + 24 * 60 * 60 * 1000 });
+      // Si no tiene links o están vacíos → forzamos regenerarlos
+      if (!torrentInfo.links || torrentInfo.links.length === 0) {
+        console.log("No hay links → Forzando regeneración en RD");
 
-      console.log("STREAM LISTO – Reproduciendo");
-      return res.json({ streams: [{ title: `${item.quality || "LATINO HD"} • Primer Latino`, url: finalUrl }] });
+        // Volvemos a seleccionar el archivo (aunque ya esté seleccionado)
+        const infoFresh = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentInfo.id}`, auth)).data;
+        const videoFile = infoFresh.files.find(f => /\.(mp4|mkv|avi|mov|webm)$/i.test(f.path)) || infoFresh.files[0];
+
+        await axios.post(`https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${torrentInfo.id}`,
+          new URLSearchParams({ files: videoFile.id }), auth);
+
+        // Esperamos 2 segundos y volvemos a pedir info
+        await new Promise(r => setTimeout(r, 2000));
+        torrentInfo = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentInfo.id}`, auth)).data;
+      }
+
+      // Ahora SÍ debe tener links
+      if (torrentInfo.links?.[0]) {
+        console.log(`Liberando link del torrent ID: ${torrentInfo.id}`);
+        const link = await axios.post("https://api.real-debrid.com/rest/1.0/unrestrict/link",
+          new URLSearchParams({ link: torrentInfo.links[0] }), auth);
+
+        const finalUrl = link.data.download;
+        cache.set(hash, { url: finalUrl, expires: Date.now() + 24*60*60*1000 });
+
+        console.log("STREAM ENVIADO A STREMIO – Reproduciendo");
+        return res.json({
+          streams: [{ 
+            title: `${item.quality || "LATINO HD"} • Primer Latino`, 
+            url: finalUrl 
+          }]
+        });
+      }
     }
 
   } catch (err) {
