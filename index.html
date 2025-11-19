@@ -3,115 +3,202 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Generador de Link | Primer Latino</title>
+  <title>Primer Latino • Generador Neón</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #0d0d1f;
+      --neon-cyan: #00f2ff;
+      --neon-magenta: #ff00aa;
+      --neon-purple: #8a00ff;
+      --glass: rgba(20, 20, 40, 0.6);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      background: #0a0a0a;
+      background: var(--bg);
       color: #fff;
-      font-family: "Segoe UI", Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      text-align: center;
+      font-family: 'Exo 2', sans-serif;
+      min-height: 100vh;
+      display ggrid;
+      place-items: center;
+      background-image: 
+        radial-gradient(circle at 20% 80%, rgba(120,0,255,0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(0,242,255,0.15) 0%, transparent 50%);
+      overflow: hidden;
     }
-    h1 { color: #ffcc00; margin-bottom: 10px; font-size: 2rem; }
-    p { opacity: 0.8; margin: 5px 0 15px; }
-    input {
-      padding: 10px;
-      width: 80%;
-      max-width: 400px;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      text-align: center;
+    .glow {
+      text-shadow: 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-magenta);
+      animation: pulse 3s infinite alternate;
     }
-    button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      background: #ffcc00;
-      color: #111;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    button:hover { background: #ffaa00; }
-    .result {
-      margin-top: 20px;
-      background: #1a1a1a;
-      padding: 15px;
-      border-radius: 10px;
+    @keyframes pulse { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(30deg); } }
+    
+    .container {
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0,242,255,0.3);
+      border-radius: 20px;
+      padding: 40px 30px;
       width: 90%;
-      max-width: 500px;
-      word-wrap: break-word;
+      max-width: 480px;
+      box-shadow: 
+        0 0 30px rgba(0,242,255,0.4),
+        0 0 60px rgba(255,0,170,0.2);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
     }
-    .result input {
+    .container::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: conic-gradient(from 0deg, transparent, var(--neon-cyan), var(--neon-magenta), transparent);
+      animation: rotate 20s linear infinite;
+      opacity: 0.1;
+    }
+    @keyframes rotate { to { transform: rotate(360deg); } }
+
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    p { opacity: 0.85; margin: 12px 0; font-size: 1.1rem; }
+
+    input {
       width: 100%;
-      background: #000;
-      color: #0f0;
-      border: 1px solid #333;
-      margin-bottom: 10px;
+      padding: 16px;
+      margin: 20px 0;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 1.1rem;
+      text-align: center;
+      transition: all 0.3s;
+      outline: none;
     }
-    .copy {
-      margin-top: 5px;
-      background: #00ccff;
-      color: #000;
+    input:focus {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 20px rgba(0,242,255,0.5);
+    }
+
+    .btn {
+      padding: 14px 28px;
+      margin: 10px 8px;
       border: none;
-      padding: 8px 16px;
-      border-radius: 5px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
       cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
     }
-    .copy:hover { background: #00aaff; }
+    .btn-generate {
+      background: linear-gradient(45deg, var(--neon-cyan), var(--neon-magenta));
+      color: #000;
+    }
+    .btn-copy { background: #00ff9d; color: #000; }
+    .btn-stremio { background: #ff00aa; color: #fff; }
+    .btn-open { background: #8a00ff; color: #fff; }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+    .result {
+      margin-top: 25px;
+      padding: 20px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 15px;
+      border: 1px solid var(--neon-purple);
+      display: none;
+    }
+    .link-display {
+      background: #000;
+      padding: 14px;
+      border-radius: 10px;
+      margin: 15px 0;
+      font-family: monospace;
+      font-size: 0.95rem;
+      word-break: break-all;
+      border: 1px dashed var(--neon-cyan);
+      color: var(--neon-cyan);
+    }
+
     footer {
       position: absolute;
       bottom: 15px;
-      opacity: 0.5;
-      font-size: 14px;
+      font-size: 0.9rem;
+      opacity: 0.6;
     }
   </style>
 </head>
 <body>
-  <h1>🔗 Primer Latino</h1>
-  <p>Genera tu enlace personalizado con tu token Real-Debrid</p>
 
-  <input id="token" placeholder="Ejemplo: ABC123..." />
-  <button onclick="generate()">Generar enlace</button>
+  <div class="container">
+    <h1 class="glow">PRIMER LATINO</h1>
+    <p>Generador de addon privado • Real-Debrid</p>
 
-  <div class="result" id="result"></div>
+    <input type="text" id="token" placeholder="Pega aquí tu token de Real-Debrid" />
 
-  <footer>© Primer Latino Addon • 2025</footer>
+    <button class="btn btn-generate" onclick="generate()">
+      GENERAR ENLACE NEÓN
+    </button>
+
+    <div class="result" id="result">
+      <p>¡Tu addon privado está listo, jefe!</p>
+      <div class="link-display" id="linkDisplay"></div>
+
+      <button class="btn btn-copy" onclick="copyLink()">COPIAR ENLACE</button>
+      <button class="btn btn-open" onclick="openManifest()">ABRIR MANIFEST</button>
+      <button class="btn btn-stremio" onclick="installStremio()">
+        INSTALAR EN STREMIO
+      </button>
+    </div>
+  </div>
+
+  <footer>© Primer Latino • 2025 • El más cabrón del continente</footer>
 
   <script>
+    const base = location.origin;
+
     function generate() {
       const token = document.getElementById("token").value.trim();
       const result = document.getElementById("result");
+      const linkDisplay = document.getElementById("linkDisplay");
+
       if (!token) {
-        result.innerHTML = '<p style="color:#f55;">⚠️ Ingresa un token válido</p>';
+        alert("¡Escribe tu token, crack!");
         return;
       }
 
-      const base = "https://primer-latino.onrender.com";
-      // Aquí generamos el link como quieres: /realdebrid=TOKEN/manifest.json
       const link = `${base}/realdebrid=${token}/manifest.json`;
-
-      result.innerHTML = `
-        <p>✅ Tu enlace generado:</p>
-        <input type="text" value="${link}" readonly id="copyField">
-        <button class="copy" onclick="copyLink()">Copiar enlace</button>
-        <p><a href="${link}" target="_blank" style="color:#00ccff;">Abrir manifest.json</a></p>
-        <p>Usa este enlace en Stremio: <em>Añadir complemento por URL</em></p>
-      `;
+      linkDisplay.textContent = link;
+      result.style.display = "block";
+      result.scrollIntoView({ behavior: "smooth" });
     }
 
     function copyLink() {
-      const copyText = document.getElementById("copyField");
-      copyText.select();
-      document.execCommand("copy");
-      alert("✅ Enlace copiado al portapapeles");
+      const text = document.getElementById("linkDisplay").textContent;
+      navigator.clipboard.writeText(text);
+      alert("Enlace copiado al portapapeles");
+    }
+
+    function openManifest() {
+      const link = document.getElementById("linkDisplay").textContent;
+      window.open(link, "_blank");
+    }
+
+    function installStremio() {
+      const link = document.getElementById("linkDisplay").textContent;
+      const stremioUrl = "stremio://" + link;
+      location.href = stremioUrl;
+      alert("Abriendo Stremio... ¡Que se arme la función!");
     }
   </script>
 </body>
