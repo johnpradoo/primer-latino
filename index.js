@@ -36,8 +36,8 @@ const manifest = {
   version: "5.1.3",
   name: "Primer Latino",
   description: "Addon Latino, Uselo solo con Real Debrid by: @johnpradoo",
-  logo: "https://github.com/johnpradoo/primer-latino/blob/main/2616AF4D-5A31-4DF1-A261-04CB61540D47.png?raw=true",
-  background: "https://i.imgur.com/lE2FQIk.png",
+  logo: "https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true",
+  background: "https://github.com/johnpradoo/primer-latino/blob/main/logo/banner.jpg?raw=true",
   types: ["movie", "series"],
   resources: ["catalog", "meta", "stream"],
   catalogs: [
