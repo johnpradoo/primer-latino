@@ -56,7 +56,7 @@ app.get("/realdebrid=:token/catalog/movie/primerlatino_movies.json", (req, res) 
     id: m.id,
     type: "movie",
     name: m.title + (m.quality ? ` (${m.quality.split("|")[0].trim()})` : ""),
-    poster: m.poster || "https://i.imgur.com/lE2FQIk.png"
+    poster: m.poster || "https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true"
   }));
   res.json({ metas });
 });
@@ -68,7 +68,7 @@ app.get("/realdebrid=:token/catalog/series/primerlatino_series.json", (req, res)
     id: s.id,
     type: "series",
     name: s.title,
-    poster: s.poster || "https://i.imgur.com/lE2FQIk.png"
+    poster: s.poster || "https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true"
   }));
   res.json({ metas });
 });
