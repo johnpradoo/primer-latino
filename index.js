@@ -13,7 +13,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/", (req, res) => res.json({ status: "OK", message: "Primer Latino v7.3 – CORREGIDO Y PERFECTO" }));
+app.get("/", (req, res) => res.json({ status: "OK", message: "Primer Latino v7.5 – EMOJIS REALES + FORMATO MEDIAFUSION" }));
 
 // CARGAR JSONs
 let movies = [], seriesList = [], episodes = [];
@@ -29,7 +29,7 @@ try {
 // MANIFEST
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "7.3.0",
+  version: "7.5.0",
   name: "Primer Latino",
   description: "El addon latino más rápido y bonito del 2025 – by @johnpradoo",
   logo: "https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true",
@@ -87,7 +87,7 @@ app.get("/realdebrid=:token/meta/series/:id.json", (req, res) => {
 // CACHÉ GLOBAL
 const cache = new Map();
 
-// TÍTULOS ÉPICOS (CORREGIDOS – SIN ERRORES DE SINTAXIS)
+// TÍTULOS ÉPICOS CON EMOJIS REALES (100% IGUAL QUE MEDIAFUSION)
 function crearTituloEpico(item, torrentInfo, fromCache = false) {
   const text = (torrentInfo.filename || "") + " " + (item.quality || "");
   const es4K = /4k|2160p|UHD/i.test(text);
@@ -96,15 +96,17 @@ function crearTituloEpico(item, torrentInfo, fromCache = false) {
   const esDolby = /Dolby|Atmos|DDP|E-?AC3/i.test(text);
   const esWeb = /WEB.?DL|WEBRip/i.test(text);
 
-  let idiomas = "MX";
-  if (/Dual|Latino.*Eng|Eng.*Latino/i.test(text)) idiomas = "MX US";
-  else if (/Castellano|Español|Spanish/i.test(text)) idiomas = "ES";
+  let banderas = "MX";
+  if (/Dual|Latino.*Eng|Eng.*Latino/i.test(text)) banderas = "MX US";
+  else if (/Castellano|Español|Spanish/i.test(text)) banderas = "ES";
 
   const size = torrentInfo.bytes ? (torrentInfo.bytes / 1024**3).toFixed(1) + " GB" : "?? GB";
 
-  const title = `${es4K ? "4K " : "1080p "}${esHDR ? "HDR " : ""}${esWeb ? "WEB-DL " : ""}${esHEVC ? "hevc " : ""}${esDolby ? "Dolby " : ""}${idiomas}${fromCache ? " RAYO" : ""}`.trim();
+  // TÍTULO PRINCIPAL CON EMOJIS REALES
+  const title = `${es4K ? "4K" : "1080p"}${esHDR ? " HDR" : ""}${esWeb ? " WEB-DL" : ""}${esHEVC ? " hevc" : ""}${esDolby ? " Dolby" : ""} ${banderas}${fromCache ? " RAYO" : ""}`.trim();
 
-  const infoTitle = `${size} • ${idiomas.includes("US") ? "Dual Latino+Eng" : idiomas === "ES" ? "Castellano" : "Latino"} • Primer Latino`;
+  // SUBTÍTULO
+  const infoTitle = `${size} • ${banderas.includes("US") ? "Dual Latino+Eng" : banderas === "ES" ? "Castellano" : "Latino"} • Primer Latino`;
 
   return { title, infoTitle };
 }
@@ -190,6 +192,6 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
 
 const PORT = process.env.PORT || 7000;
 app.listen(PORT, () => {
-  console.log(`\nPRIMER LATINO v7.3 FINAL Y SIN ERRORES CORRIENDO EN PUERTO ${PORT}`);
-  console.log(`Todo perfecto: banderas, rayo, títulos épicos y velocidad brutal!\n`);
+  console.log(`\nPRIMER LATINO v7.5 🧋🍿 CORRIENDO EN PUERTO ${PORT}`);
+  console.log(`¡🍿!\n`);
 });
