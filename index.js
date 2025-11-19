@@ -29,9 +29,9 @@ try {
 // MANIFEST
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "9.0.0",
+  version: "9.1.17",
   name: "Primer Latino",
-  description: "Lee exactamente tu quality y language con banderas – by @johnpradoo",
+  description: "Complemento Premiun (Real Debrid) – by @johnpradoo",
   logo: "https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true",
   background: "https://github.com/johnpradoo/primer-latino/blob/main/logo/banner.jpg?raw=true",
   types: ["movie", "series"],
@@ -92,7 +92,7 @@ function crearTituloEpico(item, fromCache = false) {
   const title = `${calidad} ${idioma}${fromCache ? " RAYO" : ""} Primer Latino`.trim();
 
   // Línea inferior: solo "Primer Latino" (o puedes dejar vacío si prefieres)
-  const infoTitle = "Primer Latino";
+  const infoTitle = "🍿 Primer Latino";
 
   return { title, infoTitle };
 }
@@ -167,7 +167,7 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
 
 const PORT = process.env.PORT || 7000;
 app.listen(PORT, () => {
-  console.log(`\nPRIMER LATINO v9.0 CORRIENDO – LEE EXACTAMENTE TU quality Y language`);
-  console.log(`Ejemplo: 4K | Dolby Vision | Dolby Atmos MX LATINO | US ENGLISH RAYO Primer Latino`);
-  console.log(`         Primer Latino\n`);
+  console.log(`\nPRIMER LATINO v9.1.17 CORRIENDO 🟢`);
+  console.log(`@johnpradooo (X)🧋`);
+  console.log(`         🍿 Primer Latino\n`);
 });
