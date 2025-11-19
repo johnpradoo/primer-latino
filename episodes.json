@@ -1,5 +1,6 @@
 {
   "episodes": [
+    { "id": "tt19244304:1:1", "title": "IT: Welcome to Derry":, "season": 1, "episode": 1, "quality": "1080p | WEB-DL | Dolby Atmos", "language": "LATINO | ENGLISH", "codec", "H.264", "hash": "B0652011C7783B9BDB6806B24072C4CF74A0E45D", "poster", "https://image.tmdb.org/t/p/w1280/vC6LSYC8uhZPkPM01L6HKrr1lMD.jpg" },
     { "id": "tt9737326:2:7", "title": "Invasión", "season": 2, "episode": 7, "quality": "1080p | WEB-DL | Dolby Atmos", "language": "LATINO | ENGLISH", "codec": "H.264", "hash": "FE436B41FC7BB414181213D37D565FD034069618", "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/2iDGTCLRz1oWxU7cVRDsTqgJv7u.jpg" },
     { "id": "tt9737326:2:8", "title": "Invasión", "season": 2, "episode": 8, "quality": "1080p | WEB-DL | Dolby Atmos", "language": "LATINO | ENGLISH", "codec": "H.264", "hash": "0B9A3E877EA7BA0E8EEB558156C01D410C9CBA94", "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/2iDGTCLRz1oWxU7cVRDsTqgJv7u.jpg" },
     { "id": "tt9737326:2:9", "title": "Invasión", "season": 2, "episode": 9, "quality": "1080p | WEB-DL | Dolby Atmos", "language": "LATINO | ENGLISH", "codec": "H.264", "hash": "CDDC3F5352EFD5E63AE5FF0C2E981F8B221E325D", "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/2iDGTCLRz1oWxU7cVRDsTqgJv7u.jpg" },
