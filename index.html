@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Primer Latino • Generador Neón</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>Primer Latino ⚡ Neón</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Exo+2:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --cyan: #00f2ff;
-      --magenta: #ff00aa;
-      --bg: #0a0a1a;
+      --cyan: #00eeff;
+      --magenta: #ff0088;
+      --bg: #0d0b1f;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      background: var(--bg) url('https://i.ibb.co/9hR6Y3v/neon-city-bg.jpg') center/cover no-repeat fixed;
+      background: var(--bg);
       color: white;
       font-family: 'Exo 2', sans-serif;
       min-height: 100vh;
@@ -21,138 +21,124 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
-      position: relative;
+      background-image: radial-gradient(circle at top, #1a0e3a, var(--bg));
     }
-    body::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(10,10,26,0.85);
-      z-index: 1;
-    }
-
-    .container {
-      position: relative;
-      z-index: 10;
-      background: rgba(15,15,35,0.7);
-      backdrop-filter: blur(15px);
-      border: 2px solid rgba(0,242,255,0.4);
-      border-radius: 24px;
-      padding: 50px 30px;
+    .card {
+      background: rgba(20,15,50,0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0,238,255,0.5);
+      border-radius: 20px;
+      padding: 35px 25px;
       width: 100%;
-      max-width: 500px;
+      max-width: 420px;
       text-align: center;
-      box-shadow: 0 0 50px rgba(0,242,255,0.5);
+      box-shadow: 0 0 40px rgba(0,238,255,0.3);
     }
-
     h1 {
       font-family: 'Orbitron', sans-serif;
-      font-size: 4.5rem;
-      font-weight: 900;
-      background: linear-gradient(90deg, var(--cyan), var(--magenta), var(--cyan));
+      font-size: 3.2rem;
+      background: linear-gradient(90deg, var(--cyan), var(--magenta));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      background-size: 200%;
-      animation: neon 4s linear infinite;
-      margin-bottom: 10px;
+      margin-bottom: 0 0 8px 0;
     }
-    @keyframes neon { 0%{background-position:0%} 100%{background-position:200%} }
-
     p {
-      font-size: 1.3rem;
-      margin: 15px 0;
+      font-size: 1.1rem;
       opacity: 0.9;
+      margin-bottom: 20px;
     }
-
     input {
       width: 100%;
-      padding: 18px;
-      margin: 25px 0;
+      padding: 16px;
+      margin: 15px 0;
       border: 2px solid var(--cyan);
-      border-radius: 14px;
+      border-radius: 12px;
       background: rgba(0,0,0,0.6);
       color: white;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       text-align: center;
       outline: none;
-      transition: all 0.4s;
     }
     input:focus {
       border-color: var(--magenta);
-      box-shadow: 0 0 25px rgba(255,0,170,0.6);
-      transform: scale(1.02);
+      box-shadow: 0 0 20px rgba(255,0,136,0.5);
     }
-
     .btn {
-      padding: 18px 40px;
-      margin: 15px 10px;
+      padding: 14px 30px;
+      margin: 8px;
       border: none;
       border-radius: 50px;
       font-weight: 700;
-      font-size: 1.3rem;
+      font-size: 1.1rem;
       cursor: pointer;
-      transition: all 0.4s;
-      position: relative;
-      overflow: hidden;
+      transition: all 0.3s;
     }
     .btn-generate {
       background: linear-gradient(45deg, var(--cyan), var(--magenta));
       color: black;
-      font-size: 1.4rem;
-      padding: 20px 50px;
+      font-size: 1.3rem;
+      padding: 16px 40px;
     }
-    .btn-copy { background: #00ff9d; color: #000; }
-    .btn-stremio { background: #ff00aa; color: white; }
-    .btn-open { background: #8a00ff; color: white; }
-    .btn:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
+    .btn-small {
+      background: #00ff9d;
+      color: #000;
+    }
+    .btn-stremio {
+      background: var(--magenta);
+      color: white;
+    }
+    .btn-open {
+      background: #8a2be2;
+      color: white;
+    }
+    .btn:hover { transform: scale(1.08); }
 
     .result {
-      margin-top: 30px;
-      padding: 25px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 18px;
-      border: 1px solid var(--cyan);
+      margin-top: 25px;
+      padding: 20px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 14px;
+      border: 1px dashed var(--cyan);
       display: none;
     }
-    .link-display {
-      background: #000;
+    .link {
+      background: black;
       color: var(--cyan);
-      padding: 16px;
-      border-radius: 12px;
-      margin: 20px 0;
+      padding: 12px;
+      border-radius: 10px;
+      margin: 15px 0;
       font-family: monospace;
-      font-size: 1rem;
+      font-size: 0.95rem;
       word-break: break-all;
-      border: 1px dashed var(--cyan);
+      border: 1px solid #333;
     }
-
     footer {
-      margin-top: 40px;
-      font-size: 1rem;
-      opacity: 0.8;
+      margin-top: 30px;
+      font-size: 0.9rem;
+      opacity: 0.7;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
+  <div class="card">
     <h1>PRIMER LATINO</h1>
-    <p>Generador de addon privado • Real-Debrid</p>
+    <p>Generador privado • Real-Debrid</p>
 
-    <input type="text" id="token" placeholder="Pega aquí tu token de Real-Debrid" autofocus />
+    <input type="text" id="token" placeholder="Pega tu token aquí" autofocus />
 
-    <button class="btn btn-generate" onclick="generate()">GENERAR ENLACE NEÓN</button>
+    <button class="btn btn-generate" onclick="generate()">GENERAR ENLACE</button>
 
     <div class="result" id="result">
-      <p>¡Tu addon privado está listo, crack!</p>
-      <div class="link-display" id="linkDisplay"></div>
+      <p>¡Listo, crack!</p>
+      <div class="link" id="linkDisplay"></div>
 
-      <button class="btn btn-copy" onclick="copyLink()">COPIAR</button>
-      <button class="btn btn-open" onclick="openManifest()">ABRIR MANIFEST</button>
+      <button class="btn btn-small" onclick="copyLink()">COPIAR</button>
+      <button class="btn btn-open" onclick="openManifest()">ABRIR</button>
       <button class="btn btn-stremio" onclick="installStremio()">INSTALAR EN STREMIO</button>
     </div>
 
-    <footer>© Primer Latino • 2025 • El más cabrón del continente</footer>
+    <footer>© Primer Latino 2025 • El más cabrón</footer>
   </div>
 
   <script>
@@ -163,23 +149,27 @@
       const result = document.getElementById("result");
       const linkDisplay = document.getElementById("linkDisplay");
 
-      if (!token) {
-        alert("¡Pega tu token, rey!");
-        return;
-      }
+      if (!token) return alert("Pega tu token, rey");
 
       const link = `${base}/realdebrid=${token}/manifest.json`;
       linkDisplay.textContent = link;
       result.style.display = "block";
-      result.scrollIntoView({ behavior: "smooth" });
     }
 
     function copyLink() {
       navigator.clipboard.writeText(document.getElementById("linkDisplay").textContent);
-      alert("Copiado al portapapeles");
+      alert("Copiado!");
     }
-    function openManifest() { window.open(document.getElementById("linkDisplay").textContent, "_blank"); }
-    function installStremio() { location.href = "stremio://" + document.getElementById("linkDisplay").textContent; }
+
+    function openManifest() {
+      window.open(document.getElementById("linkDisplay").textContent, "_blank");
+    }
+
+    function installStremio() {
+      let link = document.getElementById("linkDisplay").textContent;
+      link = link.replace("https://", "").replace("http://", "");
+      location.href = "stremio://" + link;
+    }
   </script>
 </body>
 </html>
