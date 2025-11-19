@@ -14,12 +14,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Ruta raíz
 app.get("/", (req, res) => {
   res.json({ status: "OK", message: "Primer Latino Addon v6 – ANTI-DUPLICADOS + CACHÉ GLOBAL" });
 });
 
-// CARGAR LOS JSON
+// CARGAR JSONs
 let movies = [], seriesList = [], episodes = [];
 try {
   movies = JSON.parse(fs.readFileSync(path.join(__dirname, "movies.json"), "utf-8")).movies || [];
@@ -30,7 +29,7 @@ try {
   console.error("ERROR leyendo JSONs:", e.message);
 }
 
-// MANIFEST (el que ya tienes funcionando)
+// MANIFEST (el tuyo exacto)
 const manifest = {
   id: "org.primerlatino.addon",
   version: "5.1.3",
@@ -49,7 +48,7 @@ const manifest = {
 
 app.get("/realdebrid=:token/manifest.json", (req, res) => res.json(manifest));
 
-// CATÁLOGO PELÍCULAS
+// CATÁLOGOS (igual que tenías)
 app.get("/realdebrid=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
   console.log("Catálogo películas solicitado");
   const metas = movies.map(m => ({
@@ -61,7 +60,6 @@ app.get("/realdebrid=:token/catalog/movie/primerlatino_movies.json", (req, res) 
   res.json({ metas });
 });
 
-// CATÁLOGO SERIES
 app.get("/realdebrid=:token/catalog/series/primerlatino_series.json", (req, res) => {
   console.log("Catálogo series solicitado");
   const metas = seriesList.map(s => ({
@@ -89,22 +87,18 @@ app.get("/realdebrid=:token/meta/series/:id.json", (req, res) => {
   if (!serie) return res.json({ meta: null });
 
   const seasonMap = {};
-  episodes
-    .filter(e => e.id.startsWith(baseId + ":"))
-    .forEach(e => {
-      const [, seasonStr, episodeStr] = e.id.split(":");
-      const season = parseInt(seasonStr);
-      const episode = parseInt(episodeStr);
-      if (!seasonMap[season]) seasonMap[season] = [];
-      seasonMap[season].push({ id: e.id, title: `Episodio ${episode}`, episode });
-    });
+  episodes.filter(e => e.id.startsWith(baseId + ":")).forEach(e => {
+    const [, seasonStr, episodeStr] = e.id.split(":");
+    const season = parseInt(seasonStr);
+    const episode = parseInt(episodeStr);
+    if (!seasonMap[season]) seasonMap[season] = [];
+    seasonMap[season].push({ id: e.id, title: `Episodio ${episode}`, episode });
+  });
 
   const videos = {};
-  Object.keys(seasonMap)
-    .sort((a, b) => a - b)
-    .forEach(s => {
-      videos[s] = { "0": seasonMap[s].sort((a, b) => a.episode - b.episode) };
-    });
+  Object.keys(seasonMap).sort((a, b) => a - b).forEach(s => {
+    videos[s] = { "0": seasonMap[s].sort((a, b) => a.episode - b.episode) };
+  });
 
   res.json({
     meta: {
@@ -117,95 +111,70 @@ app.get("/realdebrid=:token/meta/series/:id.json", (req, res) => {
   });
 });
 
-// CACHÉ GLOBAL EN MEMORIA (24h) – nunca sube duplicados y segunda vez
+// CACHÉ GLOBAL EN MEMORIA
 const cache = new Map(); // hash → { url, expires }
 
+// STREAM CON ANTI-DUPLICADOS + CACHÉ
 app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
   const { token, type, id } = req.params;
   console.log(`STREAM → ${type} ${id}`);
 
-  const item = type === "movie" 
-    ? movies.find(m => m.id === id)
-    : episodes.find(e => e.id === id);
-
-  if (!item || !item.hash) {
-    console.log("Ítem o hash no encontrado");
-    return res.json({ streams: [] });
-  }
+  const item = type === "movie" ? movies.find(m => m.id === id) : episodes.find(e => e.id === id);
+  if (!item || !item.hash) return res.json({ streams: [] });
 
   const hash = item.hash.trim().toUpperCase();
 
-  // 1. CACHÉ GLOBAL (link directo si ya lo tenemos)
-  if (cache.has(hash)) {
-    const cached = cache.get(hash);
-    if (Date.now() < cached.expires) {
-      console.log(`CACHÉ GLOBAL HIT – Link instantáneo`);
-      return res.json({ streams: [{ title: `${item.quality || "LATINO HD"} • Primer Latino ⚡`, url: cached.url }] });
-    }
+  // 1. CACHÉ EN MEMORIA (link instantáneo)
+  if (cache.has(hash) && Date.now() < cache.get(hash).expires) {
+    console.log(`CACHÉ GLOBAL – Link instantáneo`);
+    return res.json({ streams: [{ title: `${item.quality || "LATINO HD"} • Primer Latino`, url: cache.get(hash).url }] });
   }
 
   try {
     const auth = { headers: { Authorization: `Bearer ${token}` } };
 
-    };
-
-    // 2. BUSCAR SI YA EXISTE EN REAL-DEBRID (anti-duplicados)
+    // 2. BUSCAR SI YA EXISTE EN REAL-DEBRID
     const { data: torrents } = await axios.get("https://api.real-debrid.com/rest/1.0/torrents?limit=1000", auth);
     let torrentInfo = torrents.find(t => t.hash.toUpperCase() === hash && t.status === "downloaded");
 
-    if (torrentInfo) {
-      console.log(`TORRENT YA EXISTE EN RD – Reutilizando (ID: ${torrentInfo.id})`);
-    } else {
-      // 3. Solo sube si NO existe
+    if (!torrentInfo) {
+      // 3. Solo subir si NO existe
       console.log(`Subiendo torrent por primera vez ${hash}`);
       const magnet = `magnet:?xt=urn:btih:${hash}`;
-      const addRes = await axios.post(
-        "https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
-        new URLSearchParams({ magnet }),
-        auth
-      );
+      const add = await axios.post("https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
+        new URLSearchParams({ magnet }), auth);
 
-      const torrentId = addRes.data.id;
+      const torrentId = add.data.id;
 
-      // Esperar descarga + selección automática
-      for (let i = 0; i < 35; i++) {
+      for (let i = 0; i < 40; i++) {
         torrentInfo = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentId}`, auth)).data;
-
         console.log(`Estado: ${torrentInfo.status}`);
 
         if (torrentInfo.status === "downloaded") break;
-
         if (torrentInfo.status === "waiting_files_selection" && torrentInfo.files) {
-          const videoFile = torrentInfo.files.find(f => /\.(mp4|mkv|avi|mov|webm)$/i.test(f.path)) || torrentInfo.files[0];
-          console.log(`Seleccionando archivo: ${videoFile.path}`);
-          await axios.post(
-            `https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${torrentId}`,
-            new URLSearchParams({ files: videoFile.id }),
-            auth
-          );
+          const video = torrentInfo.files.find(f => /\.(mp4|mkv|avi|mov|webm)$/i.test(f.path)) || torrentInfo.files[0];
+          console.log(`Seleccionando: ${video.path}`);
+          await axios.post(`https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${torrentId}`,
+            new URLSearchParams({ files: video.id }), auth);
         }
-
         await new Promise(r => setTimeout(r, 3000));
       }
+    } else {
+      console.log(`Torrent ya existe en RD → Reutilizando (ID: ${torrentInfo.id})`);
     }
 
-    // 4. Unrestrict + guardar en caché global 24h
+    // 4. Unrestrict + guardar caché 24h
     if (torrentInfo?.links?.[0]) {
-      const linkRes = await axios.post(
-        "https://api.real-debrid.com/rest/1.0/unrestrict/link",
-        new URLSearchParams({ link: torrentInfo.links[0] }),
-        auth
-      );
+      const link = await axios.post("https://api.real-debrid.com/rest/1.0/unrestrict/link",
+        new URLSearchParams({ link: torrentInfo.links[0] }), auth);
 
-      const finalUrl = linkRes.data.download;
-
-      // Guardar en caché 24h
+      const finalUrl = link.data.download;
       cache.set(hash, { url: finalUrl, expires: Date.now() + 24 * 60 * 60 * 1000 });
 
-      console.log("LINK LIBERADO Y GUARDADO EN CACHÉ GLOBAL");
+      console.log("LINK LIBERADO + GUARDADO EN CACHÉ");
       return res.json({
         streams: [{
-          title: `${item.quality || "LATINO HD"} • Primer Latino ⚡`,
+          title: `${item.quality || "LATINO HD"} • Primer Latino`,
           url: finalUrl
         }]
       });
@@ -218,8 +187,8 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
   res.json({ streams: [] });
 });
 
-// SERVIDOR
+// ARRANCAR
 const PORT = process.env.PORT || 7000;
 app.listen(PORT, () => {
-  console.log(`Primer Latino Addon v6 – ANTI-DUPLICADOS + CACHÉ GLOBAL activo en puerto ${PORT}`);
+  console.log(`Primer Latino v6 – ANTI-DUPLICADOS + CACHÉ GLOBAL corriendo en puerto ${PORT}`);
 });
