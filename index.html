@@ -10,9 +10,8 @@
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:var(--bg);color:white;font-family:'Exo 2',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:15px;background:radial-gradient(circle at top,#1a0e3a,var(--bg))}
     .card{background:rgba(15,15,40,0.85);backdrop-filter:blur(14px);border:1px solid var(--cyan);border-radius:20px;padding:28px 22px;width:100%;max-width:380px;text-align:center;box-shadow:0 0 35px rgba(0,238,255,0.4)}
-    .logo{width:90px;height:90px;border-radius:16px;margin-bottom:12px;box-shadow:0 0 20px rgba(0,238,255,0.6)}
-    h1{font-family:'Orbitron',sans-serif;font-size:2.1rem;background:linear-gradient(90deg,var(--cyan),var(--magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:8px 0}
-    p{font-size:0.98rem;opacity:0.88;margin:10px 0 16px}
+    .logo{width:92px;height:92px;border-radius:16px;margin-bottom:14px;box-shadow:0 0 22px rgba(0,238,255,0.7)}
+    .aviso{font-size:0.82rem;line-height:1.45;opacity:0.9;background:rgba(0,0,0,0.4);padding:12px;border-radius:10px;margin:10px 0 16px;border:1px dashed rgba(0,238,255,0.4)}
     select,input{width:100%;padding:14px;margin:10px 0;border:2px solid var(--cyan);border-radius:12px;background:#000;color:white;font-size:1rem;outline:none}
     select option{background:#111}
     .btn{padding:14px 36px;margin:8px 4px;border:none;border-radius:50px;font-weight:700;font-size:1.05rem;cursor:pointer;transition:.3s}
@@ -22,15 +21,18 @@
     .btn:hover{transform:scale(1.07)}
     .result{margin-top:20px;padding:18px;background:rgba(0,0,0,0.5);border-radius:12px;border:1px dashed var(--cyan);display:none}
     .link{background:#000;color:var(--cyan);padding:11px;border-radius:10px;margin:12px 0;font-family:monospace;font-size:0.88rem;word-break:break-all}
-    footer{margin-top:22px;font-size:0.8rem;opacity:0.7}
+    footer{margin-top:22px;font-size:0.78rem;opacity:0.7}
   </style>
 </head>
 <body>
 
   <div class="card">
     <img src="https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true" alt="Primer Latino" class="logo">
-    <h1>PRIMER LATINO</h1>
-    <p>El addon privado más rápido del 2025</p>
+
+    <div class="aviso">
+      Este addon no captura todo el API • Mantenemos transparencia total: <br>
+      <strong>tu token solo lo ves tú</strong>, yo solo veo los últimos 4 dígitos como referencia.
+    </div>
 
     <select id="debrid">
       <option value="real">Real-Debrid</option>
@@ -48,7 +50,7 @@
       <button class="btn btn-stremio" onclick="installStremio()">INSTALAR EN STREMIO</button>
     </div>
 
-    <footer>© Primer Latino 2025 • Multi-Debrid</footer>
+    <footer>© Primer Latino 2025 • Privado & Transparente</footer>
   </div>
 
   <script>
