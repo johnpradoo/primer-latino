@@ -13,7 +13,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/", (req, res) => res.json({ status: "OK", message: "Primer Latino v8.1 – LIMPIO, BONITO Y PERFECTO" }));
+app.get("/", (req, res) => res.json({ status: "OK", message: "Primer Latino v9.0 – LEE EXACTAMENTE TU JSON" }));
 
 // CARGAR JSONs
 let movies = [], seriesList = [], episodes = [];
@@ -22,14 +22,16 @@ try {
   seriesList = JSON.parse(fs.readFileSync(path.join(__dirname, "series.json"), "utf-8")).series || [];
   episodes = JSON.parse(fs.readFileSync(path.join(__dirname, "episodes.json"), "utf-8")).episodes || [];
   console.log(`Cargados → ${movies.length} películas | ${seriesList.length} series | ${episodes.length} episodios`);
-} catch (e) { console.error("ERROR JSON:", e.message); }
+} catch (e) {
+  console.error("ERROR leyendo JSONs:", e.message);
+}
 
 // MANIFEST
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "8.1.0",
+  version: "9.0.0",
   name: "Primer Latino",
-  description: "Calidad + Idioma + Primer Latino = EL MÁS BONITO",
+  description: "Lee exactamente tu quality y language con banderas – by @johnpradoo",
   logo: "https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true",
   background: "https://github.com/johnpradoo/primer-latino/blob/main/logo/banner.jpg?raw=true",
   types: ["movie", "series"],
@@ -42,7 +44,7 @@ const manifest = {
 };
 app.get("/realdebrid=:token/manifest.json", (req, res) => res.json(manifest));
 
-// CATÁLOGOS Y METAS (sin cambios, todo igual)
+// CATÁLOGOS Y METAS (sin cambios)
 app.get("/realdebrid=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
   const metas = movies.map(m => ({
     id: m.id, type: "movie",
@@ -81,28 +83,21 @@ app.get("/realdebrid=:token/meta/series/:id.json", (req, res) => {
 // CACHÉ
 const cache = new Map();
 
-// TÍTULOS LIMPIOS Y ÉPICOS — SOLO LO QUE TÚ QUIERES
+// LEE EXACTAMENTE LO QUE TÚ ESCRIBISTE EN EL JSON
 function crearTituloEpico(item, fromCache = false) {
-  const calidad = (item.quality || "1080p").toUpperCase().trim();
-  const idioma = (item.language || "MX").toUpperCase().trim();
+  const calidad = (item.quality || "1080p").trim();
+  const idioma = (item.language || "MX LATINO").trim();
 
-  // Detectar 4K
-  const es4K = /4K|2160|UHD/i.test(calidad);
+  // Línea superior: calidad + idioma + rayo si es caché + Primer Latino
+  const title = `${calidad} ${idioma}${fromCache ? " RAYO" : ""} Primer Latino`.trim();
 
-  // Banderas reales
-  const banderas = idioma.includes("US") ? "MX US" : idioma.includes("ES") ? "ES" : "MX";
-
-  // Línea superior (título principal)
-  const title = `${es4K ? "4K" : "1080p"} ${calidad.replace(/4K|2160P|1080P|UHD|FHD/gi, "").trim()} ${banderas}${fromCache ? " RAYO" : ""} Primer Latino`.trim();
-
-  // Línea inferior (subtítulo)
-  const textoIdioma = idioma.includes("US") ? "Dual Latino+Eng" : idioma.includes("ES") ? "Castellano" : "Latino";
-  const infoTitle = `${textoIdioma} • Primer Latino`;
+  // Línea inferior: solo "Primer Latino" (o puedes dejar vacío si prefieres)
+  const infoTitle = "Primer Latino";
 
   return { title, infoTitle };
 }
 
-// STREAM v8.1 — FINAL
+// STREAM FINAL v9.0
 app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
   const { token, type, id } = req.params;
 
@@ -114,6 +109,7 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
   // CACHÉ + RAYO
   if (cache.has(hash) && Date.now() < cache.get(hash).expires) {
     const titulos = crearTituloEpico(item, true);
+    console.log(`CACHÉ RAYO → ${titulos.title}`);
     return res.json({ streams: [{ title: titulos.title, infoTitle: titulos.infoTitle, url: cache.get(hash).url }] });
   }
 
@@ -138,7 +134,7 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
       }
     }
 
-    if (!torrentInfo.links || torrentInfo.links.length === 0) {
+    if ((!torrentInfo.links || torrentInfo.links.length === 0) && torrentInfo.id) {
       const fresh = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentInfo.id}`, auth)).data;
       const video = fresh.files.find(f => /\.(mp4|mkv|avi|mov|webm)$/i.test(f.path)) || fresh.files[0];
       await axios.post(`https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${torrentInfo.id}`, new URLSearchParams({files: video.id}), auth);
@@ -152,6 +148,7 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
       cache.set(hash, { url: finalUrl, expires: Date.now() + 24*60*60*1000 });
 
       const titulos = crearTituloEpico(item, false);
+      console.log(`PLAY → ${titulos.title}`);
 
       return res.json({
         streams: [{
@@ -170,6 +167,7 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
 
 const PORT = process.env.PORT || 7000;
 app.listen(PORT, () => {
-  console.log(`\nPRIMER LATINO v8.1 CORRIENDO – LIMPIO, ELEGANTE Y PERFECTO`);
-  console.log(`Solo calidad + idioma + Primer Latino → EN DOS LÍNEAS HERMOSAS!\n`);
+  console.log(`\nPRIMER LATINO v9.0 CORRIENDO – LEE EXACTAMENTE TU quality Y language`);
+  console.log(`Ejemplo: 4K | Dolby Vision | Dolby Atmos MX LATINO | US ENGLISH RAYO Primer Latino`);
+  console.log(`         Primer Latino\n`);
 });
