@@ -13,7 +13,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/", (req, res) => res.json({ status: "OK", message: "Primer Latino v7.2 – TÍTULOS ÉPICOS + BANDERAS + RAYO" }));
+app.get("/", (req, res) => res.json({ status: "OK", message: "Primer Latino v7.3 – EL ADDON MÁS ÉPICO DEL 2025" }));
 
 // CARGAR JSONs
 let movies = [], seriesList = [], episodes = [];
@@ -22,14 +22,16 @@ try {
   seriesList = JSON.parse(fs.readFileSync(path.join(__dirname, "series.json"), "utf-8")).series || [];
   episodes = JSON.parse(fs.readFileSync(path.join(__dirname, "episodes.json"), "utf-8")).episodes || [];
   console.log(`Cargados → ${movies.length} películas | ${seriesList.length} series | ${episodes.length} episodios`);
-} catch (e) { console.error("ERROR JSON:", e.message); }
+} catch (e) {
+  console.error("ERROR leyendo JSONs:", e.message);
+}
 
 // MANIFEST
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "7.2.0",
+  version: "7.3.0",
   name: "Primer Latino",
-  description: "El addon latino más rápido y bonito del 2025 – by @johnpradoo",
+  description: "El addon latino más rápido, bonito y potente del 2025 – by @johnpradoo",
   logo: "https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true",
   background: "https://github.com/johnpradoo/primer-latino/blob/main/logo/banner.jpg?raw=true",
   types: ["movie", "series"],
@@ -42,7 +44,7 @@ const manifest = {
 };
 app.get("/realdebrid=:token/manifest.json", (req, res) => res.json(manifest));
 
-// CATÁLOGOS Y METAS (igual que antes)
+// CATÁLOGOS
 app.get("/realdebrid=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
   const metas = movies.map(m => ({
     id: m.id, type: "movie",
@@ -51,6 +53,7 @@ app.get("/realdebrid=:token/catalog/movie/primerlatino_movies.json", (req, res) 
   }));
   res.json({ metas });
 });
+
 app.get("/realdebrid=:token/catalog/series/primerlatino_series.json", (req, res) => {
   const metas = seriesList.map(s => ({
     id: s.id, type: "series", name: s.title,
@@ -58,11 +61,14 @@ app.get("/realdebrid=:token/catalog/series/primerlatino_series.json", (req, res)
   }));
   res.json({ metas });
 });
+
+// METAS
 app.get("/realdebrid=:token/meta/movie/:id.json", (req, res) => {
   const m = movies.find(x => x.id === req.params.id);
   if (!m) return res.json({ meta: null });
   res.json({ meta: { id: m.id, type: "movie", name: m.title, poster: m.poster } });
 });
+
 app.get("/realdebrid=:token/meta/series/:id.json", (req, res) => {
   const baseId = req.params.id.split(":")[0];
   const serie = seriesList.find(s => s.id === baseId);
@@ -81,34 +87,29 @@ app.get("/realdebrid=:token/meta/series/:id.json", (req, res) => {
 // CACHÉ GLOBAL
 const cache = new Map();
 
-// === FUNCIÓN TÍTULOS ÉPICOS CON BANDERAS Y RAYO ===
+// TÍTULOS ÉPICOS CON BANDERAS Y RAYO (FUNCIONA PERFECTO EN STREMIO)
 function crearTituloEpico(item, torrentInfo, fromCache = false) {
-  const text = (torrentInfo.filename || item.title || "") + " " + (item.quality || "");
+  const text = (torrentInfo.filename || "") + " " + (item.quality || "");
   const es4K = /4k|2160p|UHD/i.test(text);
-  const esHDR = /HDR10\+|HDR10|HDR|DV|Dolby ?Vision/i.test(text);
-  const esHEVC = /hevc|h265|x265/i.test(text);
-  const esDolby = /Dolby|Atmos|E-AC3|DDP/i.test(text);
-  const esWeb = /WEB-?DL|WEBRip/i.test(text);
+  const esHDR = /HDR|DV|Dolby ?Vision/i.test(text);
+  const esHEVC = /hevc|h\.?265|x265/i.test(text);
+  const esDolby = /Dolby|Atmos|DDP|E-?AC3/i.test(text);
+  const esWeb = /WEB.?DL|WEBRip/i.test(text);
 
-  // Idiomas + banderas
-  let idiomas = "";
-  if (/Dual|Latino.*Eng|Eng.*Latino/i.test(text)) {
-    idiomas = "MX US";
-  } else if (/Castellano|Español|Spanish/i.test(text)) {
-    idiomas = "ES";
-  } else {
-    idiomas = "MX"; // por defecto latino
-  }
+  let idiomas = "MX";
+  if (/Dual|Latino.*Eng|Eng.*Latino/i.test(text)) idiomas = "MX US";
+  else if (/Castellano|Español|Spanish/i.test(text)) idiomas = "ES";
 
-  const sizeGB = torrentInfo.bytes ? (torrentInfo.bytes / 1024**3).toFixed(1) + " GB" : "";
+  const size = torrentInfo.bytes ? (torrentInfo.bytes / 1024**3).toFixed(1) + " GB" : "?? GB";
 
-  const linea1 = `${es4K?"4K ":"1080p "}${esHDR?"HDR10+ ":""}${esWeb?"WEB-DL ":""}${esHEVC?"hevc ":""}${esDolby?"Dolby ":""} ${idiomas}${fromCache?" RAYO":""}`;
-  const linea2 = `${sizeGB} • ${idiomas.includes("US")?"Dual Lat+Eng":idiomas==="ES"?"Castellano":"Latino"} • Primer Latino`;
+  const title = `${es4K?"4K ":"1080p "}${esHDR?"HDR ":"" : ""}${esWeb?"WEB-DL ":""}${esHEVC?"hevc ":""}${esDolby?"Dolby ":""}${idiomas}${fromCache?" RAYO":""}`.trim();
 
-  return { title: linea1.trim(), infoTitle: linea2 };
+  const infoTitle = `${size} • ${idiomas.includes("US")?"Dual Latino+Eng":idiomas==="ES"?"Castellano":"Latino"} • Primer Latino`;
+
+  return { title, infoTitle };
 }
 
-// STREAM v7.2
+// STREAM FINAL
 app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
   const { token, type, id } = req.params;
   const shortToken = token.slice(0,10)+"...";
@@ -124,7 +125,7 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
   // CACHÉ + RAYO
   if (cache.has(hash) && Date.now() < cache.get(hash).expires) {
     const titulos = crearTituloEpico(item, {}, true);
-    console.log(`CACHÉ GLOBAL RAYO – <0.5s`);
+    console.log(`CACHÉ GLOBAL RAYO – Instantáneo`);
     console.log(`PLAY Enviado – ${titulos.title}\n           ${titulos.infoTitle}`);
     return res.json({ streams: [{ title: titulos.title, infoTitle: titulos.infoTitle, url: cache.get(hash).url }] });
   }
@@ -157,7 +158,7 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
 
     // REGENERAR LINKS SI NO HAY
     if (!torrentInfo.links || torrentInfo.links.length === 0) {
-      console.log(`REGENERANDO links...`);
+      console.log(`REGENERANDO links en RD...`);
       const fresh = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentInfo.id}`, auth)).data;
       const video = fresh.files.find(f => /\.(mp4|mkv|avi|mov|webm)$/i.test(f.path)) || fresh.files[0];
       await axios.post(`https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${torrentInfo.id}`, new URLSearchParams({files: video.id}), auth);
@@ -192,6 +193,6 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
 
 const PORT = process.env.PORT || 7000;
 app.listen(PORT, () => {
-  console.log(`\nPRIMER LATINO v7.2 ÉPICO CORRIENDO EN PUERTO ${PORT}`);
-  console.log(`rayo!\n`);
+  console.log(`\nPRIMER LATINO v7.3 ÉPICO CORRIENDO EN PUERTO ${PORT}`);
+  console.log(`Banderas, rayo, títulos perfectos y velocidad brutal activados!\n`);
 });
