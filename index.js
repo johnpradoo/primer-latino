@@ -33,10 +33,10 @@ try {
 // MANIFEST
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "5.0.0",
+  version: "5.1.3",
   name: "Primer Latino",
-  description: "Películas y series en LATINO – Sin duplicados – 100% funcional",
-  logo: "https://i.imgur.com/lE2FQIk.png",
+  description: "Addon Latino, Uselo solo con Real Debrid by: @johnpradoo",
+  logo: "https://github.com/johnpradoo/primer-latino/blob/main/2616AF4D-5A31-4DF1-A261-04CB61540D47.png?raw=true",
   background: "https://i.imgur.com/lE2FQIk.png",
   types: ["movie", "series"],
   resources: ["catalog", "meta", "stream"],
@@ -203,5 +203,5 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
 // ARRANCAR SERVIDOR
 const PORT = process.env.PORT || 7000;
 app.listen(PORT, () => {
-  console.log(`Primer Latino Addon v5.0 corriendo en puerto ${PORT} – TODO FUNCIONA`);
+  console.log(`Primer Latino Addon v5.1 Pro, corriendo en puerto ${PORT} – TODO FUNCIONA`);
 });
