@@ -96,17 +96,17 @@ function crearTituloEpico(item, torrentInfo, fromCache = false) {
   const esDolby = /Dolby|Atmos|DDP|E-?AC3/i.test(text);
   const esWeb = /WEB.?DL|WEBRip/i.test(text);
 
-  let banderas = "MX";
-  if (/Dual|Latino.*Eng|Eng.*Latino/i.test(text)) banderas = "MX US";
-  else if (/Castellano|Español|Spanish/i.test(text)) banderas = "ES";
+  let banderas = "🇲🇽";
+  if (/Dual|Latino.*Eng|Eng.*Latino/i.test(text)) banderas = "🇲🇽 | 🇺🇸";
+  else if (/Castellano|Español|Spanish/i.test(text)) banderas = "🇪🇸";
 
   const size = torrentInfo.bytes ? (torrentInfo.bytes / 1024**3).toFixed(1) + " GB" : "?? GB";
 
   // TÍTULO PRINCIPAL CON EMOJIS REALES
-  const title = `${es4K ? "4K" : "1080p"}${esHDR ? " HDR" : ""}${esWeb ? " WEB-DL" : ""}${esHEVC ? " hevc" : ""}${esDolby ? " Dolby" : ""} ${banderas}${fromCache ? " RAYO" : ""}`.trim();
+  const title = `${es4K ? "🍿 4K" : "1080p"}${esHDR ? " 🎞️HDR" : ""}${esWeb ? " 🎥WEB-DL" : ""}${esHEVC ? " hevc" : ""}${esDolby ? " 🎬Dolby" : ""} ${banderas}${fromCache ? "⚡️" : ""}`.trim();
 
   // SUBTÍTULO
-  const infoTitle = `${size} • ${banderas.includes("US") ? "Dual Latino+Eng" : banderas === "ES" ? "Castellano" : "Latino"} • Primer Latino`;
+  const infoTitle = `${size} • ${banderas.includes("US") ? "Dual Latino+Eng" : banderas === "ES" ? "Castellano" : "Latino"} • 🧋Primer Latino`;
 
   return { title, infoTitle };
 }
