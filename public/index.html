@@ -1,73 +1,204 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Primer Latino • Activar Addon</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Primer Latino • Generador Neón</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #0d0d1f;
+      --neon-cyan: #00f2ff;
+      --neon-magenta: #ff00aa;
+      --neon-purple: #8a00ff;
+      --glass: rgba(20, 20, 40, 0.6);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      font-family: Arial, sans-serif;
-      background: #101010;
+      background: var(--bg);
       color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
+      font-family: 'Exo 2', sans-serif;
+      min-height: 100vh;
+      display ggrid;
+      place-items: center;
+      background-image: 
+        radial-gradient(circle at 20% 80%, rgba(120,0,255,0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(0,242,255,0.15) 0%, transparent 50%);
+      overflow: hidden;
     }
-    .box {
-      background: #1b1b1b;
-      padding: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 0 15px rgba(255,255,255,0.1);
+    .glow {
+      text-shadow: 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-magenta);
+      animation: pulse 3s infinite alternate;
+    }
+    @keyframes pulse { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(30deg); } }
+    
+    .container {
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0,242,255,0.3);
+      border-radius: 20px;
+      padding: 40px 30px;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: 
+        0 0 30px rgba(0,242,255,0.4),
+        0 0 60px rgba(255,0,170,0.2);
       text-align: center;
-      max-width: 400px;
+      position: relative;
+      overflow: hidden;
     }
+    .container::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: conic-gradient(from 0deg, transparent, var(--neon-cyan), var(--neon-magenta), transparent);
+      animation: rotate 20s linear infinite;
+      opacity: 0.1;
+    }
+    @keyframes rotate { to { transform: rotate(360deg); } }
+
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    p { opacity: 0.85; margin: 12px 0; font-size: 1.1rem; }
+
     input {
       width: 100%;
-      padding: 0.8rem;
-      border-radius: 0.5rem;
-      border: none;
-      margin-bottom: 1rem;
-      background: #2b2b2b;
+      padding: 16px;
+      margin: 20px 0;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.5);
       color: #fff;
+      font-size: 1.1rem;
+      text-align: center;
+      transition: all 0.3s;
+      outline: none;
     }
-    button {
-      width: 100%;
-      padding: 0.8rem;
-      background: #d23c3c;
+    input:focus {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 20px rgba(0,242,255,0.5);
+    }
+
+    .btn {
+      padding: 14px 28px;
+      margin: 10px 8px;
       border: none;
-      border-radius: 0.5rem;
-      color: #fff;
-      font-weight: bold;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
       cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
     }
-    button:hover {
-      background: #ff4a4a;
+    .btn-generate {
+      background: linear-gradient(45deg, var(--neon-cyan), var(--neon-magenta));
+      color: #000;
     }
-    small {
-      display: block;
-      margin-top: 1rem;
-      color: #999;
+    .btn-copy { background: #00ff9d; color: #000; }
+    .btn-stremio { background: #ff00aa; color: #fff; }
+    .btn-open { background: #8a00ff; color: #fff; }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+    .result {
+      margin-top: 25px;
+      padding: 20px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 15px;
+      border: 1px solid var(--neon-purple);
+      display: none;
+    }
+    .link-display {
+      background: #000;
+      padding: 14px;
+      border-radius: 10px;
+      margin: 15px 0;
+      font-family: monospace;
+      font-size: 0.95rem;
+      word-break: break-all;
+      border: 1px dashed var(--neon-cyan);
+      color: var(--neon-cyan);
+    }
+
+    footer {
+      position: absolute;
+      bottom: 15px;
+      font-size: 0.9rem;
+      opacity: 0.6;
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2>Primer Latino</h2>
-    <p>Introduce tu token de <b>Real-Debrid</b> para generar el addon personalizado:</p>
-    <input type="text" id="token" placeholder="Ejemplo: eyJhbGciOiJIUz..." />
-    <button onclick="generate()">Activar Addon</button>
-    <small>No guardamos tu token. Se usa solo para vincular tu cuenta.</small>
+
+  <div class="container">
+    <h1 class="glow">PRIMER LATINO</h1>
+    <p>Generador de addon privado • Real-Debrid</p>
+
+    <input type="text" id="token" placeholder="Pega aquí tu token de Real-Debrid" />
+
+    <button class="btn btn-generate" onclick="generate()">
+      GENERAR ENLACE NEÓN
+    </button>
+
+    <div class="result" id="result">
+      <p>¡Tu addon privado está listo, jefe!</p>
+      <div class="link-display" id="linkDisplay"></div>
+
+      <button class="btn btn-copy" onclick="copyLink()">COPIAR ENLACE</button>
+      <button class="btn btn-open" onclick="openManifest()">ABRIR MANIFEST</button>
+      <button class="btn btn-stremio" onclick="installStremio()">
+        INSTALAR EN STREMIO
+      </button>
+    </div>
   </div>
 
+  <footer>© Primer Latino • 2025 • El más cabrón del continente</footer>
+
   <script>
+    const base = location.origin;
+
     function generate() {
       const token = document.getElementById("token").value.trim();
-      if (!token) return alert("Por favor ingresa tu token de Real-Debrid");
-      const url = `${window.location.origin}/manifest.json?token=${encodeURIComponent(token)}`;
-      navigator.clipboard.writeText(url);
-      alert("✅ Enlace copiado:\n\n" + url + "\n\nPégalo en Stremio → Añadir Addon → Por URL.");
+      const result = document.getElementById("result");
+      const linkDisplay = document.getElementById("linkDisplay");
+
+      if (!token) {
+        alert("¡Escribe tu token, crack!");
+        return;
+      }
+
+      const link = `${base}/realdebrid=${token}/manifest.json`;
+      linkDisplay.textContent = link;
+      result.style.display = "block";
+      result.scrollIntoView({ behavior: "smooth" });
+    }
+
+    function copyLink() {
+      const text = document.getElementById("linkDisplay").textContent;
+      navigator.clipboard.writeText(text);
+      alert("Enlace copiado al portapapeles");
+    }
+
+    function openManifest() {
+      const link = document.getElementById("linkDisplay").textContent;
+      window.open(link, "_blank");
+    }
+
+    function installStremio() {
+      const link = document.getElementById("linkDisplay").textContent;
+      const stremioUrl = "stremio://" + link;
+      location.href = stremioUrl;
+      alert("Abriendo Stremio... ¡Que se arme la función!");
     }
   </script>
 </body>
