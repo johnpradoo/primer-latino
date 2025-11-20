@@ -13,7 +13,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/", (req, res) => res.json({ status: "OK", message: "Primer Latino v9.0 – LEE EXACTAMENTE TU JSON" }));
+app.get("/", (req, res) => res.json({ status: "OK", message: "Primer Latino v9.2.10 – LEE EXACTAMENTE TU JSON" }));
 
 // CARGAR JSONs
 let movies = [], seriesList = [], episodes = [];
