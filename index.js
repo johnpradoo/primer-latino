@@ -167,7 +167,7 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
 
 const PORT = process.env.PORT || 7000;
 app.listen(PORT, () => {
-  console.log(`\nPRIMER LATINO v9.1.17 CORRIENDO 🟢`);
+  console.log(`\nPRIMER LATINO v9.2.10 CORRIENDO 🟢`);
   console.log(`@johnpradooo (X)🧋`);
-  console.log(`         🍿 Primer Latino\n`);
+  console.log(`🍿 Primer Latino\n`);
 });
