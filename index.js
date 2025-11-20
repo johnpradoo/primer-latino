@@ -89,7 +89,7 @@ function crearTituloEpico(item, fromCache = false) {
   const idioma = (item.language || "MX LATINO").trim();
 
   // Línea superior: calidad + idioma + rayo si es caché + Primer Latino
-  const title = `${calidad} ${idioma}${fromCache ? " RAYO" : ""} Primer Latino`.trim();
+  const title = `${calidad} ${idioma}${fromCache ? " ⚡️| CAHE" : ""} 🍿Primer Latino`.trim();
 
   // Línea inferior: solo "Primer Latino" (o puedes dejar vacío si prefieres)
   const infoTitle = "🍿 Primer Latino";
