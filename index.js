@@ -29,7 +29,7 @@ try {
 // MANIFEST
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "9.1.17",
+  version: "9.2.10",
   name: "Primer Latino",
   description: "Complemento Premiun (Real Debrid) – by @johnpradoo",
   logo: "https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true",
