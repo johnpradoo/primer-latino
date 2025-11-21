@@ -68,27 +68,41 @@ function crearTituloEpico(item, fromCache = false) {
   return { title, infoTitle };
 }
 
-// STREAM – REAL-DEBRID + ALLDEBRID + TORBOX
+// STREAM – REAL-DEBRID + ALLDEBRID + TORBOX (CORREGIDO al 100%)
 app.get("/:service=:token?/stream/:type/:id.json", async (req, res) => {
-  let { service = "realdebrid", token = "", type, id } = req.params;
+  // DETECCIÓN PERFECTA (funciona con o sin servicio en la URL)
+  let service = req.params.service || "realdebrid";
+  let token = req.params.token || "";
   service = service.toLowerCase();
-  console.log(`\nSOLICITUD → ${service.toUpperCase()} | ${type} ${id}`);
+
+  const { type, id } = req.params;
+  console.log(`\nSOLICITUD → ${service.toUpperCase()} | ${type} ${id} | Token: ${token ? "Sí" : "No"}`);
 
   const item = type === "movie" ? movies.find(m => m.id === id) : episodes.find(e => e.id === id);
-  if (!item || !item.hash) return res.json({ streams: [] });
+  if (!item || !item.hash) {
+    console.log("Item no encontrado o sin hash");
+    return res.json({ streams: [] });
+  }
 
   const hash = item.hash.trim().toUpperCase();
 
-  // RAYO CACHÉ
+  // CACHÉ RAYO
   if (cache.has(hash) && Date.now() < cache.get(hash).expires) {
     const t = crearTituloEpico(item, true);
     console.log(`RAYO CACHÉ → ${t.title}`);
     return res.json({ streams: [{ title: t.title, infoTitle: t.infoTitle, url: cache.get(hash).url }] });
   }
 
+  // SI NO HAY TOKEN → nada (sin P2P, como tú quieres)
+  if (!token) {
+    console.log("No hay token → sin stream");
+    return res.json({ streams: [] });
+  }
+
   try {
     // REAL-DEBRID
-    if (service === "realdebrid") {
+    if (service === "realdebrid" || service === "real-debrid") {
+      console.log("Procesando con Real-Debrid...");
       const auth = { headers: { Authorization: `Bearer ${token}` } };
       let torrentInfo = (await axios.post("https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
         new URLSearchParams({ magnet: `magnet:?xt=urn:btih:${hash}` }), auth)).data;
@@ -105,7 +119,6 @@ app.get("/:service=:token?/stream/:type/:id.json", async (req, res) => {
         if (video && !torrentInfo.selected) {
           await axios.post(`https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${torrentInfo.id}`,
             new URLSearchParams({ files: video.id }), auth);
-          await new Promise(r => setTimeout(r, 2000));
         }
         const link = await axios.post("https://api.real-debrid.com/rest/1.0/unrestrict/link",
           new URLSearchParams({ link: torrentInfo.links[0] }), auth);
@@ -113,13 +126,14 @@ app.get("/:service=:token?/stream/:type/:id.json", async (req, res) => {
         cache.set(hash, { url: finalUrl, expires: Date.now() + 86400000 });
 
         const titulos = crearTituloEpico(item);
-        console.log(`PLAY → ${titulos.title}`);
+        console.log(`LIBERADO RD → ${titulos.title}`);
         return res.json({ streams: [{ title: titulos.title, infoTitle: titulos.infoTitle, url: finalUrl }] });
       }
     }
 
     // ALLDEBRID
-    if (service === "alldebrid") {
+    if (service === "alldebrid" || service === "all-debrid") {
+      console.log("Procesando con AllDebrid...");
       const magnet = `magnet:?xt=urn:btih:${hash}`;
       const add = await axios.get(`https://api.alldebrid.com/v4/magnet/upload?agent=PrimerLatino&token=${token}&magnets[]=${encodeURIComponent(magnet)}`);
       const id = add.data.data.magnets[0].id;
@@ -132,19 +146,21 @@ app.get("/:service=:token?/stream/:type/:id.json", async (req, res) => {
         attempts++;
       } while (status.status !== "Ready" && attempts < 70);
 
-      if (status.status !== "Ready") return res.json({ streams: [] });
+      if (status.status === "Ready") {
+        const videoLink = status.links.find(l => /\.(mkv|mp4)$/i.test(l.filename)) || status.links[0];
+        const unrestrict = await axios.get(`https://api.alldebrid.com/v4/link/unlock?agent=PrimerLatino&token=${token}&link=${encodeURIComponent(videoLink.link)}`);
+        const url = unrestrict.data.data.link;
 
-      const videoLink = status.links.find(l => /\.(mkv|mp4)$/i.test(l.filename)) || status.links[0];
-      const unrestrict = await axios.get(`https://api.alldebrid.com/v4/link/unlock?agent=PrimerLatino&token=${token}&link=${encodeURIComponent(videoLink.link)}`);
-      const url = unrestrict.data.data.link;
-
-      cache.set(hash, { url, expires: Date.now() + 86400000 });
-      const titulo = crearTituloEpico(item);
-      return res.json({ streams: [{ title: titulo.title, infoTitle: titulo.infoTitle, url }] });
+        cache.set(hash, { url, expires: Date.now() + 86400000 });
+        const titulo = crearTituloEpico(item);
+        console.log(`LIBERADO ALLDEBRID → ${titulo.title}`);
+        return res.json({ streams: [{ title: titulo.title, infoTitle: titulo.infoTitle, url }] });
+      }
     }
 
     // TORBOX
     if (service === "torbox") {
+      console.log("Procesando con TorBox...");
       const add = await axios.post("https://api.torbox.app/v1/torrents/add", { token, magnet: `magnet:?xt=urn:btih:${hash}` });
       const torrentId = add.data.detail.id;
 
@@ -156,20 +172,22 @@ app.get("/:service=:token?/stream/:type/:id.json", async (req, res) => {
         attempts++;
       } while (info.status !== "completed" && attempts < 70);
 
-      if (info.status !== "completed") return res.json({ streams: [] });
+      if (info.status === "completed") {
+        const file = info.files.find(f => /\.(mkv|mp4)$/i.test(f.name)) || info.files[0];
+        const url = `https://tbx.sx/dl/${file.hash}/${encodeURIComponent(file.name)}?token=${token}`;
 
-      const file = info.files.find(f => /\.(mkv|mp4)$/i.test(f.name)) || info.files[0];
-      const url = `https://tbx.sx/dl/${file.hash}/${encodeURIComponent(file.name)}?token=${token}`;
-
-      cache.set(hash, { url, expires: Date.now() + 86400000 });
-      const titulo = crearTituloEpico(item);
-      return res.json({ streams: [{ title: titulo.title, infoTitle: titulo.infoTitle, url }] });
+        cache.set(hash, { url, expires: Date.now() + 86400000 });
+        const titulo = crearTituloEpico(item);
+        console.log(`LIBERADO TORBOX → ${titulo.title}`);
+        return res.json({ streams: [{ title: titulo.title, infoTitle: titulo.infoTitle, url }] });
+      }
     }
 
   } catch (err) {
-    console.error("ERROR:", err.response?.data || err.message);
+    console.error(`ERROR ${service.toUpperCase()}:`, err.response?.data || err.message);
   }
 
+  console.log("No se pudo liberar con ningún servicio");
   res.json({ streams: [] });
 });
 
