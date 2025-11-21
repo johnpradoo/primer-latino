@@ -20,8 +20,7 @@ const manifest = {
   name: "Primer Latino",
   description: "Real-Debrid • AllDebrid • TorBox • P2P Latino – by @johnpradoo",
   logo: "https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true",
-  background: "https://github.com/johnpradoo/primer-
-latino/blob/main/logo/banner.jpg?raw=true",
+  background: "https://github.com/johnpradoo/primer-latino/blob/main/logo/banner.jpg?raw=true",
   types: ["movie", "series"],
   resources: ["catalog", "meta", "stream"],
   catalogs: [
