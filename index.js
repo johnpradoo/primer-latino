@@ -26,12 +26,11 @@ try {
   console.error("ERROR leyendo JSONs:", e.message);
 }
 
-// MANIFEST
+// MANIFEST CORREGIDO
 const manifest = {
   id: "org.primerlatino.addon",
   version: "9.3.0",
   name: "Primer Latino",
- 2025",
   description: "Real-Debrid • AllDebrid • TorBox • P2P Latino – by @johnpradoo",
   logo: "https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true",
   background: "https://github.com/johnpradoo/primer-latino/blob/main/logo/banner.jpg?raw=true",
@@ -61,7 +60,7 @@ app.get("/:service=:token?/meta/:type/:id.json", (req, res) => {
   res.json({ meta: { id: item.id, type, name: item.title, poster: item.poster } });
 });
 
-// CACHÉ
+// CACHÉ RAYO
 const cache = new Map();
 function crearTituloEpico(item, fromCache = false) {
   const q = item.quality || "";
@@ -71,9 +70,10 @@ function crearTituloEpico(item, fromCache = false) {
   return { title, infoTitle };
 }
 
-// STREAM – TU CÓDIGO ORIGINAL + ALLDEBRID + TORBOX + P2P OPCIONAL
+// STREAM – TU CÓDIGO ORIGINAL + TODOS LOS SERVICIOS
 app.get("/:service=:token?/stream/:type/:id.json", async (req, res) => {
   let { service = "p2p", token = "", type, id } = req.params;
+  service = service.toLowerCase();
   console.log(`\nSOLICITUD → ${service.toUpperCase()} | ${type} ${id}`);
 
   const item = type === "movie" ? movies.find(m => m.id === id) : episodes.find(e => e.id === id);
@@ -88,16 +88,16 @@ app.get("/:service=:token?/stream/:type/:id.json", async (req, res) => {
     return res.json({ streams: [{ title: t.title, infoTitle: t.infoTitle, url: cache.get(hash).url }] });
   }
 
-  // P2P GRATIS (solo si el usuario elige /p2p o no pone token)
+  // P2P GRATIS
   if (service === "p2p" || !token) {
     const magnet = `magnet:?xt=urn:btih:${hash}&dn=Primer+Latino&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce`;
     const t = crearTituloEpico(item);
     return res.json({ streams: [{ title: `${t.title} P2P`, infoTitle: "P2P Latino curado", url: magnet, behaviorHints: { p2p: true } }] });
   }
 
-  // REAL-DEBRID (TU CÓDIGO ORIGINAL 100% INTACTO)
-  if (service === "realdebrid") {
-    try {
+  try {
+    // REAL-DEBRID
+    if (service === "realdebrid") {
       const auth = { headers: { Authorization: `Bearer ${token}` } };
       let torrentInfo = (await axios.post("https://api.real-debrid.com/rest/1.0/torrents/addMagnet", 
         new URLSearchParams({ magnet: `magnet:?xt=urn:btih:${hash}` }), auth)).data;
@@ -108,32 +108,25 @@ app.get("/:service=:token?/stream/:type/:id.json", async (req, res) => {
         torrentInfo = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentInfo.id}`, auth)).data;
         attempts++;
       }
+      if (!torrentInfo.links?.[0]) return res.json({ streams: [] });
 
-      if (torrentInfo.links?.[0]) {
-        const fresh = torrentInfo;
-        const video = fresh.files.find(f => /\.(mp4|mkv|avi|mov|webm)$/i.test(f.path)) || fresh.files[0];
-        if (video && !fresh.selected) {
-          await axios.post(`https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${torrentInfo.id}`,
-            new URLSearchParams({ files: video.id }), auth);
-          await new Promise(r => setTimeout(r, 2000));
-        }
-        const link = await axios.post("https://api.real-debrid.com/rest/1.0/unrestrict/link",
-          new URLSearchParams({ link: torrentInfo.links[0] }), auth);
-        const finalUrl = link.data.download;
-        cache.set(hash, { url: finalUrl, expires: Date.now() + 86400000 });
-
-        const titulos = crearTituloEpico(item);
-        console.log(`PLAY → ${titulos.title}`);
-        return res.json({ streams: [{ title: titulos.title, infoTitle: titulos.infoTitle, url: finalUrl }] });
+      const video = torrentInfo.files.find(f => /\.(mp4|mkv|avi|mov|webm)$/i.test(f.path)) || torrentInfo.files[0];
+      if (video && !torrentInfo.selected) {
+        await axios.post(`https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${torrentInfo.id}`,
+          new URLSearchParams({ files: video.id }), auth);
       }
-    } catch (err) {
-      console.error("ERROR RD:", err.response?.data || err.message);
-    }
-  }
+      const link = await axios.post("https://api.real-debrid.com/rest/1.0/unrestrict/link",
+        new URLSearchParams({ link: torrentInfo.links[0] }), auth);
+      const finalUrl = link.data.download;
+      cache.set(hash, { url: finalUrl, expires: Date.now() + 86400000 });
 
-  // ALLDEBRID
-  if (service === "alldebrid") {
-    try {
+      const titulos = crearTituloEpico(item);
+      console.log(`PLAY → ${titulos.title}`);
+      return res.json({ streams: [{ title: titulos.title, infoTitle: titulos.infoTitle, url: finalUrl }] });
+    }
+
+    // ALLDEBRID
+    if (service === "alldebrid") {
       const magnet = `magnet:?xt=urn:btih:${hash}`;
       const add = await axios.get(`https://api.alldebrid.com/v4/magnet/upload?agent=PrimerLatino&token=${token}&magnets[]=${encodeURIComponent(magnet)}`);
       const id = add.data.data.magnets[0].id;
@@ -155,14 +148,10 @@ app.get("/:service=:token?/stream/:type/:id.json", async (req, res) => {
       cache.set(hash, { url, expires: Date.now() + 86400000 });
       const titulo = crearTituloEpico(item);
       return res.json({ streams: [{ title: titulo.title, infoTitle: titulo.infoTitle, url }] });
-    } catch (err) {
-      console.error("ERROR AllDebrid:", err.message);
     }
-  }
 
-  // TORBOX
-  if (service === "torbox") {
-    try {
+    // TORBOX
+    if (service === "torbox") {
       const add = await axios.post("https://api.torbox.app/v1/torrents/add", { token, magnet: `magnet:?xt=urn:btih:${hash}` });
       const torrentId = add.data.detail.id;
 
@@ -182,18 +171,18 @@ app.get("/:service=:token?/stream/:type/:id.json", async (req, res) => {
       cache.set(hash, { url, expires: Date.now() + 86400000 });
       const titulo = crearTituloEpico(item);
       return res.json({ streams: [{ title: titulo.title, infoTitle: titulo.infoTitle, url }] });
-    } catch (err) {
-      console.error("ERROR TorBox:", err.message);
     }
+
+  } catch (err) {
+    console.error(`ERROR ${service.toUpperCase()}:`, err.response?.data || err.message);
   }
 
-  // SI LLEGA AQUÍ Y TENÍA TOKEN → NO HAY STREAM (nada de P2P)
   return res.json({ streams: [] });
 });
 
 const PORT = process.env.PORT || 7000;
 app.listen(PORT, () => {
-  console.log(`\nPRIMER LATINO v9.3 CORRIENDO`);
-  console.log(`@johnpradooo (X)`);
-  console.log(`Primer Latino\n`);
+  console.log(`\nPRIMER LATINO v9.3 CORRIENDO PERFECTO`);
+  console.log(`@johnpradooo – EL REY DE LATAM 2025`);
+  console.log(`Sube esto y ya nadie te para.\n`);
 });
