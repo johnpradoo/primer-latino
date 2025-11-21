@@ -13,14 +13,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// MANIFEST
+// ==================== MANIFEST ====================
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "9.3.1",
+  version: "9.3.2",
   name: "Primer Latino",
   description: "Real-Debrid • AllDebrid • TorBox • P2P Latino – by @johnpradoo",
   logo: "https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true",
-  background: "https://github.com/johnpradoo/primer-latino/blob/main/logo/banner.jpg?raw=true",
+  background: "https://github.com/johnpradoo/primer-
+latino/blob/main/logo/banner.jpg?raw=true",
   types: ["movie", "series"],
   resources: ["catalog", "meta", "stream"],
   catalogs: [
@@ -34,19 +35,21 @@ const manifest = {
 app.get("/manifest.json", (req, res) => res.json(manifest));
 app.get("/*/manifest.json", (req, res) => res.json(manifest));
 
-// CARGAR JSONs
+// ==================== CARGAR JSONs ====================
 let movies = [], seriesList = [], episodes = [];
 try {
   movies = JSON.parse(fs.readFileSync("movies.json", "utf-8")).movies || [];
   seriesList = JSON.parse(fs.readFileSync("series.json", "utf-8")).series || [];
   episodes = JSON.parse(fs.readFileSync("episodes.json", "utf-8")).episodes || [];
-  console.log(`Cargados → ${movies.length} películas | ${seriesList.length} series`);
-} catch (e) { console.error("JSON error:", e.message); }
+  console.log(`Cargados → ${movies.length} películas | ${seriesList.length} series | ${episodes.length} episodios`);
+} catch (e) {
+  console.error("ERROR leyendo JSONs:", e.message);
+}
 
-// CATÁLOGO Y META
+// ==================== CATÁLOGO Y META ====================
 app.get("/*/catalog/:type/:id.json", (req, res) => {
   const { type } = req.params;
-  const metas = type === "movie" 
+  const metas = type === "movie"
     ? movies.map(m => ({ id: m.id, type: "movie", name: m.title, poster: m.poster }))
     : seriesList.map(s => ({ id: s.id, type: "series", name: s.title, poster: s.poster }));
   res.json({ metas });
@@ -59,7 +62,7 @@ app.get("/*/meta/:type/:id.json", (req, res) => {
   res.json({ meta: { id: item.id, type, name: item.title, poster: item.poster, background: item.poster } });
 });
 
-// CACHÉ
+// ==================== CACHÉ RAYO ====================
 const cache = new Map();
 function crearTitulo(item, rayo = false) {
   const q = item.quality || "";
@@ -70,7 +73,7 @@ function crearTitulo(item, rayo = false) {
   };
 }
 
-// STREAM – 4 SERVICIOS 100% FUNCIONALES
+// ==================== STREAM – SIN P2P CUANDO HAY DEBRID ====================
 app.get("/*/stream/:type/:id.json", async (req, res) => {
   const fullUrl = req.url.split("/stream")[0];
   let service = "p2p";
@@ -78,68 +81,81 @@ app.get("/*/stream/:type/:id.json", async (req, res) => {
 
   if (fullUrl.includes("=")) {
     const parts = fullUrl.slice(1).split("=");
-    service = parts[0];
+    service = parts[0].toLowerCase();
     token = parts[1] || "";
   }
 
   const { type, id } = req.params;
-  console.log(`STREAM → ${service.toUpperCase()} | ${type} ${id}`);
+  console.log(`\nSTREAM → ${service.toUpperCase()} | ${type} ${id}`);
 
   const item = type === "movie" ? movies.find(m => m.id === id) : episodes.find(e => e.id === id);
   if (!item || !item.hash) return res.json({ streams: [] });
+
   const hash = item.hash.trim().toUpperCase();
 
   // CACHÉ RAYO
   if (cache.has(hash) && Date.now() < cache.get(hash).expires) {
     const t = crearTitulo(item, true);
+    console.log(`RAYO CACHÉ → ${t.title}`);
     return res.json({ streams: [{ title: t.title, infoTitle: t.infoTitle, url: cache.get(hash).url }] });
   }
 
-  const sendP2P = () => {
+  // P2P DIRECTO (solo si el usuario eligió la versión gratis)
+  if (service === "p2p" || !token) {
     const magnet = `magnet:?xt=urn:btih:${hash}&dn=Primer+Latino&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce`;
     const t = crearTitulo(item);
-    res.json({ streams: [{ title: `${t.title} P2P`, infoTitle: "P2P Latino curado", url: magnet, behaviorHints: { p2p: true } }] });
-  };
+    return res.json({ streams: [{
+      title: `${t.title} P2P`,
+      infoTitle: "P2P Latino curado • Primer Latino",
+      url: magnet,
+      behaviorHints: { p2p: true }
+    }] });
+  }
 
+  // PREMIUM (Real-Debrid / AllDebrid / TorBox) → NUNCA P2P
   try {
     // REAL-DEBRID
-    if (service === "realdebrid" && token.length > 30) {
-      const auth = { headers: { Authorization: `Bearer ${token}` }, timeout: 25000 };
-      let t = (await axios.post("https://api.real-debrid.com/rest/1.0/torrents/addMagnet", 
+    if (service === "realdebrid") {
+      const auth = { headers: { Authorization: `Bearer ${token}` }, timeout: 30000 };
+      let t = (await axios.post("https://api.real-debrid.com/rest/1.0/torrents/addMagnet",
         new URLSearchParams({ magnet: `magnet:?xt=urn:btih:${hash}` }), auth)).data;
 
       let attempts = 0;
-      while (attempts < 60 && !t.links) {
+      while (attempts < 80 && !t.links) {
         await new Promise(r => setTimeout(r, 3000));
         t = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${t.id}`, auth)).data;
         attempts++;
       }
-      if (t.links?.[0]) {
-        const video = t.files?.find(f => /\.(mkv|mp4)$/i.test(f.path)) || t.files[0];
-        if (video && video.selected !== 1) {
-          await axios.post(`https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${t.id}`, 
-            new URLSearchParams({ files: video.id }), auth);
-        }
-        const link = await axios.post("https://api.real-debrid.com/rest/1.0/unrestrict/link", 
-          new URLSearchParams({ link: t.links[0] }), auth);
-        const url = link.data.download;
-        cache.set(hash, { url, expires: Date.now() + 86400000 });
-        const titulo = crearTitulo(item);
-        return res.json({ streams: [{ title: titulo.title, infoTitle: titulo.infoTitle, url }] });
+      if (!t.links?.[0]) return res.json({ streams: [] });
+
+      const video = t.files?.find(f => /\.(mkv|mp4)$/i.test(f.path)) || t.files[0];
+      if (video && video.selected !== 1) {
+        await axios.post(`https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${t.id}`,
+          new URLSearchParams({ files: video.id }), auth);
       }
+      const link = await axios.post("https://api.real-debrid.com/rest/1.0/unrestrict/link",
+        new URLSearchParams({ link: t.links[0] }), auth);
+      const url = link.data.download;
+      cache.set(hash, { url, expires: Date.now() + 86400000 });
+      const titulo = crearTitulo(item);
+      return res.json({ streams: [{ title: titulo.title, infoTitle: titulo.infoTitle, url }] });
     }
 
     // ALLDEBRID
-    if (service === "alldebrid" && token.length > 20) {
+    if (service === "alldebrid") {
       const magnet = `magnet:?xt=urn:btih:${hash}`;
       const add = await axios.get(`https://api.alldebrid.com/v4/magnet/upload?agent=PrimerLatino&token=${token}&magnets[]=${encodeURIComponent(magnet)}`);
       const id = add.data.data.magnets[0].id;
 
       let status;
+      let attempts = 0;
       do {
         await new Promise(r => setTimeout(r, 4000));
         status = (await axios.get(`https://api.alldebrid.com/v4/magnet/status?agent=PrimerLatino&token=${token}&id=${id}`)).data.data.magnets[0];
-      } while (status.status !== "Ready");
+        attempts++;
+      } while (status.status !== "Ready" && attempts < 70);
+
+      if (status.status !== "Ready") return res.json({ streams: [] });
 
       const videoLink = status.links.find(l => /\.(mkv|mp4)$/i.test(l.filename)) || status.links[0];
       const unrestrict = await axios.get(`https://api.alldebrid.com/v4/link/unlock?agent=PrimerLatino&token=${token}&link=${encodeURIComponent(videoLink.link)}`);
@@ -151,15 +167,19 @@ app.get("/*/stream/:type/:id.json", async (req, res) => {
     }
 
     // TORBOX
-    if (service === "torbox" && token.length > 30) {
+    if (service === "torbox") {
       const add = await axios.post("https://api.torbox.app/v1/torrents/add", { token, magnet: `magnet:?xt=urn:btih:${hash}` });
       const torrentId = add.data.detail.id;
 
       let info;
+      let attempts = 0;
       do {
         await new Promise(r => setTimeout(r, 4000));
         info = (await axios.get(`https://api.torbox.app/v1/torrents/info/${torrentId}?token=${token}`)).data.detail;
-      } while (info.status !== "completed");
+        attempts++;
+      } while (info.status !== "completed" && attempts < 70);
+
+      if (info.status !== "completed") return res.json({ streams: [] });
 
       const file = info.files.find(f => /\.(mkv|mp4)$/i.test(f.name)) || info.files[0];
       const url = `https://tbx.sx/dl/${file.hash}/${encodeURIComponent(file.name)}?token=${token}`;
@@ -170,16 +190,17 @@ app.get("/*/stream/:type/:id.json", async (req, res) => {
     }
 
   } catch (e) {
-    console.log(`${service} falló → usando P2P`, e.message);
+    console.log(`Error en ${service}:`, e.message);
   }
 
-  // FALLBACK P2P
-  return sendP2P();
+  // Si llega aquí con debrid → no devolvemos nada (nada de P2P)
+  return res.json({ streams: [] });
 });
 
+// ==================== INICIO ====================
 const PORT = process.env.PORT || 7000;
 app.listen(PORT, () => {
-  console.log(`\nPRIMER LATINO v9.3.1 CORRIENDO`);
+  console.log(`\nPRIMER LATINO v9.3.2 CORRIENDO`);
   console.log(`@johnpradooo (X)`);
   console.log(`Primer Latino\n`);
 });
