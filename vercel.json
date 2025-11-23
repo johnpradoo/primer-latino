@@ -1,16 +1,16 @@
 {
   "rewrites": [
     {
-      "source": "/(realdebrid|alldebrid|torbox)=:token/(.*)",
-      "destination": "/api/addon.js"
-    },
-    {
       "source": "/",
       "destination": "/index.html"
     },
     {
       "source": "/:path",
       "destination": "/index.html"
+    },
+    {
+      "source": "/(realdebrid|alldebrid|torbox)=:token/(.*)",
+      "destination": "/api/addon.js"
     }
   ],
   "cleanUrls": true,
