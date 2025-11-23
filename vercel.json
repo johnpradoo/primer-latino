@@ -1,15 +1,27 @@
 {
-  "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "index.js",
-      "use": "@vercel/node"
+      "source": "/realdebrid=:token/(.*)",
+      "destination": "/api/addon.js?token=:token&path=$1"
+    },
+    {
+      "source": "/alldebrid=:token/(.*)",
+      "destination": "/api/addon.js?token=:token&path=$1"
+    },
+    {
+      "source": "/torbox=:token/(.*)",
+      "destination": "/api/addon.js?token=:token&path=$1"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
     }
   ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "index.js"
+  "functions": {
+    "api/addon.js": {
+      "memory": 1024,
+      "maxDuration": 30
     }
-  ]
+  },
+  "cleanUrls": true
 }
