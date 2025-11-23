@@ -9,20 +9,13 @@
   ],
   "routes": [
     {
-      "src": "/realdebrid=(?<token>[^/]+)/(?<path>.*)",
-      "dest": "/api/addon.js?token=$token&path=$path"
-    },
-    {
-      "src": "/alldebrid=(?<token>[^/]+)/(?<path>.*)",
-      "dest": "/api/addon.js?token=$token&path=$path"
-    },
-    {
-      "src": "/torbox=(?<token>[^/]+)/(?<path>.*)",
+      "src": "/(realdebrid|alldebrid|torbox)=(?<token>[^/]+)/(?<path>.*)",
       "dest": "/api/addon.js?token=$token&path=$path"
     },
     {
       "src": "/(.*)",
       "dest": "/public/index.html"
     }
-  ]
+  ],
+  "cleanUrls": true
 }
