@@ -1,18 +1,19 @@
 {
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/:path",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/(realdebrid|alldebrid|torbox)=:token/(.*)",
-      "destination": "/api/addon.js"
+      "src": "api/addon.js",
+      "use": "@vercel/node"
     }
   ],
-  "cleanUrls": true,
-  "trailingSlash": false
+  "routes": [
+    {
+      "src": "/(realdebrid|alldebrid|torbox)=[^/]+/(.*)",
+      "dest": "/api/addon.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }
