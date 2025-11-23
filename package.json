@@ -1,7 +1,6 @@
 {
   "name": "primer-latino",
   "version": "9.2.10",
-  "type": "module",
   "main": "api/addon.js",
   "scripts": {
     "dev": "node api/addon.js",
@@ -13,6 +12,6 @@
     "axios": "^1.7.4"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "18.x"
   }
 }
