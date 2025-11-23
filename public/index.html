@@ -54,34 +54,37 @@
   </div>
 
   <script>
+    // ←←← AQUÍ ESTÁ EL FIX DEFINITIVO ←←←
     const base = "https://www.primerlatino.com";
 
     function generate() {
-  const servicio = document.getElementById("debrid").value;
-  const token = document.getElementById("token").value.trim();
-  const result = document.getElementById("result");
-  const linkDisplay = document.getElementById("linkDisplay");
+      const servicio = document.getElementById("debrid").value;
+      const token = document.getElementById("token").value.trim();
+      const result = document.getElementById("result");
+      const linkDisplay = document.getElementById("linkDisplay");
 
-  if (!token) return alert("Pega tu token o API key");
+      if (!token) return alert("Pega tu token o API key");
 
-  const prefix = servicio === "real" ? "realdebrid" : 
-                servicio === "all" ? "alldebrid" : "torbox";
+      const prefix = servicio === "real" ? "realdebrid" : 
+                    servicio === "all" ? "alldebrid" : "torbox";
 
-  const link = `${base}/${prefix}=${token}/manifest.json`;  // Esto está bien, pero para evitar el slash extra en Stremio, usa encodeURIComponent en el token
-  const encodedLink = link.replace(token, encodeURIComponent(token));  // Nueva línea: codifica el token para URLs seguras
-  linkDisplay.textContent = encodedLink;
-  result.style.display = "block";
-}
+      // Codificamos el token para evitar errores de URL
+      const safeToken = encodeURIComponent(token);
+      const link = `${base}/${prefix}=${safeToken}/manifest.json`;
+
+      linkDisplay.textContent = link;
+      result.style.display = "block";
+    }
 
     function copyLink() {
       navigator.clipboard.writeText(document.getElementById("linkDisplay").textContent);
-      alert("Copiado!");
+      alert("¡Copiado al portapapeles!");
     }
 
     function installStremio() {
-      let link = document.getElementById("linkDisplay").textContent;
-      link = link.replace("https://", "").replace("http://", "");
-      location.href = "stremio://" + link;
+      const fullLink = document.getElementById("linkDisplay").textContent;
+      const stremioUrl = fullLink.replace("https://", "stremio://");
+      location.href = stremioUrl;
     }
   </script>
 </body>
