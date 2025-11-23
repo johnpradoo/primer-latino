@@ -1,3 +1,4 @@
+// api/addon.js
 const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
@@ -6,6 +7,7 @@ const path = require("path");
 const app = express();
 app.use(express.json());
 
+// CORS + headers
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -15,12 +17,12 @@ app.use((req, res, next) => {
 
 app.get("/", (req, res) => res.json({ status: "OK", message: "Primer Latino v9.2.10 – LEE EXACTAMENTE TU JSON" }));
 
-// CARGAR JSONs
+// CARGAR JSONs (una sola vez)
 let movies = [], seriesList = [], episodes = [];
 try {
-  movies = JSON.parse(fs.readFileSync(path.join(__dirname, "movies.json"), "utf-8")).movies || [];
-  seriesList = JSON.parse(fs.readFileSync(path.join(__dirname, "series.json"), "utf-8")).series || [];
-  episodes = JSON.parse(fs.readFileSync(path.join(__dirname, "episodes.json"), "utf-8")).episodes || [];
+  movies = JSON.parse(fs.readFileSync(path.join(__dirname, "../movies.json"), "utf-8")).movies || [];
+  seriesList = JSON.parse(fs.readFileSync(path.join(__dirname, "../series.json"), "utf-8")).series || [];
+  episodes = JSON.parse(fs.readFileSync(path.join(__dirname, "../episodes.json"), "utf-8")).episodes || [];
   console.log(`Cargados → ${movies.length} películas | ${seriesList.length} series | ${episodes.length} episodios`);
 } catch (e) {
   console.error("ERROR leyendo JSONs:", e.message);
@@ -42,10 +44,12 @@ const manifest = {
   ],
   idPrefixes: ["tt"]
 };
-app.get("/realdebrid=:token/manifest.json", (req, res) => res.json(manifest));
 
-// CATÁLOGOS Y METAS (sin cambios)
-app.get("/realdebrid=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
+// RUTAS DINÁMICAS CON TOKEN
+app.get("/:service(realdebrid|alldebrid|torbox)=:token/manifest.json", (req, res) => res.json(manifest));
+
+// CATÁLOGOS
+app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
   const metas = movies.map(m => ({
     id: m.id, type: "movie",
     name: m.title + (m.quality ? ` (${m.quality.split("|")[0].trim()})` : ""),
@@ -53,19 +57,24 @@ app.get("/realdebrid=:token/catalog/movie/primerlatino_movies.json", (req, res) 
   }));
   res.json({ metas });
 });
-app.get("/realdebrid=:token/catalog/series/primerlatino_series.json", (req, res) => {
+
+app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlatino_series.json", (req, res) => {
   const metas = seriesList.map(s => ({
     id: s.id, type: "series", name: s.title,
     poster: s.poster || "https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true"
   }));
   res.json({ metas });
 });
-app.get("/realdebrid=:token/meta/movie/:id.json", (req, res) => {
+
+// META MOVIE
+app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/movie/:id.json", (req, res) => {
   const m = movies.find(x => x.id === req.params.id);
   if (!m) return res.json({ meta: null });
   res.json({ meta: { id: m.id, type: "movie", name: m.title, poster: m.poster } });
 });
-app.get("/realdebrid=:token/meta/series/:id.json", (req, res) => {
+
+// META SERIES
+app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (req, res) => {
   const baseId = req.params.id.split(":")[0];
   const serie = seriesList.find(s => s.id === baseId);
   if (!serie) return res.json({ meta: null });
@@ -83,22 +92,16 @@ app.get("/realdebrid=:token/meta/series/:id.json", (req, res) => {
 // CACHÉ
 const cache = new Map();
 
-// LEE EXACTAMENTE LO QUE TÚ ESCRIBISTE EN EL JSON
 function crearTituloEpico(item, fromCache = false) {
   const calidad = (item.quality || "1080p").trim();
   const idioma = (item.language || "MX LATINO").trim();
-
-  // Línea superior: calidad + idioma + rayo si es caché + Primer Latino
-  const title = `${calidad} ${idioma}${fromCache ? " ⚡️| CAHE" : ""} 🍿Primer Latino`.trim();
-
-  // Línea inferior: solo "Primer Latino" (o puedes dejar vacío si prefieres)
-  const infoTitle = "🍿 Primer Latino";
-
+  const title = `${calidad} ${idioma}${fromCache ? " ⚡️| CAHE" : ""} Primer Latino`.trim();
+  const infoTitle = "Primer Latino";
   return { title, infoTitle };
 }
 
-// STREAM FINAL v9.0
-app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
+// STREAM (solo Real-Debrid por ahora)
+app.get("/:service(realdebrid)=:token/stream/:type/:id.json", async (req, res) => {
   const { token, type, id } = req.params;
 
   const item = type === "movie" ? movies.find(m => m.id === id) : episodes.find(e => e.id === id);
@@ -106,10 +109,8 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
 
   const hash = item.hash.trim().toUpperCase();
 
-  // CACHÉ + RAYO
   if (cache.has(hash) && Date.now() < cache.get(hash).expires) {
     const titulos = crearTituloEpico(item, true);
-    console.log(`CACHÉ RAYO → ${titulos.title}`);
     return res.json({ streams: [{ title: titulos.title, infoTitle: titulos.infoTitle, url: cache.get(hash).url }] });
   }
 
@@ -148,8 +149,6 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
       cache.set(hash, { url: finalUrl, expires: Date.now() + 24*60*60*1000 });
 
       const titulos = crearTituloEpico(item, false);
-      console.log(`PLAY → ${titulos.title}`);
-
       return res.json({
         streams: [{
           title: titulos.title,
@@ -165,9 +164,5 @@ app.get("/realdebrid=:token/stream/:type/:id.json", async (req, res) => {
   res.json({ streams: [] });
 });
 
-const PORT = process.env.PORT || 7000;
-app.listen(PORT, () => {
-  console.log(`\nPRIMER LATINO v9.2.10 CORRIENDO 🟢`);
-  console.log(`@johnpradooo (X)`);
-  console.log(`🍿 Primer Latino\n`);
-});
+// ←←← ESTO ES LO ÚNICO NUEVO QUE NECESITA VERCEL ←←←
+module.exports = app;
