@@ -1,29 +1,31 @@
-// api/addon.js - 100% COMPATIBLE VERCEL 2025
-import express from "express";
-import axios from "axios";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// api/addon.js - COMMONJS PARA VERCEL 2025 (sin ESM)
+const express = require("express");
+const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
 app.use(express.json());
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.type("application/json");
   next();
 });
 
-app.get("/", (req, res) => res.json({ status: "OK", message: "Primer Latino v9.2.10" }));
+app.get("/", (req, res) => res.json({ status: "OK", message: "Primer Latino v9.2.10 – LEE EXACTAMENTE TU JSON" }));
 
 // CARGAR JSONs
-const movies = JSON.parse(fs.readFileSync(path.join(__dirname, "../movies.json"), "utf-8")).movies || [];
-const seriesList = JSON.parse(fs.readFileSync(path.join(__dirname, "../series.json"), "utf-8")).series || [];
-const episodes = JSON.parse(fs.readFileSync(path.join(__dirname, "../episodes.json"), "utf-8")).episodes || [];
+let movies = [], seriesList = [], episodes = [];
+try {
+  movies = JSON.parse(fs.readFileSync(path.join(__dirname, "../movies.json"), "utf-8")).movies || [];
+  seriesList = JSON.parse(fs.readFileSync(path.join(__dirname, "../series.json"), "utf-8")).series || [];
+  episodes = JSON.parse(fs.readFileSync(path.join(__dirname, "../episodes.json"), "utf-8")).episodes || [];
+  console.log(`Cargados → ${movies.length} películas | ${seriesList.length} series | ${episodes.length} episodios`);
+} catch (e) {
+  console.error("ERROR leyendo JSONs:", e.message);
+}
 
 // MANIFEST
 const manifest = {
@@ -42,7 +44,7 @@ const manifest = {
   idPrefixes: ["tt"]
 };
 
-// RUTAS
+// RUTAS CON TOKEN
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/manifest.json", (req, res) => res.json(manifest));
 
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
@@ -83,18 +85,21 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (r
   res.json({ meta: { id: baseId, type: "series", name: serie.title, poster: serie.poster, videos } });
 });
 
-// CACHÉ Y STREAM (Real-Debrid)
+// CACHÉ
 const cache = new Map();
 
 function crearTituloEpico(item, fromCache = false) {
   const calidad = (item.quality || "1080p").trim();
-  const idioma = (item.language || "LATINO").trim();
-  const title = `${calidad} ${idioma}${fromCache ? " CACHÉ" : ""} Primer Latino`;
-  return { title, infoTitle: "Primer Latino" };
+  const idioma = (item.language || "MX LATINO").trim();
+  const title = `${calidad} ${idioma}${fromCache ? " ⚡️| CAHE" : ""} Primer Latino`.trim();
+  const infoTitle = "Primer Latino";
+  return { title, infoTitle };
 }
 
+// STREAM (Real-Debrid)
 app.get("/:service(realdebrid)=:token/stream/:type/:id.json", async (req, res) => {
   const { token, type, id } = req.params;
+
   const item = type === "movie" ? movies.find(m => m.id === id) : episodes.find(e => e.id === id);
   if (!item || !item.hash) return res.json({ streams: [] });
 
@@ -102,6 +107,7 @@ app.get("/:service(realdebrid)=:token/stream/:type/:id.json", async (req, res) =
 
   if (cache.has(hash) && Date.now() < cache.get(hash).expires) {
     const titulos = crearTituloEpico(item, true);
+    console.log(`CACHÉ RAYO → ${titulos.title}`);
     return res.json({ streams: [{ title: titulos.title, infoTitle: titulos.infoTitle, url: cache.get(hash).url }] });
   }
 
@@ -114,6 +120,7 @@ app.get("/:service(realdebrid)=:token/stream/:type/:id.json", async (req, res) =
       const magnet = `magnet:?xt=urn:btih:${hash}`;
       const add = await axios.post("https://api.real-debrid.com/rest/1.0/torrents/addMagnet", new URLSearchParams({magnet}), auth);
       const torrentId = add.data.id;
+
       for (let i = 0; i < 40; i++) {
         torrentInfo = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentId}`, auth)).data;
         if (torrentInfo.status === "downloaded") break;
@@ -125,20 +132,36 @@ app.get("/:service(realdebrid)=:token/stream/:type/:id.json", async (req, res) =
       }
     }
 
+    if ((!torrentInfo.links || torrentInfo.links.length === 0) && torrentInfo.id) {
+      const fresh = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentInfo.id}`, auth)).data;
+      const video = fresh.files.find(f => /\.(mp4|mkv|avi|mov|webm)$/i.test(f.path)) || fresh.files[0];
+      await axios.post(`https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${torrentInfo.id}`, new URLSearchParams({files: video.id}), auth);
+      await new Promise(r => setTimeout(r, 2000));
+      torrentInfo = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentInfo.id}`, auth)).data;
+    }
+
     if (torrentInfo.links?.[0]) {
       const link = await axios.post("https://api.real-debrid.com/rest/1.0/unrestrict/link", new URLSearchParams({link: torrentInfo.links[0]}), auth);
       const finalUrl = link.data.download;
       cache.set(hash, { url: finalUrl, expires: Date.now() + 24*60*60*1000 });
+
       const titulos = crearTituloEpico(item, false);
-      return res.json({ streams: [{ title: titulos.title, infoTitle: titulos.infoTitle, url: finalUrl }] });
+      console.log(`PLAY → ${titulos.title}`);
+
+      return res.json({
+        streams: [{
+          title: titulos.title,
+          infoTitle: titulos.infoTitle,
+          url: finalUrl
+        }]
+      });
     }
   } catch (err) {
-    console.error("ERROR:", err.message);
+    console.error("ERROR:", err.response?.data || err.message);
   }
+
   res.json({ streams: [] });
 });
 
-// EXPORTACIÓN PARA VERCEL
-export default async function handler(req, res) {
-  await new Promise(resolve => app(req, res, resolve));
-}
+// EXPORT PARA VERCEL (CommonJS)
+module.exports = app;
