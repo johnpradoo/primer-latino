@@ -1,4 +1,4 @@
-// api/addon.js → FUNCIONA 100% EN VERCEL 2025 CON JSONs SEPARADOS
+// api/addon.js → FUNCIONA 100% EN VERCEL 2025 (JSONs en public/)
 const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
@@ -15,9 +15,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// FUNCIÓN QUE LEE JSONs EN VERCEL SIN FALLAR (esto es la clave)
+// FUNCIÓN QUE LEE LOS JSONs DESDE LA CARPETA public/ (esto es la magia)
 function loadJSON(filename) {
-  const filePath = path.resolve(process.cwd(), filename);
+  const filePath = path.resolve(process.cwd(), "public", filename);
   if (!fs.existsSync(filePath)) {
     console.error(`Archivo no encontrado: ${filename}`);
     return {};
@@ -25,7 +25,7 @@ function loadJSON(filename) {
   return JSON.parse(fs.readFileSync(filePath, "utf-8"));
 }
 
-// CARGAR TUS JSONs SEPARADOS
+// CARGAR TUS JSONs DESDE public/
 let movies = [], seriesList = [], episodes = [];
 
 try {
@@ -48,8 +48,8 @@ const manifest = {
   version: "9.2.10",
   name: "Primer Latino",
   description: "Películas y Series Latino Full Premium – by @johnpradoo",
-  logo: "https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true",
-  background: "https://github.com/johnpradoo/primer-latino/blob/main/logo/banner.jpg?raw=true",
+  logo: "https://www.primerlatino.com/icon.png", // o la ruta que uses
+  background: "https://www.primerlatino.com/banner.jpg",
   types: ["movie", "series"],
   resources: ["catalog", "meta", "stream"],
   catalogs: [
@@ -112,7 +112,7 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (r
   res.json({ meta: { id: baseId, type: "series", name: serie.title, poster: serie.poster, videos } });
 });
 
-// CACHÉ Y STREAM REAL-DEBRID
+// CACHÉ Y STREAM REAL-DEBRID (igual que antes)
 const cache = new Map();
 
 function crearTituloEpico(item, fromCache = false) {
@@ -131,7 +131,6 @@ app.get("/:service(realdebrid)=:token/stream/:type/:id.json", async (req, res) =
 
   const hash = item.hash.trim().toUpperCase();
 
-  // CACHÉ
   if (cache.has(hash) && Date.now() < cache.get(hash).expires) {
     const t = crearTituloEpico(item, true);
     return res.json({ streams: [{ title: t.title, infoTitle: t.infoTitle, url: cache.get(hash).url }] });
@@ -140,11 +139,9 @@ app.get("/:service(realdebrid)=:token/stream/:type/:id.json", async (req, res) =
   try {
     const auth = { headers: { Authorization: `Bearer ${token}` } };
 
-    // Buscar torrent ya descargado
     let torrentInfo = (await axios.get("https://api.real-debrid.com/rest/1.0/torrents?limit=1000", auth)).data
       .find(t => t.hash.toUpperCase() === hash && t.status === "downloaded");
 
-    // Si no existe, agregarlo
     if (!torrentInfo) {
       const magnet = `magnet:?xt=urn:btih:${hash}`;
       const add = await axios.post("https://api.real-debrid.com/rest/1.0/torrents/addMagnet", new URLSearchParams({ magnet }), auth);
@@ -161,7 +158,6 @@ app.get("/:service(realdebrid)=:token/stream/:type/:id.json", async (req, res) =
       }
     }
 
-    // Si aún no tiene links, forzar selección
     if (torrentInfo && (!torrentInfo.links || torrentInfo.links.length === 0)) {
       const fresh = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentInfo.id}`, auth)).data;
       const video = fresh.files.find(f => /\.(mp4|mkv|avi|mov|webm)$/i.test(f.path)) || fresh.files[0];
@@ -186,5 +182,4 @@ app.get("/:service(realdebrid)=:token/stream/:type/:id.json", async (req, res) =
   res.json({ streams: [] });
 });
 
-// EXPORT
 module.exports = app;
