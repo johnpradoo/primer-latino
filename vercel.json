@@ -2,23 +2,12 @@
   "rewrites": [
     {
       "source": "/(realdebrid|alldebrid|torbox)=:token/(.*)",
-      "destination": "/api/addon.js?token=:token&path=$2"
+      "destination": "/api/addon.js"
     },
     {
       "source": "/",
       "destination": "/index.html"
-    },
-    {
-      "source": "/:path*",
-      "destination": "/index.html"
     }
   ],
-  "functions": {
-    "api/addon.js": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
-  "cleanUrls": true,
-  "trailingSlash": false
+  "cleanUrls": true
 }
