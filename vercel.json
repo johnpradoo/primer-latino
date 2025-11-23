@@ -1,12 +1,19 @@
 {
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/(realdebrid|alldebrid|torbox)=:token/(.*)",
-      "destination": "/api/addon.js"
+      "src": "api/addon.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(realdebrid|alldebrid|torbox)=:token/(.*)",
+      "dest": "/api/addon.js"
     },
     {
-      "source": "/",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/public/index.html"
     }
   ],
   "cleanUrls": true
