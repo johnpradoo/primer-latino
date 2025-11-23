@@ -5,8 +5,12 @@
       "destination": "/api/addon.js"
     },
     {
-      "source": "/:path*",
-      "destination": "/public/index.html"
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/:path",
+      "destination": "/index.html"
     }
   ],
   "cleanUrls": true,
