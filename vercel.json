@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "public": true,
   "builds": [
     {
       "src": "api/addon.js",
@@ -8,13 +9,20 @@
   ],
   "routes": [
     {
-      "src": "/(realdebrid|alldebrid|torbox)=:token/(.*)",
-      "dest": "/api/addon.js"
+      "src": "/realdebrid=(?<token>[^/]+)/(?<path>.*)",
+      "dest": "/api/addon.js?token=$token&path=$path"
+    },
+    {
+      "src": "/alldebrid=(?<token>[^/]+)/(?<path>.*)",
+      "dest": "/api/addon.js?token=$token&path=$path"
+    },
+    {
+      "src": "/torbox=(?<token>[^/]+)/(?<path>.*)",
+      "dest": "/api/addon.js?token=$token&path=$path"
     },
     {
       "src": "/(.*)",
       "dest": "/public/index.html"
     }
-  ],
-  "cleanUrls": true
+  ]
 }
