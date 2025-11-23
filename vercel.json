@@ -1,27 +1,28 @@
 {
-  "rewrites": [
+  "version": 2,
+  "public": true,
+  "builds": [
     {
-      "source": "/realdebrid=:token/(.*)",
-      "destination": "/api/addon.js?token=:token&path=$1"
-    },
-    {
-      "source": "/alldebrid=:token/(.*)",
-      "destination": "/api/addon.js?token=:token&path=$1"
-    },
-    {
-      "source": "/torbox=:token/(.*)",
-      "destination": "/api/addon.js?token=:token&path=$1"
-    },
-    {
-      "source": "/",
-      "destination": "/index.html"
+      "src": "api/addon.js",
+      "use": "@vercel/node"
     }
   ],
-  "functions": {
-    "api/addon.js": {
-      "memory": 1024,
-      "maxDuration": 30
+  "routes": [
+    {
+      "src": "/realdebrid=(?<token>[^/]+)/(?<path>.*)",
+      "dest": "/api/addon.js?token=$token&path=$path"
+    },
+    {
+      "src": "/alldebrid=(?<token>[^/]+)/(?<path>.*)",
+      "dest": "/api/addon.js?token=$token&path=$path"
+    },
+    {
+      "src": "/torbox=(?<token>[^/]+)/(?<path>.*)",
+      "dest": "/api/addon.js?token=$token&path=$path"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/index.html"
     }
-  },
-  "cleanUrls": true
+  ]
 }
