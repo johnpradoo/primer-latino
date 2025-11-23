@@ -25,44 +25,62 @@
   </style>
 </head>
 <body>
+
   <div class="card">
     <img src="https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true" alt="Primer Latino" class="logo">
+
     <div class="aviso">
       Este addon no captura todo el API • Mantenemos transparencia total: <br>
       <strong>tu token solo lo ves tú</strong>, yo solo veo los últimos 4 dígitos como referencia.
     </div>
+
     <select id="debrid">
       <option value="real">Real-Debrid</option>
       <option value="all">AllDebrid</option>
       <option value="torbox">TorBox</option>
     </select>
+
     <input type="text" id="token" placeholder="Token / API Key" autofocus />
+
     <button class="btn btn-generate" onclick="generate()">GENERAR ENLACE</button>
+
     <div class="result" id="result">
       <div class="link" id="linkDisplay"></div>
       <button class="btn btn-small" onclick="copyLink()">COPIAR</button>
       <button class="btn btn-stremio" onclick="installStremio()">INSTALAR EN STREMIO</button>
     </div>
+
     <footer>© Primer Latino 2025 • Privado & Transparente</footer>
   </div>
 
   <script>
     const base = "https://www.primerlatino.com";
+
     function generate() {
       const servicio = document.getElementById("debrid").value;
       const token = document.getElementById("token").value.trim();
-      if (!token) return alert("Pega tu token");
-      const prefix = servicio === "real" ? "realdebrid" : servicio === "all" ? "alldebrid" : "torbox";
-      const link = `${base}/${prefix}=${encodeURIComponent(token)}/manifest.json`;
-      document.getElementById("linkDisplay").textContent = link;
-      document.getElementById("result").style.display = "block";
+      const result = document.getElementById("result");
+      const linkDisplay = document.getElementById("linkDisplay");
+
+      if (!token) return alert("Pega tu token o API key");
+
+      const prefix = servicio === "real" ? "realdebrid" : 
+                    servicio === "all" ? "alldebrid" : "torbox";
+
+      const link = `${base}/${prefix}=${token}/manifest.json`;
+      linkDisplay.textContent = link;
+      result.style.display = "block";
     }
+
     function copyLink() {
       navigator.clipboard.writeText(document.getElementById("linkDisplay").textContent);
       alert("Copiado!");
     }
+
     function installStremio() {
-      location.href = document.getElementById("linkDisplay").textContent.replace("https://", "stremio://");
+      let link = document.getElementById("linkDisplay").textContent;
+      link = link.replace("https://", "").replace("http://", "");
+      location.href = "stremio://" + link;
     }
   </script>
 </body>
