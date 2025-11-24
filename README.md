@@ -23,7 +23,7 @@
 
 ### Instalación en 10 segundos
 
-1. Entra aquí → [Genera 🍿](https://wwww.primerlatino.com)  
+1. Entra aquí → [Genera 🍿](https://www.primerlatino.com)  
 2. Pega tu token de Real-Debrid  
 3. Pulsa **GENERAR ENLACE**  
 4. Toca **“Haz clic aquí para instalar en Stremio”** → ¡listo!
