@@ -1,4 +1,4 @@
-# Primer Latino v9.3  
+# Primer Latino v9.2.10  
 **El addon privado más rápido, estable y transparente de Latinoamérica — 2025**
 
 > 100 % hecho desde cero por **@johnpradoo** con conocimiento real, amor y obsesión por la perfeza.
