@@ -117,10 +117,10 @@ const cache = new Map();
 
 function crearTituloEpico(item, fromCache = false) {
   const calidad = (item.quality || "1080p").trim();
-  const idioma = (item.language || "LATINO").trim().replace("🇲🇽", "MX");
+  const idioma = (item.language || "LATINO").trim().replace(" 🇲🇽 ", " 🇺🇸 ");
   return {
     title: `${calidad} ${idioma}${fromCache ? " ⚡️ CACHÉ" : ""} Primer Latino`.trim(),
-    infoTitle: "Primer Latino"
+    infoTitle: " 🍿Primer Latino"
   };
 }
 
