@@ -3,8 +3,7 @@
   "builds": [
     {
       "src": "api/addon.js",
-      "use": "@vercel/node",
-      "src": "public/index.html", "use": "@vercel/static"
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -13,6 +12,8 @@
       "dest": "/api/addon.js"
     },
     {
+      "src": "public/index.html",
+      "use": "@vercel/static",
       "src": "/(.*)",
       "dest": "/public/index.html"
     }
