@@ -1,4 +1,4 @@
-<img src="https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true" align="right" width="120" />
+<img src="[https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true](https://github.com/johnpradoo/primer-latino/blob/main/rebi-icon/icon.png)" align="right" width="120" />
 
 # Primer Latino v9.2.10  
 **El addon privado más rápido, estable y transparente de Latinoamérica — 2025**
@@ -23,7 +23,7 @@
 
 ### Instalación en 10 segundos
 
-1. Entra aquí → [Genera 🍿](https://johnpradoo.github.io/primer-latino/)  
+1. Entra aquí → [Genera 🍿](https://wwww.primerlatino.com)  
 2. Pega tu token de Real-Debrid  
 3. Pulsa **GENERAR ENLACE**  
 4. Toca **“Haz clic aquí para instalar en Stremio”** → ¡listo!
