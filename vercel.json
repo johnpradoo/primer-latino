@@ -1,10 +1,9 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "api/addon.js",
-      "use": "@vercel/node"
-    }
+    { "src": "api/addon.js", "use": "@vercel/node" },
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "*.json", "use": "@vercel/static" }
   ],
   "routes": [
     {
@@ -12,8 +11,8 @@
       "dest": "/api/addon.js"
     },
     {
-      "src": "public/index.html",
-      "dest": "/public/index.html"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
