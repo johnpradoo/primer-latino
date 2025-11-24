@@ -119,8 +119,8 @@ function crearTituloEpico(item, fromCache = false) {
   const calidad = (item.quality || "1080p").trim();
   const idioma = (item.language || "LATINO").trim().replace(" 🇲🇽 ", " 🇺🇸 ");
   return {
-    title: `${calidad} ${idioma}${fromCache ? " ⚡️ CACHÉ" : ""} Primer Latino`.trim(),
-    infoTitle: " 🍿Primer Latino"
+    title: `${calidad} ${idioma}${fromCache ? " ⚡️ CACHÉ" : ""} 🍿Primer Latino`.trim(),
+    infoTitle: "🍿Primer Latino"
   };
 }
 
