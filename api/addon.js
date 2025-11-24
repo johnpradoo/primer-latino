@@ -48,8 +48,8 @@ const manifest = {
   version: "9.2.50",
   name: "Primer Latino",
   description: "Películas y Series Latino Full Premium – by @johnpradoo",
-  logo: "https://github.com/johnpradoo/primer-latino/blob/main/rebi-icon/icon.png", // o la ruta que uses
-  background: "https://github.com/johnpradoo/primer-latino/blob/main/rebi-icon/banner.jpg",
+  logo: "https://github.com/johnpradoo/primer-latino/blob/531779b968c5ad77eb29112e33aa0f069083595e/public/icon.png?raw=true", // o la ruta que uses
+  background: "https://github.com/johnpradoo/primer-latino/blob/531779b968c5ad77eb29112e33aa0f069083595e/public/banner.jpg?raw=true",
   types: ["movie", "series"],
   resources: ["catalog", "meta", "stream"],
   catalogs: [
