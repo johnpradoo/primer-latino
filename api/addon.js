@@ -45,11 +45,11 @@ try {
 // MANIFEST
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "9.2.10",
+  version: "9.2.50",
   name: "Primer Latino",
   description: "Películas y Series Latino Full Premium – by @johnpradoo",
-  logo: "https://www.primerlatino.com/icon.png", // o la ruta que uses
-  background: "https://www.primerlatino.com/banner.jpg",
+  logo: "https://github.com/johnpradoo/primer-latino/blob/main/rebi-icon/icon.png", // o la ruta que uses
+  background: "https://github.com/johnpradoo/primer-latino/blob/main/rebi-icon/banner.jpg",
   types: ["movie", "series"],
   resources: ["catalog", "meta", "stream"],
   catalogs: [
