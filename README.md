@@ -1,5 +1,4 @@
-<img src="https://github.com/johnpradoo/primer-latino/blob/531779b968c5ad77eb29112e33aa0f069083595e/public/icon.png?raw=true" align="right" width="120" />
-
+<img src="https://drive.google.com/file/d/18dhd8sg3rzeAlzBI7P4N-RrpZYZGKLuw/view?usp=sharing" align="right" width="120" />
 # Primer Latino v9.3  
 **El addon privado más rápido, estable y transparente de Latinoamérica — 2025**
 
