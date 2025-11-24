@@ -1,4 +1,4 @@
-<img src="[https://github.com/johnpradoo/primer-latino/blob/main/logo/icon.png?raw=true](https://github.com/johnpradoo/primer-latino/blob/main/rebi-icon/icon.png)" align="right" width="120" />
+<img src="https://github.com/johnpradoo/primer-latino/blob/main/rebi-icon/icon.png" align="right" width="120" />
 
 # Primer Latino v9.2.10  
 **El addon privado más rápido, estable y transparente de Latinoamérica — 2025**
