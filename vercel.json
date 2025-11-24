@@ -13,6 +13,8 @@
     {
       "src": "/(.*)",
       "dest": "/index.html"
-    }
+    },
+    { "src": "/icon.png", "dest": "/icon.png" },
+    { "src": "/banner.jpg", "dest": "/banner.jpg" }
   ]
 }
