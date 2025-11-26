@@ -57,6 +57,10 @@ const manifest = {
     { type: "series", id: "primerlatino_series", name: "Series Latino" }
   ],
   idPrefixes: ["tt"]
+  stremioAddonsConfig: {
+    issuer: "https://stremio-addons.net",
+    signature: "eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..Yq20TgraX11xQ1atTJBupw.VSWTon9CqMjFLNZOFfETauwyG3EH0ylWJT1BmJzl58Y9ezYJ0CYNSk99WtnWexvVhJfPHyA7g3XVyD83cnW-AlGAQp9WJF5btMyv7ThlkOb7ahsMV_vJ5K874Z3Mk8KH.JWeljgfk0HFvnXtTFkT4tw"
+  }
 };
 
 // RUTAS
