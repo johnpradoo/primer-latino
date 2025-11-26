@@ -47,8 +47,8 @@ const manifest = {
   id: "org.primerlatino.addon",
   version: "9.2.50",
   name: "Primer Latino",
-  description: "Películas y Series Latino Full Premium – by @johnpradoo",
-  logo: "https://www.primerlatino.com/icon.png", // o la ruta que uses
+  description: "Películas y Series Latino Full Premium – https://ko-fi.com/johnpradoo ☕",
+  logo: "https://www.primerlatino.com/icon.png", // icon
   background: "https://www.primerlatino.com/banner.jpg",
   types: ["movie", "series"],
   resources: ["catalog", "meta", "stream"],
