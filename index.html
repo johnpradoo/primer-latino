@@ -36,6 +36,12 @@
       overflow:hidden;
       border:1px solid var(--border);
     }
+    /* Ajuste específico para tarjetas de banner (más delgado) */
+    .card.banner-card {
+      border: 0.5px solid var(--border); /* Borde más delgado */
+      box-shadow: 0 8px 24px rgba(0,0,0,0.04); /* Sombra más sutil */
+      margin-bottom: 16px; /* Margen inferior más delgado */
+    }
     .header-card .header{
       background:linear-gradient(135deg,#ff2e7f,#ff6ba8);
       color:white;
@@ -168,6 +174,19 @@
       color:var(--soft);
       font-size:0.9rem;
     }
+
+    /* Estilo ajustado para el banner de Real-Debrid (más compacto) */
+    .banner-section {
+      text-align: center;
+      padding: 8px; /* Padding reducido para que sea más ajustado a la imagen */
+    }
+    .banner-section img {
+      max-width: 100%;
+      height: 80px; /* Altura fija para hacerlo más pequeño */
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
@@ -181,7 +200,16 @@
     </div>
   </div>
 
-  <!-- TARJETA 2: GENERADOR -->
+  <!-- TARJETA 2: BANNER DE REAL-DEBRID (ahora con clase banner-card para ajustes específicos) -->
+  <div class="card banner-card">
+    <div class="banner-section">
+      <a href="http://real-debrid.com/?id=15788320" title="Real-Debrid">
+        <img src="http://real-debrid.com/static/images/banner/es.png" alt="Real-Debrid Banner" />
+      </a>
+    </div>
+  </div>
+
+  <!-- TARJETA 3: GENERADOR -->
   <div class="card">
     <div class="section">
       <div class="title">Genera tu enlace privado</div>
@@ -208,7 +236,7 @@
     </div>
   </div>
 
-  <!-- TARJETA 3: DONAR -->
+  <!-- TARJETA 4: DONAR -->
   <div class="card">
     <div class="section">
       <div class="title">Apóyame con un cafecito</div>
