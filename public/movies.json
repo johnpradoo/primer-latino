@@ -1,6 +1,17 @@
 {
   "movies": [
     {
+      "id": "tt1262426",
+      "title": "Wicked: Part I",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "0AB30D3B153C538B063A05ED1AD36739DD71CBDB",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/hDQXqvmmikekQ15uxhisBDwEA63.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt30144839",
       "title": "Una batalla tras otra",
       "quality": "4K | Dolby Vision | Dolby Atmos",
@@ -9,6 +20,17 @@
       "hash": "0CD1618D27CD8BF02011558B4BDEA0FFA4FF2D9C",
       "status": "aprobado",
       "poster": "https://image.tmdb.org/t/p/w1280/sRiK0GwWAQ1qukvAgN3I9t5dGVq.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt27986457",
+      "title": "La educación de Polly McClusky (2025)",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "0A3132653576B445FE9D3DC064968A1E0B5A491E",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/oflNtC0av7EoQkvasSP2HV3h0yC.jpg",
       "type": "movie"
     },
     {
