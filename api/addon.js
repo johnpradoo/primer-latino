@@ -1,4 +1,4 @@
-// api/addon.js → FUNCIONA 100% EN VERCEL 2025 (JSONs en public/)
+// api/addon.js → INTEGRADO CON ALLDEBRID Y TORBOX (modular)
 const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
@@ -15,7 +15,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// FUNCIÓN QUE LEE LOS JSONs DESDE LA CARPETA public/ (esto es la magia)
+// FUNCIÓN QUE LEE LOS JSONs DESDE LA CARPETA public/
 function loadJSON(filename) {
   const filePath = path.resolve(process.cwd(), "public", filename);
   if (!fs.existsSync(filePath)) {
@@ -48,7 +48,7 @@ const manifest = {
   version: "9.2.50",
   name: "Primer Latino",
   description: "Películas y Series Latino Full Premium – https://ko-fi.com/johnpradoo ☕",
-  logo: "https://www.primerlatino.com/icon.png", // icon
+  logo: "https://www.primerlatino.com/icon.png",
   background: "https://www.primerlatino.com/banner.jpg",
   types: ["movie", "series"],
   resources: ["catalog", "meta", "stream"],
@@ -63,11 +63,17 @@ const manifest = {
   }
 };
 
-// RUTAS
+// IMPORTA LOS SERVICIOS (modular)
+const realDebrid = require("./services/realDebrid");
+const allDebrid = require("./services/allDebrid");
+const torbox = require("./services/torbox");
+
+// RUTAS (manifest para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/manifest.json", (req, res) => {
   res.json(manifest);
 });
 
+// Catalog movie (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
   const metas = movies.map(m => ({
     id: m.id,
@@ -78,6 +84,7 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatin
   res.json({ metas });
 });
 
+// Catalog series (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlatino_series.json", (req, res) => {
   const metas = seriesList.map(s => ({
     id: s.id,
@@ -88,25 +95,25 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlati
   res.json({ metas });
 });
 
+// Meta movie (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/movie/:id.json", (req, res) => {
   const m = movies.find(x => x.id === req.params.id);
   if (!m) return res.json({ meta: null });
   res.json({ meta: { id: m.id, type: "movie", name: m.title, poster: m.poster } });
 });
 
+// Meta series (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (req, res) => {
   const baseId = req.params.id.split(":")[0];
   const serie = seriesList.find(s => s.id === baseId);
   if (!serie) return res.json({ meta: null });
 
   const seasonMap = {};
-  episodes
-    .filter(e => e.id.startsWith(baseId + ":"))
-    .forEach(e => {
-      const [, season, ep] = e.id.split(":");
-      if (!seasonMap[season]) seasonMap[season] = [];
-      seasonMap[season].push({ id: e.id, title: `Episodio ${ep}`, episode: +ep });
-    });
+  episodes.filter(e => e.id.startsWith(baseId + ":")).forEach(e => {
+    const [, s, ep] = e.id.split(":");
+    if (!seasonMap[s]) seasonMap[s] = [];
+    seasonMap[s].push({ id: e.id, title: `Episodio ${ep}`, episode: +ep });
+  });
 
   const videos = {};
   Object.keys(seasonMap).sort((a, b) => a - b).forEach(s => {
@@ -116,74 +123,28 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (r
   res.json({ meta: { id: baseId, type: "series", name: serie.title, poster: serie.poster, videos } });
 });
 
-// CACHÉ Y STREAM REAL-DEBRID (igual que antes)
-const cache = new Map();
+// STREAM (switch por servicio – la magia modular)
+app.get("/:service(realdebrid|alldebrid|torbox)=:token/stream/:type/:id.json", async (req, res) => {
+  const { service, token, type, id } = req.params;
 
-function crearTituloEpico(item, fromCache = false) {
-  const calidad = (item.quality || "1080p").trim();
-  const idioma = (item.language || "LATINO").trim().replace(" 🇲🇽 ", " 🇺🇸 ");
-  return {
-    title: `${calidad} ${idioma}${fromCache ? " ⚡️ CACHÉ" : ""} 🍿Primer Latino`.trim(),
-    infoTitle: "🍿Primer Latino"
-  };
-}
-
-app.get("/:service(realdebrid)=:token/stream/:type/:id.json", async (req, res) => {
-  const { token, type, id } = req.params;
   const item = type === "movie" ? movies.find(m => m.id === id) : episodes.find(e => e.id === id);
   if (!item || !item.hash) return res.json({ streams: [] });
 
-  const hash = item.hash.trim().toUpperCase();
-
-  if (cache.has(hash) && Date.now() < cache.get(hash).expires) {
-    const t = crearTituloEpico(item, true);
-    return res.json({ streams: [{ title: t.title, infoTitle: t.infoTitle, url: cache.get(hash).url }] });
-  }
-
   try {
-    const auth = { headers: { Authorization: `Bearer ${token}` } };
-
-    let torrentInfo = (await axios.get("https://api.real-debrid.com/rest/1.0/torrents?limit=1000", auth)).data
-      .find(t => t.hash.toUpperCase() === hash && t.status === "downloaded");
-
-    if (!torrentInfo) {
-      const magnet = `magnet:?xt=urn:btih:${hash}`;
-      const add = await axios.post("https://api.real-debrid.com/rest/1.0/torrents/addMagnet", new URLSearchParams({ magnet }), auth);
-      const torrentId = add.data.id;
-
-      for (let i = 0; i < 40; i++) {
-        await new Promise(r => setTimeout(r, 3000));
-        torrentInfo = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentId}`, auth)).data;
-        if (torrentInfo.status === "downloaded") break;
-        if (torrentInfo.status === "waiting_files_selection" && torrentInfo.files?.length) {
-          const video = torrentInfo.files.find(f => /\.(mp4|mkv|avi|mov|webm)$/i.test(f.path)) || torrentInfo.files[0];
-          await axios.post(`https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${torrentId}`, new URLSearchParams({ files: video.id }), auth);
-        }
-      }
+    let streams = [];
+    if (service === "realdebrid") {
+      streams = await realDebrid.getStream(token, item.hash, item);
+    } else if (service === "alldebrid") {
+      streams = await allDebrid.getStream(token, item.hash, item);
+    } else if (service === "torbox") {
+      streams = await torbox.getStream(token, item.hash, item);
     }
 
-    if (torrentInfo && (!torrentInfo.links || torrentInfo.links.length === 0)) {
-      const fresh = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentInfo.id}`, auth)).data;
-      const video = fresh.files.find(f => /\.(mp4|mkv|avi|mov|webm)$/i.test(f.path)) || fresh.files[0];
-      await axios.post(`https://api.real-debrid.com/rest/1.0/torrents/selectFiles/${torrentInfo.id}`, new URLSearchParams({ files: video.id }), auth);
-      await new Promise(r => setTimeout(r, 3000));
-      torrentInfo = (await axios.get(`https://api.real-debrid.com/rest/1.0/torrents/info/${torrentInfo.id}`, auth)).data;
-    }
-
-    if (torrentInfo?.links?.[0]) {
-      const unrestricted = await axios.post("https://api.real-debrid.com/rest/1.0/unrestrict/link", new URLSearchParams({ link: torrentInfo.links[0] }), auth);
-      const finalUrl = unrestricted.data.download;
-
-      cache.set(hash, { url: finalUrl, expires: Date.now() + 24 * 60 * 60 * 1000 });
-
-      const t = crearTituloEpico(item, false);
-      return res.json({ streams: [{ title: t.title, infoTitle: t.infoTitle, url: finalUrl }] });
-    }
+    res.json({ streams });
   } catch (err) {
     console.error("ERROR STREAM:", err.response?.data || err.message);
+    res.json({ streams: [] });
   }
-
-  res.json({ streams: [] });
 });
 
 module.exports = app;
