@@ -45,7 +45,7 @@ try {
 // MANIFEST
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "9.2.50",
+  version: "9.3",
   name: "Primer Latino",
   description: "Películas y Series Latino Full Premium – https://ko-fi.com/johnpradoo ☕",
   logo: "https://www.primerlatino.com/icon.png",
