@@ -45,7 +45,7 @@ try {
 // MANIFEST
 const manifest = {
   id: "org.primerlatino.addon",
-  version: "9.3",
+  version: "9.2.50",
   name: "Primer Latino",
   description: "Películas y Series Latino Full Premium – https://ko-fi.com/johnpradoo ☕",
   logo: "https://www.primerlatino.com/icon.png",
@@ -56,11 +56,7 @@ const manifest = {
     { type: "movie", id: "primerlatino_movies", name: "Películas Latino" },
     { type: "series", id: "primerlatino_series", name: "Series Latino" }
   ],
-  idPrefixes: ["tt"],
-  stremioAddonsConfig: {
-    issuer: "https://stremio-addons.net",
-    signature: "eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..Yq20TgraX11xQ1atTJBupw.VSWTon9CqMjFLNZOFfETauwyG3EH0ylWJT1BmJzl58Y9ezYJ0CYNSk99WtnWexvVhJfPHyA7g3XVyD83cnW-AlGAQp9WJF5btMyv7ThlkOb7ahsMV_vJ5K874Z3Mk8KH.JWeljgfk0HFvnXtTFkT4tw"
-  }
+  idPrefixes: ["tt"]
 };
 
 // IMPORTA LOS SERVICIOS (modular)
