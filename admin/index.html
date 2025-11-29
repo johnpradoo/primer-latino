@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panel Admin · Primer Latino</title>
+
+  <!-- Firebase SDKs compat (versión estable y funciona perfecto) -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#fad0e0;--card:#ffffff;--text:#1a1a1a;--accent:#ff2e7f;--purple:#8b3dff;--soft:#555;}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .card{max-width:460px;width:100%;background:var(--card);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,0.1);overflow:hidden;position:relative;}
+    .header{background:linear-gradient(135deg,var(--purple),#a86bff);color:white;padding:40px 32px;text-align:center;}
+    .section{padding:32px;}
+    input,button{width:100%;padding:16px 20px;margin:12px 0;border-radius:16px;border:2px solid #ddd;font-size:1rem;transition:.3s;}
+    input:focus{outline:none;border-color:var(--purple);}
+    button{background:var(--purple);color:white;border:none;font-weight:700;cursor:pointer;}
+    button:hover{background:#7a2ee6;}
+    .hidden{display:none;}
+    table{width:100%;border-collapse:collapse;margin-top:20px;font-size:0.95rem;}
+    th,td{padding:12px;text-align:left;border-bottom:1px solid #eee;}
+    th{background:#f0f0f0;font-weight:600;}
+    .btn-aceptar{background:#00d26a;color:white;border:none;padding:8px 14px;border-radius:50px;cursor:pointer;margin:2px;}
+    .btn-revision{background:#ffa502;color:white;border:none;padding:8px 14px;border-radius:50px;cursor:pointer;margin:2px;}
+    .btn-rechazar{background:#ff4757;color:white;border:none;padding:8px 14px;border-radius:50px;cursor:pointer;margin:2px;}
+    .logout{position:absolute;top:16px;right:16px;background:var(--accent);color:white;padding:8px 16px;border-radius:50px;font-size:0.9rem;cursor:pointer;}
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <!-- LOGIN -->
+  <div id="loginSection">
+    <div class="header">
+      <h1>Panel Admin</h1>
+      <p>Primer Latino</p>
+    </div>
+    <div class="section">
+      <input type="email" id="email" placeholder="Correo electrónico" required />
+      <input type="password" id="password" placeholder="Contraseña" required />
+      <button onclick="login()">Entrar</button>
+      <p id="msg" style="color:#ff4757;margin-top:16px;text-align:center;font-weight:600;"></p>
+    </div>
+  </div>
+
+  <!-- PANEL PRINCIPAL -->
+  <div id="panelSection" class="hidden">
+    <div class="header">
+      <h1>Peticiones</h1>
+      <div class="logout" onclick="logout()">Salir</div>
+    </div>
+    <div class="section">
+      <div id="lista">Cargando peticiones…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// TU CONFIGURACIÓN (correcta)
+const firebaseConfig = {
+  apiKey: "AIzaSyDbM--YzDZ6J2GRZKXGJD88eyKJTKuBRhc",
+  authDomain: "primerlatino-admin.firebaseapp.com",
+  projectId: "primerlatino-admin",
+  storageBucket: "primerlatino-admin.firebasestorage.app",
+  messagingSenderId: "26166116734",
+  appId: "1:26166116734:web:b9634bc650c41703f0732f"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+// CORRECTO: usar getFirestore y getAuth en modo compat
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// Login
+function login() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  if (!email || !password) {
+    document.getElementById("msg").textContent = "Completa ambos campos";
+    return;
+  }
+  document.getElementById("msg").textContent = "Entrando…";
+  auth.signInWithEmailAndPassword(email, password)
+    .then(() => location.reload())
+    .catch(err => document.getElementById("msg").textContent = "Correo o contraseña incorrecta");
+}
+
+// Cerrar sesión
+function logout() {
+  auth.signOut().then(() => location.reload());
+}
+
+// Estado de autenticación
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("panelSection").classList.remove("hidden");
+    cargarPeticiones();
+  } else {
+    document.getElementById("loginSection").classList.remove("hidden");
+    document.getElementById("panelSection").classList.add("hidden");
+  }
+});
+
+// Cargar peticiones en tiempo real
+function cargarPeticiones() {
+  db.collection("peticiones")
+    .orderBy("fecha", "desc")
+    .onSnapshot(snapshot => {
+      if (snapshot.empty) {
+        document.getElementById("lista").innerHTML = "<p style='text-align:center;color:var(--soft);'>No hay peticiones pendientes</p>";
+        return;
+      }
+
+      let html = `<table>
+        <tr><th>Título</th><th>Tipo</th><th>Detalles</th><th>Fecha</th><th>Acciones</th></tr>`;
+
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const fecha = d.fecha ? d.fecha.toDate().toLocaleDateString("es-ES") : "—";
+        const detalles = d.detalles || "—";
+
+        html += `<tr>
+          <td><strong>${d.titulo || 'Sin título'}</strong></td>
+          <td>${d.tipo || ''}</td>
+          <td>${detalles}</td>
+          <td>${fecha}</td>
+          <td>
+            <button class="btn-aceptar" onclick="cambiarEstado('${doc.id}','aceptada')">Aceptar</button>
+            <button class="btn-revision" onclick="cambiarEstado('${doc.id}','revision')">Revisión</button>
+            <button class="btn-rechazar" onclick="cambiarEstado('${doc.id}','rechazada')">Rechazar</button>
+          </td>
+        </tr>`;
+      });
+
+      html += `</table>`;
+      document.getElementById("lista").innerHTML = html;
+    }, err => {
+      document.getElementById("lista").innerHTML = "Error al cargar peticiones";
+      console.error(err);
+    });
+}
+
+// Cambiar estado de la petición
+function cambiarEstado(id, estado) {
+  db.collection("peticiones").doc(id).update({
+    estado: estado,
+    procesadoPor: auth.currentUser.email,
+    fechaProcesado: new Date()
+  }).then(() => {
+    alert("Estado actualizado: " + estado);
+  }).catch(() => alert("Error al actualizar"));
+}
+</script>
+
+</body>
+</html>
