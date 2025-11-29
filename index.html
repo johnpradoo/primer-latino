@@ -199,6 +199,34 @@
       <p>El addon privado más rápido de Latinoamérica</p>
     </div>
   </div>
+  
+    <!-- TARJETA: PEDIR CONTENIDO -->
+  <div class="card">
+    <div class="section">
+      <div class="title">¿No encontrás lo que buscás?</div>
+      <p style="text-align:center;color:var(--soft);margin-bottom:24px;">
+        Pedilo acá y lo agregamos lo antes posible
+      </p>
+
+      <input type="text" id="titulo" placeholder="Título de película o serie *" required />
+      
+      <select id="tipo" required>
+        <option value="" disabled selected>Tipo de contenido *</option>
+        <option value="pelicula">Película</option>
+        <option value="serie">Serie</option>
+      </select>
+
+      <input type="text" id="detalles" placeholder="Temporada/capítulos, año, IMDB... (opcional)" />
+
+      <input type="text" id="contacto" placeholder="Correo o Telegram (opcional - para avisarte)" />
+
+      <button class="btn" onclick="enviarPeticion()" style="margin-top:12px;">
+        Enviar petición
+      </button>
+
+      <p id="msgPeticion" style="margin-top:16px;text-align:center;font-weight:600;"></p>
+    </div>
+  </div>
 
   <!-- TARJETA 2: BANNER DE REAL-DEBRID (ahora con clase banner-card para ajustes específicos) -->
   <div class="card banner-card">
