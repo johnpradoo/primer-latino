@@ -1,6 +1,17 @@
 {
   "movies": [
     {
+      "id": "tt27722618",
+      "title": "La chica zurda (2025)",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "BDEC4385257EE6428A10BEDD76D50D89A6AEFE34",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/hfuxIKRCNsecLmoDdO0HJ1YUvv1.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt27543578",
       "title": "Cuando el cielo se equivoca",
       "quality": "1080p | WEB-DL | Dolby Atmos",
