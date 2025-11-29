@@ -1,6 +1,17 @@
 {
   "movies": [
     {
+      "id": "tt31137117",
+      "title": "The Carman Family Deaths",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "73382E4ECA6B46F9EDEC92291D942414CE86AEEF",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/kehV1PgXItaiPJS9o3YZPIVJcPT.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt27722618",
       "title": "La chica zurda (2025)",
       "quality": "1080p | WEB-DL | Dolby Atmos",
