@@ -3,18 +3,33 @@
   "builds": [
     { "src": "api/addon.js", "use": "@vercel/node" },
     { "src": "index.html", "use": "@vercel/static" },
-    { "src": "*.json", "use": "@vercel/static" }
+    { "src": "*.json", "use": "@vercel/static" },
+    { "src": "admin/index.html", "use": "@vercel/static" }
   ],
   "routes": [
+    {
+      "src": "/admin",
+      "dest": "/admin/index.html"
+    },
+    {
+      "src": "/admin/",
+      "dest": "/admin/index.html"
+    },
     {
       "src": "/(realdebrid|alldebrid|torbox)=[^/]+/(.*)",
       "dest": "/api/addon.js"
     },
     {
+      "src": "/icon.png",
+      "dest": "/icon.png"
+    },
+    {
+      "src": "/banner.jpg",
+      "dest": "/banner.jpg"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
-    },
-    { "src": "/icon.png", "dest": "/icon.png" },
-    { "src": "/banner.jpg", "dest": "/banner.jpg" }
+    }
   ]
 }
