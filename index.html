@@ -333,5 +333,61 @@
       location.href = "stremio://" + link.replace("https://", "");
     }
   </script>
+  
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+<script>
+// MISMA CONFIG que usamos en el panel admin
+const firebaseConfig = {
+  apiKey: "AIzaSyDbM--YzDZ6J2GRZKXGJD88eyKJTKuBRhc",
+  authDomain: "primerlatino-admin.firebaseapp.com",
+  projectId: "primerlatino-admin",
+  storageBucket: "primerlatino-admin.firebasestorage.app",
+  messagingSenderId: "26166116734",
+  appId: "1:26166116734:web:b9634bc650c41703f0732f"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+function enviarPeticion() {
+  const titulo = document.getElementById("titulo").value.trim();
+  const tipo = document.getElementById("tipo").value;
+  const detalles = document.getElementById("detalles").value.trim();
+  const contacto = document.getElementById("contacto").value.trim();
+  const msg = document.getElementById("msgPeticion");
+
+  if (!titulo || !tipo) {
+    msg.style.color = "#ff4757";
+    msg.textContent = "Completa título y tipo";
+    return;
+  }
+
+  msg.style.color = "#00d26a";
+  msg.textContent = "Enviando…";
+
+  db.collection("peticiones").add({
+    titulo: titulo,
+    tipo: tipo,
+    detalles: detalles || null,
+    contacto: contacto || null,
+    fecha: new Date(),
+    estado: "pendiente"
+  })
+  .then(() => {
+    msg.textContent = "¡Petición enviada! Gracias ❤️";
+    document.getElementById("titulo").value = "";
+    document.getElementById("detalles").value = "";
+    document.getElementById("contacto").value = "";
+    document.getElementById("tipo").value = "";
+  })
+  .catch(err => {
+    msg.style.color = "#ff4757";
+    msg.textContent = "Error al enviar, intentá de nuevo";
+    console.error(err);
+  });
+}
+</script>
 </body>
 </html>
