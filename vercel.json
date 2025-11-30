@@ -13,7 +13,7 @@
       "dest": "/admin/index.html"
     },
     {
-      "src": "/admin",
+      "src": "/(.*)",
       "dest": "/admin/verify.html"
     },
     {
