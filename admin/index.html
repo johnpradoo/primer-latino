@@ -154,8 +154,52 @@ async function enviarMailAceptado(contacto, titulo, detalles = "") {
 }
 
 // resto del código (cargarPeticiones y cambiarEstado) queda igual que antes
-function cargarPeticiones() { /* ... igual que el anterior ... */ }
-function cambiarEstado(id, estado, titulo = "", contacto = "", detalles = "") { /* ... igual que el anterior ... */ }
+// Cargar peticiones
+function cargarPeticiones() {
+  db.collection("peticiones")
+    .orderBy("fecha", "desc")
+    .onSnapshot(snapshot => {
+      if (snapshot.empty) {
+        document.getElementById("lista").innerHTML = "<p style='text-align:center;color:var(--soft);padding:40px 0;'>No hay peticiones pendientes</p>";
+        return;
+      }
+
+      let html = `<table>
+        <tr><th>Título</th><th>Tipo</th><th>Detalles</th><th>Contacto</th><th>Fecha</th><th>Acciones</th></tr>`;
+
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const fecha = d.fecha ? d.fecha.toDate().toLocaleDateString("es-ES") : "—";
+
+        html += `<tr>
+          <td><strong>${d.titulo || ''}</strong></td>
+          <td>${d.tipo || ''}</td>
+          <td>${d.detalles || ''}</td>
+          <td>${d.contacto || ''}</td>
+          <td>${fecha}</td>
+          <td>
+            <button class="btn-aceptar" onclick="cambiarEstado('${doc.id}','aceptada','${d.titulo}','${d.contacto}','${d.detalles || ''}')">Aceptar</button>
+            <button class="btn-revision" onclick="cambiarEstado('${doc.id}','revision')">Revisión</button>
+            <button class="btn-rechazar" onclick="cambiarEstado('${doc.id}','rechazada')">Rechazar</button>
+          </td>
+        </tr>`;
+      });
+
+      html += `</table>`;
+      document.getElementById("lista").innerHTML = html;
+    });
+}
+
+function cambiarEstado(id, estado, titulo = "", contacto = "", detalles = "") {
+  const updates = { estado: estado, procesadoPor: auth.currentUser.email, fechaProcesado: new Date() };
+
+  db.collection("peticiones").doc(id).update(updates)
+    .then(() => {
+      alert(`Petición marcada como: ${estado}`);
+      if (estado === "aceptada") enviarMailAceptado(contacto, titulo, detalles);
+    })
+    .catch(() => alert("Error al actualizar"));
+}
 </script>
 </body>
 </html>
