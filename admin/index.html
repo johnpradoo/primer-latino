@@ -61,10 +61,12 @@
 
 <!-- FIREBASE MODULAR -->
 <script type="module">
+  // Import Firebase modular
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
+  // Config Firebase nueva
   const firebaseConfig = {
     apiKey: "AIzaSyCbSu-l8g5pjK6hbmHvWX5DM7mFILrDdBQ",
     authDomain: "primer-latino.firebaseapp.com",
@@ -79,32 +81,29 @@
   const db = getFirestore(app);
 
   // LOGIN
-  window.login = async function() {
+  window.login = function() {
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
-    const msg = document.getElementById("msg");
 
-    if (!email || !password) {
-      msg.textContent = "Completa ambos campos";
+    if(!email || !password){
+      document.getElementById("msg").textContent = "Completa ambos campos";
       return;
     }
 
-    msg.textContent = "Entrando…";
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      location.reload();
-    } catch (err) {
-      msg.textContent = "Correo o contraseña incorrecta";
-      console.error(err);
-    }
+    document.getElementById("msg").textContent = "Entrando…";
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => location.reload())
+      .catch(() => document.getElementById("msg").textContent = "Correo o contraseña incorrecta");
   }
 
   window.logout = function() {
     signOut(auth).then(() => location.reload());
   }
 
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
+  // OBSERVAR LOGIN
+  onAuthStateChanged(auth, user => {
+    if(user){
       document.getElementById("loginSection").classList.add("hidden");
       document.getElementById("panelSection").classList.remove("hidden");
       cargarPeticiones();
@@ -114,92 +113,108 @@
     }
   });
 
- // CARGAR PETICIONES
-window.cargarPeticiones = function() {
-  const q = query(collection(db, "peticiones"), orderBy("fecha", "desc"));
-  onSnapshot(q, (snapshot) => {
-    if (snapshot.empty) {
-      document.getElementById("lista").innerHTML =
-        "<p style='text-align:center;color:var(--soft);padding:40px 0;'>No hay peticiones</p>";
-      return;
-    }
+  // ENVIAR CORREO FORM SUBMIT
+  async function enviarCorreoAprobado(contacto, titulo, detalles="") {
+    if(!contacto || !contacto.includes("@")) return;
 
-    let html = `<table>
-      <tr>
-        <th>Título</th><th>Tipo</th><th>Detalles</th><th>Contacto</th><th>Fecha</th><th>Acciones</th>
-      </tr>`;
+    const htmlCorreo = `
+      <html>
+      <body style="font-family:system-ui,sans-serif;max-width:600px;margin:40px auto;padding:20px;background:#fdfdfd;border-radius:16px;">
+        <h1 style="color:#ff2e7f;text-align:center;">¡Buenas noticias!</h1>
+        <p style="font-size:1.15rem;text-align:center;">
+          Tu petición ya está disponible en <strong>🍿Primer Latino</strong>
+        </p>
+        <h2 style="color:#333;text-align:center;font-size:1.6rem;margin:30px 0;">
+          ${titulo}
+        </h2>
+        ${detalles ? `<p style="background:#f0f0f0;padding:15px;border-radius:12px;text-align:center;font-size:1.05rem;">
+          <strong>Detalles:</strong> ${detalles}
+        </p>` : ""}
+        <div style="text-align:center;margin:45px 0;">
+          <a href="https://ko-fi.com/johnpradoo"
+            style="background:#ff5e9e;color:white;padding:14px 32px;border-radius:50px;text-decoration:none;font-weight:bold;font-size:1.1rem;display:inline-block;box-shadow:0 6px 16px rgba(255,94,158,0.3);">
+            ☕ Apóyame con un cafecito
+          </a>
+        </div>
+        <p style="text-align:center;color:#555;font-size:1rem;margin:40px 0;">
+          ¡Gracias por ayudarnos a mejorar el catálogo! ❤️
+        </p>
+        <hr style="border:none;border-top:1px solid #eee;margin:40px 0;">
+        <p style="color:#888;font-size:0.95rem;text-align:center;">
+          Hecho con cariño por @johnpradoo<br>
+          <strong>Primer Latino</strong> – El addon privado más rápido de Latinoamérica
+        </p>
+      </body>
+      </html>
+    `.trim();
 
-    snapshot.forEach((docSnap) => {
-      const d = docSnap.data();
-      const fecha = d.fecha?.toDate?.()?.toLocaleDateString("es-ES") || "—";
+    const formData = new FormData();
+    formData.append("_subject", "Tu petición ya está disponible 🍿");
+    formData.append("_template", "raw");
+    formData.append("email", contacto);
+    formData.append("message", htmlCorreo);
 
-      html += `
-      <tr>
-        <td><strong>${d.titulo}</strong></td>
-        <td>${d.tipo}</td>
-        <td>${d.detalles || ""}</td>
-        <td>${d.contacto || ""}</td>
-        <td>${fecha}</td>
-        <td>
-          <button class="btn-aceptar" 
-            onclick="cambiarEstado('${docSnap.id}','aceptada','${d.titulo}','${d.contacto}','${d.detalles || ""}')">
-            Aceptar
-          </button>
-          <button class="btn-revision" 
-            onclick="cambiarEstado('${docSnap.id}','revision')">
-            Revisión
-          </button>
-          <button class="btn-rechazar" 
-            onclick="cambiarEstado('${docSnap.id}','rechazada')">
-            Rechazar
-          </button>
-        </td>
-      </tr>`;
-    });
+    fetch("https://formsubmit.co/541bb53841c2c4befb2464f8fd8febe9", {
+      method: "POST",
+      body: formData
+    }).then(() => console.log("Correo enviado")).catch(err => console.error(err));
+  }
 
-    html += `</table>`;
-    document.getElementById("lista").innerHTML = html;
-  });
-}
-
-
-  // CAMBIAR ESTADO Y ENVIAR CORREO
-  window.cambiarEstado = async function(id, estado, titulo="", contacto="", detalles="") {
-    try {
-      const docRef = doc(db, "peticiones", id);
-      await updateDoc(docRef, {
-        estado: estado,
-        procesadoPor: auth.currentUser.email,
-        fechaProcesado: new Date()
-      });
-
-      alert(`Petición marcada como: ${estado}`);
-
-      if (estado === "aceptada") {
-        enviarCorreoAprobado(contacto, titulo, detalles);
+  // CARGAR PETICIONES
+  window.cargarPeticiones = function() {
+    const q = query(collection(db, "peticiones"), orderBy("fecha","desc"));
+    onSnapshot(q, (snapshot) => {
+      if(snapshot.empty){
+        document.getElementById("lista").innerHTML = "<p style='text-align:center;color:var(--soft);padding:40px 0;'>No hay peticiones</p>";
+        return;
       }
-    } catch(err) {
-      alert("Error al actualizar");
-      console.error(err);
-    }
-  }
 
-  // ENVIAR CORREO CON NODMAILER (via backend Vercel)
-  window.enviarCorreoAprobado = async function(contacto, titulo, detalles="") {
-    if (!contacto || !contacto.includes("@")) return;
+      let html = `<table>
+        <tr>
+          <th>Título</th><th>Tipo</th><th>Detalles</th><th>Contacto</th><th>Fecha</th><th>Acciones</th>
+        </tr>`;
 
-    try {
-      await fetch("/api/sendMail", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ emailUser: contacto, title: titulo, details: detalles })
+      snapshot.forEach(docSnap => {
+        const d = docSnap.data();
+        const fecha = d.fecha?.toDate?.()?.toLocaleDateString("es-ES") || "—";
+
+        html += `
+        <tr>
+          <td><strong>${d.titulo}</strong></td>
+          <td>${d.tipo}</td>
+          <td>${d.detalles || ""}</td>
+          <td>${d.contacto || ""}</td>
+          <td>${fecha}</td>
+          <td>
+            <button class="btn-aceptar" 
+              onclick="cambiarEstado('${docSnap.id}','aceptada','${d.titulo}','${d.contacto}','${d.detalles || ""}')">Aceptar</button>
+            <button class="btn-revision" 
+              onclick="cambiarEstado('${docSnap.id}','revision')">Revisión</button>
+            <button class="btn-rechazar" 
+              onclick="cambiarEstado('${docSnap.id}','rechazada')">Rechazar</button>
+          </td>
+        </tr>`;
       });
-      console.log("Correo enviado");
-    } catch(err) {
-      console.error("Error enviando correo:", err);
-    }
+
+      html += `</table>`;
+      document.getElementById("lista").innerHTML = html;
+    });
   }
 
+  // CAMBIAR ESTADO
+  window.cambiarEstado = function(id, estado, titulo="", contacto="", detalles="") {
+    const docRef = doc(db, "peticiones", id);
+    updateDoc(docRef, { 
+      estado: estado, 
+      procesadoPor: auth.currentUser.email, 
+      fechaProcesado: new Date() 
+    })
+    .then(() => {
+      alert(`Petición marcada como: ${estado}`);
+      if(estado === "aceptada") enviarCorreoAprobado(contacto, titulo, detalles);
+    })
+    .catch(() => alert("Error al actualizar"));
+  }
 </script>
 
 </body>
