@@ -7,6 +7,10 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script type="text/javascript" src="https://cdn.emailjs.com/dist/email.min.js"></script>
+  <script type="text/javascript">
+    (function(){ emailjs.init("f0AIcX0oEVX84gsyz"); })();
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <style>
     :root{--bg:#fad0e0;--card:#ffffff;--text:#1a1a1a;--accent:#ff2e7f;--purple:#8b3dff;--soft:#555;}
@@ -90,7 +94,7 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-// ENVÍO DE MAIL PRO CON PÓSTER
+// ENVÍO SMTP REAL – 100% PRO
 async function enviarMailAceptado(contacto, titulo, detalles = "") {
   if (!contacto || !contacto.includes('@')) return;
 
@@ -104,7 +108,7 @@ async function enviarMailAceptado(contacto, titulo, detalles = "") {
     }
   } catch(e) {}
 
-  const mensaje = `
+  const mensajeHTML = `
 <!DOCTYPE html>
 <html>
 <body style="font-family:system-ui,sans-serif;max-width:600px;margin:40px auto;padding:20px;background:#fdfdfd;border-radius:16px;">
@@ -125,21 +129,22 @@ async function enviarMailAceptado(contacto, titulo, detalles = "") {
   <p style="color:#666;">¡Gracias por ayudarnos a mejorar el catálogo!</p>
   <hr style="border:none;border-top:1px solid #eee;margin:40px 0;">
   <p style="color:#888;font-size:0.9rem;text-align:center;">
-    John Prado<br><strong>Primer Latino</strong> – El addon privado más rápido de Latinoamérica
+    John Prado<br>
+    <strong>Primer Latino</strong> – El addon privado más rápido de Latinoamérica
   </p>
 </body>
 </html>
   `.trim();
 
-  await fetch("https://formsubmit.co/ajax/admin@primerlatino.com", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      _subject: `¡${titulo} ya está en Primer Latino!`,
-      message: mensaje,
-      email: contacto
-    })
-  });
+  emailjs.send("service_0pqgszr", "template_default", {
+    to_email: contacto,
+    subject: `¡${titulo} ya está en Primer Latino!`,
+    message: mensajeHTML,
+    from_name: "Primer Latino",
+    reply_to: "admin@primerlatino.com"
+  }, "uGhKDM5YhWDnJXppj204U")
+  .then(() => console.log("Mail enviado perfecto"))
+  .catch(err => console.error("Error:", err));
 }
 
 // Cargar peticiones
