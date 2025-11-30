@@ -19,10 +19,6 @@
     .card{max-width:480px;width:100%;background:var(--card);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,0.1);overflow:hidden;position:relative;}
     .header{background:linear-gradient(135deg,var(--purple),#a86bff);color:white;padding:32px 24px;text-align:center;}
     .section{padding:24px;}
-    input,button{width:100%;padding:14px 16px;margin:10px 0;border-radius:16px;border:2px solid #ddd;font-size:1rem;transition:.3s;}
-    input:focus{outline:none;border-color:var(--purple);}
-    button{background:var(--purple);color:white;border:none;font-weight:700;cursor:pointer;}
-    button:hover{background:#7a2ee6;}
     .hidden{display:none;}
     .table-container{overflow-x:auto;margin-top:16px;}
     table{width:100%;min-width:520px;border-collapse:collapse;font-size:0.92rem;}
@@ -32,8 +28,6 @@
     .btn-revision{background:#ffa502;color:white;border:none;padding:7px 12px;border-radius:50px;cursor:pointer;font-size:0.85rem;margin:2px;}
     .btn-rechazar{background:#ff4757;color:white;border:none;padding:7px 12px;border-radius:50px;cursor:pointer;font-size:0.85rem;margin:2px;}
     .logout{position:absolute;top:12px;right:12px;background:var(--accent);color:white;padding:7px 14px;border-radius:50px;font-size:0.85rem;cursor:pointer;}
-    
-    /* Móvil: botones debajo del título */
     @media (max-width: 560px) {
       table{min-width:100%;}
       td:nth-child(6){display:block;width:100%;padding-top:8px;}
@@ -81,7 +75,6 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Login / logout
 function login() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
@@ -104,57 +97,29 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-// ENVÍO SMTP REAL – 100% PRO
+// ENVÍO CON TU TEMPLATE ID template_lz1av8m
 async function enviarMailAceptado(contacto, titulo, detalles = "") {
   if (!contacto || !contacto.includes('@')) return;
 
-  let posterUrl = "";
+  let posterHtml = "";
   try {
     const query = encodeURIComponent(titulo.split(" – ")[0] || titulo);
     const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=6b4357c41d9f8e2f0baa8bf9471b5a87&query=${query}&language=es-MX`);
     const data = await res.json();
     if (data.results?.[0]?.poster_path) {
-      posterUrl = `https://image.tmdb.org/t/p/w600_and_h900_bestv2${data.results[0].poster_path}`;
+      const posterUrl = `https://image.tmdb.org/t/p/w600_and_h900_bestv2${data.results[0].poster_path}`;
+      posterHtml = `<div style="text-align:center;margin:30px 0;"><img src="${posterUrl}" alt="${titulo}" style="max-width:100%;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.2);"></div>`;
     }
   } catch(e) {}
 
-  const mensajeHTML = `
-<!DOCTYPE html>
-<html>
-<body style="font-family:system-ui,sans-serif;max-width:600px;margin:40px auto;padding:20px;background:#fdfdfd;border-radius:16px;">
-  <h1 style="color:#ff2e7f;text-align:center;">¡Buenas noticias!</h1>
-  <p style="font-size:1.1rem;">Tu petición ya está disponible en <strong>Primer Latino</strong>:</p>
-  
-  ${posterUrl ? `<div style="text-align:center;margin:30px 0;"><img src="${posterUrl}" alt="${titulo}" style="max-width:100%;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.2);"></div>` : ''}
-  
-  <h2 style="color:#333;font-size:1.4rem;">${titulo}</h2>
-  ${detalles ? `<p style="background:#f0f0f0;padding:12px;border-radius:12px;"><strong>Detalles:</strong> ${detalles}</p>` : ''}
-  
-  <div style="text-align:center;margin:40px 0;">
-    <a href="https://primerlatino.com" style="background:#ff2e7f;color:white;padding:18px 40px;border-radius:50px;text-decoration:none;font-weight:bold;font-size:1.2rem;display:inline-block;">
-      Abrir en Stremio ahora
-    </a>
-  </div>
-  
-  <p style="color:#666;">¡Gracias por ayudarnos a mejorar el catálogo!</p>
-  <hr style="border:none;border-top:1px solid #eee;margin:40px 0;">
-  <p style="color:#888;font-size:0.9rem;text-align:center;">
-    John Prado<br>
-    <strong>Primer Latino</strong> – El addon privado más rápido de Latinoamérica
-  </p>
-</body>
-</html>
-  `.trim();
-
-  emailjs.send("service_0pqgszr", "template_default", {
+  emailjs.send("service_0pqgszr", "template_lz1av8m", {
     to_email: contacto,
-    subject: `¡${titulo} ya está en Primer Latino!`,
-    message: mensajeHTML,
-    from_name: "Primer Latino",
-    reply_to: "admin@primerlatino.com"
-  }, "uGhKDM5YhWDnJXppj204U")
-  .then(() => console.log("Mail enviado perfecto"))
-  .catch(err => console.error("Error:", err));
+    titulo: titulo,
+    detalles: detalles || "",
+    poster: posterHtml
+  })
+  .then(() => console.log("Mail enviado perfecto con template"))
+  .catch(err => console.error("Error EmailJS:", err));
 }
 
 // Cargar peticiones
@@ -193,7 +158,6 @@ function cargarPeticiones() {
     });
 }
 
-// Cambiar estado + enviar mail
 function cambiarEstado(id, estado, titulo = "", contacto = "", detalles = "") {
   const updates = { estado: estado, procesadoPor: auth.currentUser.email, fechaProcesado: new Date() };
 
