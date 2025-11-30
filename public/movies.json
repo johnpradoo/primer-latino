@@ -1099,6 +1099,17 @@
       "status": "aprobado",
       "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/cHLTwNaH3jAmrDKZ0Tjy1oZR3T8.jpg",
       "type": "movie"
+    },
+    {
+      "id": "tt1790809",
+      "title": "Piratas del caribe : La venganza de Salazar",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language":"🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec":"H.264",
+      "hash": "6336F7EA1792F9137D991598786EFDC42D00071F",
+      "status":"aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/AookkwjZfWdigGtaEwy5IfOnBku.jpg",
+      "type": "movie"
     }
   ]
 }
