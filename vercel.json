@@ -14,7 +14,7 @@
       "dest": "/admin/index.html"
     },
     {
-      "src": "/(.*)",
+      "src": "/verify.html",
       "dest": "/admin/verify.html"
     },
     {
