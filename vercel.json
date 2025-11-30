@@ -4,7 +4,7 @@
     { "src": "api/addon.js", "use": "@vercel/node" },
     { "src": "index.html", "use": "@vercel/static" },
     { "src": "*.json", "use": "@vercel/static" },
-    { "src": "verificar.html", "use": "@vercel/static" },
+    { "src": "admin/verify.html", "use": "@vercel/static" },
     { "src": "admin/index.html", "use": "@vercel/static" }
   ],
   "routes": [
@@ -13,8 +13,8 @@
       "dest": "/admin/index.html"
     },
     {
-      "src": "/verificar.html",
-      "dest": "/verificar.html"
+      "src": "/admin",
+      "dest": "/admin/verify.html"
     },
     {
       "src": "/admin/",
