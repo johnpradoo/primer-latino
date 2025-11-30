@@ -16,21 +16,29 @@
     :root{--bg:#fad0e0;--card:#ffffff;--text:#1a1a1a;--accent:#ff2e7f;--purple:#8b3dff;--soft:#555;}
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
-    .card{max-width:460px;width:100%;background:var(--card);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,0.1);overflow:hidden;position:relative;}
-    .header{background:linear-gradient(135deg,var(--purple),#a86bff);color:white;padding:40px 32px;text-align:center;}
-    .section{padding:32px;}
-    input,button{width:100%;padding:16px 20px;margin:12px 0;border-radius:16px;border:2px solid #ddd;font-size:1rem;transition:.3s;}
+    .card{max-width:480px;width:100%;background:var(--card);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,0.1);overflow:hidden;position:relative;}
+    .header{background:linear-gradient(135deg,var(--purple),#a86bff);color:white;padding:32px 24px;text-align:center;}
+    .section{padding:24px;}
+    input,button{width:100%;padding:14px 16px;margin:10px 0;border-radius:16px;border:2px solid #ddd;font-size:1rem;transition:.3s;}
     input:focus{outline:none;border-color:var(--purple);}
     button{background:var(--purple);color:white;border:none;font-weight:700;cursor:pointer;}
     button:hover{background:#7a2ee6;}
     .hidden{display:none;}
-    table{width:100%;border-collapse:collapse;margin-top:20px;font-size:0.95rem;}
-    th,td{padding:12px;text-align:left;border-bottom:1px solid #eee;}
-    th{background:#f0f0f0;font-weight:600;}
-    .btn-aceptar{background:#00d26a;color:white;border:none;padding:8px 14px;border-radius:50px;cursor:pointer;margin:2px;}
-    .btn-revision{background:#ffa502;color:white;border:none;padding:8px 14px;border-radius:50px;cursor:pointer;margin:2px;}
-    .btn-rechazar{background:#ff4757;color:white;border:none;padding:8px 14px;border-radius:50px;cursor:pointer;margin:2px;}
-    .logout{position:absolute;top:16px;right:16px;background:var(--accent);color:white;padding:8px 16px;border-radius:50px;font-size:0.9rem;cursor:pointer;}
+    .table-container{overflow-x:auto;margin-top:16px;}
+    table{width:100%;min-width:520px;border-collapse:collapse;font-size:0.92rem;}
+    th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #eee;vertical-align:middle;}
+    th{background:#f0f0f0;font-weight:600;font-size:0.85rem;}
+    .btn-aceptar{background:#00d26a;color:white;border:none;padding:7px 12px;border-radius:50px;cursor:pointer;font-size:0.85rem;margin:2px;}
+    .btn-revision{background:#ffa502;color:white;border:none;padding:7px 12px;border-radius:50px;cursor:pointer;font-size:0.85rem;margin:2px;}
+    .btn-rechazar{background:#ff4757;color:white;border:none;padding:7px 12px;border-radius:50px;cursor:pointer;font-size:0.85rem;margin:2px;}
+    .logout{position:absolute;top:12px;right:12px;background:var(--accent);color:white;padding:7px 14px;border-radius:50px;font-size:0.85rem;cursor:pointer;}
+    
+    /* Móvil: botones debajo del título */
+    @media (max-width: 560px) {
+      table{min-width:100%;}
+      td:nth-child(6){display:block;width:100%;padding-top:8px;}
+      .btn-aceptar, .btn-revision, .btn-rechazar{display:inline-block;width:auto;margin:4px 4px 4px 0;}
+    }
   </style>
 </head>
 <body>
@@ -52,7 +60,9 @@
       <div class="logout" onclick="logout()">Salir</div>
     </div>
     <div class="section">
-      <div id="lista">Cargando peticiones…</div>
+      <div class="table-container">
+        <div id="lista">Cargando peticiones…</div>
+      </div>
     </div>
   </div>
 </div>
@@ -153,7 +163,7 @@ function cargarPeticiones() {
     .orderBy("fecha", "desc")
     .onSnapshot(snapshot => {
       if (snapshot.empty) {
-        document.getElementById("lista").innerHTML = "<p style='text-align:center;color:var(--soft);'>No hay peticiones pendientes</p>";
+        document.getElementById("lista").innerHTML = "<p style='text-align:center;color:var(--soft);padding:40px 0;'>No hay peticiones pendientes</p>";
         return;
       }
 
@@ -165,10 +175,10 @@ function cargarPeticiones() {
         const fecha = d.fecha ? d.fecha.toDate().toLocaleDateString("es-ES") : "—";
 
         html += `<tr>
-          <td><strong>${d.titulo}</strong></td>
-          <td>${d.tipo}</td>
-          <td>${d.detalles || "—"}</td>
-          <td>${d.contacto || "—"}</td>
+          <td><strong>${d.titulo || ''}</strong></td>
+          <td>${d.tipo || ''}</td>
+          <td>${d.detalles || ''}</td>
+          <td>${d.contacto || ''}</td>
           <td>${fecha}</td>
           <td>
             <button class="btn-aceptar" onclick="cambiarEstado('${doc.id}','aceptada','${d.titulo}','${d.contacto}','${d.detalles || ''}')">Aceptar</button>
