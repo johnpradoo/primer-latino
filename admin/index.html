@@ -4,14 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Panel Admin · Primer Latino</title>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-  <script type="text/javascript" src="https://cdn.emailjs.com/dist/email.min.js"></script>
-  <script type="text/javascript">
-    (function(){ emailjs.init("f0AIcX0oEVX84gsyz"); })();
-  </script>
+
+  <!-- FONTS -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
   <style>
     :root{--bg:#fad0e0;--card:#ffffff;--text:#1a1a1a;--accent:#ff2e7f;--purple:#8b3dff;--soft:#555;}
     *{margin:0;padding:0;box-sizing:border-box}
@@ -28,16 +29,17 @@
     .btn-revision{background:#ffa502;color:white;border:none;padding:7px 12px;border-radius:50px;cursor:pointer;font-size:0.85rem;margin:2px;}
     .btn-rechazar{background:#ff4757;color:white;border:none;padding:7px 12px;border-radius:50px;cursor:pointer;font-size:0.85rem;margin:2px;}
     .logout{position:absolute;top:12px;right:12px;background:var(--accent);color:white;padding:7px 14px;border-radius:50px;font-size:0.85rem;cursor:pointer;}
-    @media (max-width: 560px) {
+    @media (max-width:560px){
       table{min-width:100%;}
       td:nth-child(6){display:block;width:100%;padding-top:8px;}
-      .btn-aceptar, .btn-revision, .btn-rechazar{display:inline-block;width:auto;margin:4px 4px 4px 0;}
+      .btn-aceptar,.btn-revision,.btn-rechazar{display:inline-block;width:auto;margin:4px;}
     }
   </style>
 </head>
 <body>
 
 <div class="card">
+  <!-- LOGIN -->
   <div id="loginSection">
     <div class="header"><h1>Panel Admin</h1><p>Primer Latino</p></div>
     <div class="section">
@@ -48,6 +50,7 @@
     </div>
   </div>
 
+  <!-- PANEL ADMIN -->
   <div id="panelSection" class="hidden">
     <div class="header">
       <h1>Peticiones</h1>
@@ -62,6 +65,7 @@
 </div>
 
 <script>
+/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyDbM--YzDZ6J2GRZKXGJD88eyKJTKuBRhc",
   authDomain: "primerlatino-admin.firebaseapp.com",
@@ -75,17 +79,26 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
+/* LOGIN */
 function login() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
-  if (!email || !password) return document.getElementById("msg").textContent = "Completa ambos campos";
+
+  if (!email || !password)
+    return document.getElementById("msg").textContent = "Completa ambos campos";
+
   document.getElementById("msg").textContent = "Entrando…";
+
   auth.signInWithEmailAndPassword(email, password)
     .then(() => location.reload())
     .catch(() => document.getElementById("msg").textContent = "Correo o contraseña incorrecta");
 }
-function logout() { auth.signOut().then(() => location.reload()); }
 
+function logout() {
+  auth.signOut().then(() => location.reload());
+}
+
+/* DETECTA SI EL ADMIN ESTÁ LOGUEADO */
 auth.onAuthStateChanged(user => {
   if (user) {
     document.getElementById("loginSection").classList.add("hidden");
@@ -97,90 +110,68 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-// ENVÍO DIRECTO (SIN TEMPLATE) – 100% FUNCIONA SIEMPRE
-async function enviarMailAceptado(contacto, titulo, detalles = "") {
-  if (!contacto || !contacto.includes('@')) return;
+/* ✉ FUNCIÓN NUEVA: ENVIAR CORREO CON FORMSUBMIT */
+function enviarCorreoAprobado(correo, titulo, detalles) {
+  if (!correo || !correo.includes("@")) return;
 
-  let posterHtml = "";
-  try {
-    const query = encodeURIComponent(titulo.split(" – ")[0] || titulo);
-    const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=6b4357c41d9f8e2f0baa8bf9471b5a87&query=${query}&language=es-MX`);
-    const data = await res.json();
-    if (data.results?.[0]?.poster_path) {
-      const posterUrl = `https://image.tmdb.org/t/p/w600_and_h900_bestv2${data.results[0].poster_path}`;
-      posterHtml = `<div style="text-align:center;margin:30px 0;"><img src="${posterUrl}" alt="${titulo}" style="max-width:100%;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.2);"></div>`;
-    }
-  } catch(e) {}
+  const formData = new FormData();
+  formData.append("email", correo);
+  formData.append("titulo", titulo);
+  formData.append("detalles", detalles || "");
+  formData.append("_subject", "Tu petición ya está disponible 🍿");
+  formData.append("_template", "false");   // usamos tu HTML personalizado
 
-  const mensajeHTML = `
-<!DOCTYPE html>
-<html>
-<body style="font-family:system-ui,sans-serif;max-width:600px;margin:40px auto;padding:20px;background:#fdfdfd;border-radius:16px;">
-  <h1 style="color:#ff2e7f;text-align:center;">¡Buenas noticias!</h1>
-  <p style="font-size:1.1rem;text-align:center;">Tu petición ya está disponible en <strong>Primer Latino</strong></p>
-  
-  ${posterHtml}
-
-  <h2 style="color:#333;text-align:center;font-size:1.6rem;margin:30px 0;">${titulo}</h2>
-  
-  ${detalles ? `<p style="background:#f0f0f0;padding:15px;border-radius:12px;text-align:center;font-size:1.05rem;"><strong>Detalles:</strong> ${detalles}</p>` : ''}
-
-  <div style="text-align:center;margin:50px 0;">
-    <a href="https://ko-fi.com/johnpradoo" style="background:#ff5e5e;color:white;padding:14px 32px;border-radius:50px;text-decoration:none;font-weight:bold;font-size:1.1rem;display:inline-block;box-shadow:0 6px 16px rgba(255,94,94,0.3);">
-      ☕ Apóyame con un cafecito
-    </a>
-  </div>
-
-  <p style="text-align:center;color:#555;font-size:1.25rem;margin:40px 0;">
-    ¡Gracias por ayudarnos a mejorar el catálogo! ❤️
-  </p>
-
-  <hr style="border:none;border-top:1px solid #eee;margin:50px 0;">
-
-  <p style="color:#888;font-size:0.95rem;text-align:center;">
-    Hecho con cariño por @johnpradoo<br>
-    <strong>Primer Latino</strong> – El addon privado más rápido de Latinoamérica
-  </p>
-</body>
-</html>
-  `.trim();
-
-  emailjs.send("service_0pqgszr", "template_lz1av8m", {
-    to_email: contacto,
-    message: mensajeHTML
+  fetch("https://formsubmit.co/541bb53841c2c4befb2464f8fd8febe9", {
+    method: "POST",
+    body: formData
   })
-  .then(() => console.log("Mail enviado perfecto"))
-  .catch(err => console.error("Error:", err));
+  .then(() => console.log("Correo enviado"))
+  .catch(e => console.error("Error enviando correo:", e));
 }
 
-// resto del código (cargarPeticiones y cambiarEstado) queda igual que antes
-// Cargar peticiones
+/* CARGAR PETICIONES DESDE FIREBASE */
 function cargarPeticiones() {
   db.collection("peticiones")
     .orderBy("fecha", "desc")
     .onSnapshot(snapshot => {
+
       if (snapshot.empty) {
-        document.getElementById("lista").innerHTML = "<p style='text-align:center;color:var(--soft);padding:40px 0;'>No hay peticiones pendientes</p>";
+        document.getElementById("lista").innerHTML =
+          "<p style='text-align:center;color:var(--soft);padding:40px 0;'>No hay peticiones</p>";
         return;
       }
 
       let html = `<table>
-        <tr><th>Título</th><th>Tipo</th><th>Detalles</th><th>Contacto</th><th>Fecha</th><th>Acciones</th></tr>`;
+        <tr>
+          <th>Título</th><th>Tipo</th><th>Detalles</th><th>Contacto</th><th>Fecha</th><th>Acciones</th>
+        </tr>`;
 
       snapshot.forEach(doc => {
         const d = doc.data();
         const fecha = d.fecha ? d.fecha.toDate().toLocaleDateString("es-ES") : "—";
 
-        html += `<tr>
-          <td><strong>${d.titulo || ''}</strong></td>
-          <td>${d.tipo || ''}</td>
-          <td>${d.detalles || ''}</td>
-          <td>${d.contacto || ''}</td>
+        html += `
+        <tr>
+          <td><strong>${d.titulo}</strong></td>
+          <td>${d.tipo}</td>
+          <td>${d.detalles || ""}</td>
+          <td>${d.contacto || ""}</td>
           <td>${fecha}</td>
           <td>
-            <button class="btn-aceptar" onclick="cambiarEstado('${doc.id}','aceptada','${d.titulo}','${d.contacto}','${d.detalles || ''}')">Aceptar</button>
-            <button class="btn-revision" onclick="cambiarEstado('${doc.id}','revision')">Revisión</button>
-            <button class="btn-rechazar" onclick="cambiarEstado('${doc.id}','rechazada')">Rechazar</button>
+            <button class="btn-aceptar" 
+              onclick="cambiarEstado('${doc.id}','aceptada','${d.titulo}','${d.contacto}','${d.detalles || ""}')">
+              Aceptar
+            </button>
+
+            <button class="btn-revision" 
+              onclick="cambiarEstado('${doc.id}','revision')">
+              Revisión
+            </button>
+
+            <button class="btn-rechazar" 
+              onclick="cambiarEstado('${doc.id}','rechazada')">
+              Rechazar
+            </button>
           </td>
         </tr>`;
       });
@@ -190,16 +181,25 @@ function cargarPeticiones() {
     });
 }
 
-function cambiarEstado(id, estado, titulo = "", contacto = "", detalles = "") {
-  const updates = { estado: estado, procesadoPor: auth.currentUser.email, fechaProcesado: new Date() };
+/* CAMBIAR ESTADO Y ENVIAR CORREO */
+function cambiarEstado(id, estado, titulo="", contacto="", detalles="") {
 
-  db.collection("peticiones").doc(id).update(updates)
-    .then(() => {
-      alert(`Petición marcada como: ${estado}`);
-      if (estado === "aceptada") enviarMailAceptado(contacto, titulo, detalles);
-    })
-    .catch(() => alert("Error al actualizar"));
+  db.collection("peticiones").doc(id).update({
+    estado: estado,
+    procesadoPor: auth.currentUser.email,
+    fechaProcesado: new Date()
+  })
+  .then(() => {
+    alert(`Petición marcada como: ${estado}`);
+
+    if (estado === "aceptada") {
+      enviarCorreoAprobado(contacto, titulo, detalles);
+    }
+
+  })
+  .catch(() => alert("Error al actualizar"));
 }
+
 </script>
 </body>
 </html>
