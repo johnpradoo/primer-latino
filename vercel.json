@@ -4,12 +4,17 @@
     { "src": "api/addon.js", "use": "@vercel/node" },
     { "src": "index.html", "use": "@vercel/static" },
     { "src": "*.json", "use": "@vercel/static" },
+    { "src": "verificar.html", "use": "@vercel/static" },
     { "src": "admin/index.html", "use": "@vercel/static" }
   ],
   "routes": [
     {
       "src": "/admin",
       "dest": "/admin/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/verificar.html"
     },
     {
       "src": "/admin/",
