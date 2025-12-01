@@ -253,6 +253,26 @@
         cargarPeticiones();
       }
     });
+    
+    async function cargarPeticiones() {
+  const res = await fetch("/api/peticiones");
+  const peticiones = await res.json();
+
+  const cont = document.getElementById("lista");
+  cont.innerHTML = "";
+
+  peticiones.forEach(p => {
+    cont.innerHTML += `
+      <div class="item">
+        <p><b>Nombre:</b> ${p.nombre}</p>
+        <p><b>Correo:</b> ${p.correo}</p>
+        <p><b>Mensaje:</b> ${p.mensaje}</p>
+        <p><b>Estado:</b> ${p.estado}</p>
+        <hr>
+      </div>
+    `;
+  });
+}
 
     /* CARGAR PETICIONES */
     function cargarPeticiones() {
