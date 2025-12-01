@@ -1,6 +1,12 @@
 import nodemailer from "nodemailer";
 import admin from "firebase-admin";
 
+export const config = {
+  api: {
+    bodyParser: true,
+  },
+};
+
 // Inicializar Firebase Admin una sola vez
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -38,14 +44,14 @@ export default async function handler(req, res) {
       estado: "pendiente"
     });
 
-    // Enviar mail a admin
+    // Enviar correo al admin
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
       secure: true,
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS || process.env.SMTP_PASS
+        pass: process.env.SMTP_PASS
       }
     });
 
