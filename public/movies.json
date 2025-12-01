@@ -68,6 +68,17 @@
       "type": "movie"
     },
     {
+      "id": "tt33057137",
+      "title": "Prisoner of War",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "1615EE1945E3C3D0DDA6188C0F884FD747D2AFCF",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/6paGLyOAvY95XxjfdiTcatwI7dJ.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt24850708",
       "title": "Tierra de Fugitivos",
       "quality": "1080p | WEB-DL | Dolby Atmos",
@@ -76,6 +87,17 @@
       "hash": "A3538F13EAC5492466D9A89BD894D509D60EB1C9",
       "status": "aprobado",
       "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/wkLXY92kCuvGlZCCU9kxyYNDYQl.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt37676033",
+      "title": "V/H/S/Halloween (2025)",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "BEA3E82FA5C8619C70DFAC3BF0399402598FE922",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/bvMKSZtN8KAdtlKoYbEi1Zhyaou.jpg",
       "type": "movie"
     },
     {
