@@ -45,9 +45,10 @@ export default async function handler(req, res) {
     });
 
     // Enviar correo al admin
+  if (correo) {
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
+      host: "mail.privateemail.com",
+      port: 465,
       secure: true,
       auth: {
         user: process.env.SMTP_USER,
