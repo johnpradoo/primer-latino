@@ -363,7 +363,20 @@
 
   <!-- SCRIPT PETICIONES CON BACKEND -->
 <script type="module">
-  import { db, collection, addDoc, serverTimestamp } from "./firebase.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDbM--YzDZ6J2GRZKXGJD88eyKJTKuBRhc",
+    authDomain: "primerlatino-admin.firebaseapp.com",
+    projectId: "primerlatino-admin",
+    storageBucket: "primerlatino-admin.firebasestorage.app",
+    messagingSenderId: "26166116734",
+    appId: "1:26166116734:web:b9634bc650c41703f0732f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
   window.enviarPeticion = async function() {
     const titulo = document.getElementById("titulo").value.trim();
@@ -396,16 +409,13 @@
       });
 
       msg.innerHTML = "¡Petición enviada! Gracias ❤️";
-      document.getElementById("titulo").value = "";
-      document.getElementById("tipo").value = "";
-      document.getElementById("anio").value = "";
-      document.getElementById("tmdb").value = "";
-      document.getElementById("magnet").value = "";
-      document.getElementById("correo").value = "";
-    } catch (e) {
-      msg.style.color = "#ff3b3b";
-      msg.innerHTML = "Error al enviar (intenta de nuevo)";
+      document.querySelectorAll("#titulo, #anio, #tmdb, #magnet, #correo").forEach(el => el.value = "");
+      document.getElementById("tipo").value = ""; 
+    } 
+      catch (e) {
       console.error(e);
+      msg.style.color = "#ff3b3b";
+      msg.innerHTML = "Error al enviar";
     }
   }
 </script>

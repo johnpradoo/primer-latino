@@ -5,204 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Panel Admin · Primer Latino</title>
 
-  <style>
-    :root {
-      --bg: #f7f7f8;
-      --card: #ffffff;
-      --border: #e3e3e3;
-      --text: #1f1f1f;
-      --accent: #ff2e7f;
-      --success: #00d26a;
-      --warn: #ffa502;
-      --error: #ff4757;
-    }
-
-    * {
-      margin: 0; padding: 0; box-sizing: border-box;
-      font-family: "Inter", sans-serif;
-    }
-
-    body {
-      background: var(--bg);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #loginSection {
-      max-width: 420px;
-      width: 92%;
-      background: var(--card);
-      margin: auto;
-      padding: 40px 32px;
-      border-radius: 20px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-    }
-
-    #loginSection h1 {
-      text-align: center;
-      font-size: 1.8rem;
-      font-weight: 800;
-      margin-bottom: 6px;
-    }
-
-    #loginSection p {
-      text-align: center;
-      color: #777;
-      margin-bottom: 26px;
-    }
-
-    #loginSection input {
-      width: 100%;
-      padding: 14px;
-      margin-bottom: 14px;
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      font-size: 1rem;
-    }
-
-    #loginSection button {
-      width: 100%;
-      padding: 15px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 1.1rem;
-      transition: 0.15s;
-    }
-
-    #loginSection button:hover {
-      opacity: 0.9;
-    }
-
-    #msg {
-      margin-top: 14px;
-      text-align: center;
-      color: var(--error);
-      font-weight: 600;
-    }
-
-    #panelSection {
-      display: none;
-      flex-direction: column;
-      height: 100vh;
-    }
-
-    .topbar {
-      width: 100%;
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      padding: 18px 26px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .topbar h2 {
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: var(--text);
-    }
-
-    .logout {
-      background: var(--accent);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 700;
-      border: none;
-      transition: 0.15s;
-    }
-
-    .logout:hover {
-      opacity: 0.85;
-    }
-
-    .content {
-      padding: 26px;
-      overflow-y: auto;
-      flex: 1;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-
-    th {
-      text-align: left;
-      background: #f0f0f0;
-      padding: 14px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      border-bottom: 1px solid var(--border);
-    }
-
-    td {
-      padding: 14px;
-      font-size: 0.95rem;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
-    }
-
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    .btn {
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: none;
-      font-size: 0.85rem;
-      cursor: pointer;
-      font-weight: 700;
-      margin-right: 4px;
-    }
-
-    .aceptar { background: var(--success); color: white; }
-    .revision { background: var(--warn); color: white; }
-    .rechazar { background: var(--error); color: white; }
-
-    .hidden { display: none; }
-  </style>
-</head>
-<body>
-
-  <div id="loginSection">
-    <h1>Panel Admin</h1>
-    <p>Primer Latino</p>
-    <input type="email" id="email" placeholder="Correo" />
-    <input type="password" id="password" placeholder="Contraseña" />
-    <button onclick="login()">Entrar</button>
-    <div id="msg"></div>
-  </div>
-
-  <div id="panelSection">
-    <div class="topbar">
-      <h2>Peticiones</h2>
-      <button class="logout" onclick="logout()">Salir</button>
-    </div>
-
-    <div class="content">
-      <div id="lista">Cargando peticiones…</div>
-    </div>
-  </div>
-
+  <!-- Firebase CDN v10 -->
   <script type="module">
-    import { auth, db, onSnapshot, orderBy, query, collection, updateDoc, doc } from "../firebase.js";
-    import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDbM--YzDZ6J2GRZKXGJD88eyKJTKuBRhc",
+      authDomain: "primerlatino-admin.firebaseapp.com",
+      projectId: "primerlatino-admin",
+      storageBucket: "primerlatino-admin.firebasestorage.app",
+      messagingSenderId: "26166116734",
+      appId: "1:26166116734:web:b9634bc650c41703f0732f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
     const loginSection = document.getElementById("loginSection");
     const panelSection = document.getElementById("panelSection");
@@ -213,10 +33,19 @@
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
+      if (!email || !password) {
+        msg.textContent = "Completa correo y contraseña";
+        return;
+      }
+
       msg.textContent = "Entrando…";
 
       signInWithEmailAndPassword(auth, email, password)
-        .catch(() => {
+        .then(() => {
+          // onAuthStateChanged se encarga de mostrar el panel
+        })
+        .catch((error) => {
+          console.error(error);
           msg.textContent = "Correo o contraseña incorrecta";
         });
     }
@@ -234,6 +63,7 @@
         loginSection.style.display = "block";
         panelSection.style.display = "none";
         lista.innerHTML = "";
+        msg.textContent = "";
       }
     });
 
@@ -270,7 +100,7 @@
               <td>${d.magnet ? "Sí" : "—"}</td>
               <td>${d.correo || "—"}</td>
               <td>
-                <button class="btn aceptar" onclick="cambiarEstado('${docSnap.id}','aceptada','${d.titulo || ""}','${d.correo || ""}')">Aceptar</button>
+                <button class="btn aceptar" onclick="cambiarEstado('${docSnap.id}','aceptada')">Aceptar</button>
                 <button class="btn revision" onclick="cambiarEstado('${docSnap.id}','revision')">Revisión</button>
                 <button class="btn rechazar" onclick="cambiarEstado('${docSnap.id}','rechazada')">Rechazar</button>
               </td>
@@ -280,10 +110,13 @@
 
         html += `</table>`;
         lista.innerHTML = html;
+      }, (error) => {
+        console.error(error);
+        lista.innerHTML = "<p style='color:red;'>Error de permisos o conexión</p>";
       });
     }
 
-    window.cambiarEstado = async function(id, estado, titulo = "", correo = "") {
+    window.cambiarEstado = async function(id, estado) {
       try {
         await updateDoc(doc(db, "peticiones", id), {
           estado,
@@ -296,5 +129,90 @@
       }
     }
   </script>
+
+  <style>
+    :root {
+      --bg: #f7f7f8;
+      --card: #ffffff;
+      --border: #e3e3e3;
+      --text: #1f1f1f;
+      --accent: #ff2e7f;
+      --success: #00d26a;
+      --warn: #ffa502;
+      --error: #ff4757;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", sans-serif; }
+
+    body { background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; }
+
+    #loginSection {
+      max-width: 420px; width: 92%; background: var(--card); margin: auto; padding: 40px 32px;
+      border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    #loginSection h1 { text-align: center; font-size: 1.8rem; font-weight: 800; margin-bottom: 6px; }
+    #loginSection p { text-align: center; color: #777; margin-bottom: 26px; }
+
+    #loginSection input {
+      width: 100%; padding: 14px; margin-bottom: 14px; border: 2px solid var(--border);
+      border-radius: 12px; font-size: 1rem;
+    }
+
+    #loginSection button {
+      width: 100%; padding: 15px; background: var(--accent); color: white; border: none;
+      border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1.1rem;
+    }
+
+    #msg { margin-top: 14px; text-align: center; color: var(--error); font-weight: 600; }
+
+    #panelSection { display: none; flex-direction: column; height: 100vh; }
+
+    .topbar {
+      background: var(--card); border-bottom: 1px solid var(--border); padding: 18px 26px;
+      display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0;
+    }
+
+    .logout {
+      background: var(--accent); color: white; padding: 10px 20px; border-radius: 10px;
+      cursor: pointer; font-weight: 700; border: none;
+    }
+
+    .content { padding: 26px; overflow-y: auto; flex: 1; }
+
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+    th { text-align: left; background: #f0f0f0; padding: 14px; font-weight: 700; border-bottom: 1px solid var(--border); }
+
+    td { padding: 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+    .btn { padding: 6px 12px; border-radius: 8px; border: none; font-weight: 700; margin-right: 4px; cursor: pointer; }
+
+    .aceptar { background: var(--success); color: white; }
+    .revision { background: var(--warn); color: white; }
+    .rechazar { background: var(--error); color: white; }
+  </style>
+</head>
+<body>
+
+  <div id="loginSection">
+    <h1>Panel Admin</h1>
+    <p>Primer Latino</p>
+    <input type="email" id="email" placeholder="Correo" />
+    <input type="password" id="password" placeholder="Contraseña" />
+    <button onclick="login()">Entrar</button>
+    <div id="msg"></div>
+  </div>
+
+  <div id="panelSection">
+    <div class="topbar">
+      <h2>Peticiones</h2>
+      <button class="logout" onclick="logout()">Salir</button>
+    </div>
+    <div class="content">
+      <div id="lista">Cargando peticiones…</div>
+    </div>
+  </div>
+
 </body>
-</html> 
+</html>
