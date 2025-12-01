@@ -5,217 +5,323 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Panel Admin · Primer Latino</title>
 
-  <!-- FONTS -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
   <style>
-    :root{--bg:#fad0e0;--card:#ffffff;--text:#1a1a1a;--accent:#ff2e7f;--purple:#8b3dff;--soft:#555;}
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
-    .card{max-width:480px;width:100%;background:var(--card);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,0.1);overflow:hidden;position:relative;}
-    .header{background:linear-gradient(135deg,var(--purple),#a86bff);color:white;padding:32px 24px;text-align:center;}
-    .section{padding:24px;}
-    .hidden{display:none;}
-    .table-container{overflow-x:auto;margin-top:16px;}
-    table{width:100%;min-width:520px;border-collapse:collapse;font-size:0.92rem;}
-    th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #eee;vertical-align:middle;}
-    th{background:#f0f0f0;font-weight:600;font-size:0.85rem;}
-    .btn-aceptar{background:#00d26a;color:white;border:none;padding:7px 12px;border-radius:50px;cursor:pointer;font-size:0.85rem;margin:2px;}
-    .btn-revision{background:#ffa502;color:white;border:none;padding:7px 12px;border-radius:50px;cursor:pointer;font-size:0.85rem;margin:2px;}
-    .btn-rechazar{background:#ff4757;color:white;border:none;padding:7px 12px;border-radius:50px;cursor:pointer;font-size:0.85rem;margin:2px;}
-    .logout{position:absolute;top:12px;right:12px;background:var(--accent);color:white;padding:7px 14px;border-radius:50px;font-size:0.85rem;cursor:pointer;}
-    @media (max-width:560px){
-      table{min-width:100%;}
-      td:nth-child(6){display:block;width:100%;padding-top:8px;}
-      .btn-aceptar,.btn-revision,.btn-rechazar{display:inline-block;width:auto;margin:4px;}
+    :root {
+      --bg: #f7f7f8;
+      --card: #ffffff;
+      --border: #e3e3e3;
+      --text: #1f1f1f;
+      --accent: #ff2e7f;
+      --success: #00d26a;
+      --warn: #ffa502;
+      --error: #ff4757;
     }
+
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      font-family: "Inter", sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* LOGIN */
+    #loginSection {
+      max-width: 420px;
+      width: 92%;
+      background: var(--card);
+      margin: auto;
+      padding: 40px 32px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    #loginSection h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    #loginSection p {
+      text-align: center;
+      color: #777;
+      margin-bottom: 26px;
+    }
+
+    #loginSection input {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 14px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 1rem;
+    }
+
+    #loginSection button {
+      width: 100%;
+      padding: 15px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: 0.15s;
+    }
+
+    #loginSection button:hover {
+      opacity: 0.9;
+    }
+
+    #msg {
+      margin-top: 14px;
+      text-align: center;
+      color: var(--error);
+      font-weight: 600;
+    }
+
+    /* PANEL */
+    #panelSection {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      width: 100%;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 26px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .topbar h2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .logout {
+      background: var(--accent);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      border: none;
+      transition: 0.15s;
+    }
+
+    .logout:hover {
+      opacity: 0.85;
+    }
+
+    /* TABLE AREA */
+    .content {
+      padding: 26px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th {
+      text-align: left;
+      background: #f0f0f0;
+      padding: 14px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 14px;
+      font-size: 0.95rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* BUTTONS STATE */
+    .btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: 700;
+      margin-right: 4px;
+    }
+
+    .aceptar { background: var(--success); color: white; }
+    .revision { background: var(--warn); color: white; }
+    .rechazar { background: var(--error); color: white; }
+
+    .hidden { display: none; }
   </style>
 </head>
+
 <body>
 
-<div class="card">
   <!-- LOGIN -->
   <div id="loginSection">
-    <div class="header"><h1>Panel Admin</h1><p>Primer Latino</p></div>
-    <div class="section">
-      <input type="email" id="email" placeholder="Correo electrónico" required />
-      <input type="password" id="password" placeholder="Contraseña" required />
-      <button onclick="login()">Entrar</button>
-      <p id="msg" style="color:#ff4757;margin-top:16px;text-align:center;font-weight:600;"></p>
+    <h1>Panel Admin</h1>
+    <p>Primer Latino</p>
+
+    <input type="email" id="email" placeholder="Correo" />
+    <input type="password" id="password" placeholder="Contraseña" />
+
+    <button onclick="login()">Entrar</button>
+    <div id="msg"></div>
+  </div>
+
+  <!-- PANEL -->
+  <div id="panelSection">
+    <div class="topbar">
+      <h2>Peticiones</h2>
+      <button class="logout" onclick="logout()">Salir</button>
+    </div>
+
+    <div class="content">
+      <div id="lista">Cargando peticiones…</div>
     </div>
   </div>
 
-  <!-- PANEL ADMIN -->
-  <div id="panelSection" class="hidden">
-    <div class="header">
-      <h1>Peticiones</h1>
-      <div class="logout" onclick="logout()">Salir</div>
-    </div>
-    <div class="section">
-      <div class="table-container">
-        <div id="lista">Cargando peticiones…</div>
-      </div>
-    </div>
-  </div>
-</div>
+  <!-- FIREBASE CONFIG -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDbM--YzDZ6J2GRZKXGJD88eyKJTKuBRhc",
+      authDomain: "primerlatino-admin.firebaseapp.com",
+      projectId: "primerlatino-admin",
+      storageBucket: "primerlatino-admin.firebasestorage.app",
+      messagingSenderId: "26166116734",
+      appId: "1:26166116734:web:b9634bc650c41703f0732f"
+    };
 
-<!-- FIREBASE MODULAR -->
-<script type="module">
-  // Import Firebase modular
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-  // Config Firebase nueva
-  const firebaseConfig = {
-    apiKey: "AIzaSyCbSu-l8g5pjK6hbmHvWX5DM7mFILrDdBQ",
-    authDomain: "primer-latino.firebaseapp.com",
-    projectId: "primer-latino",
-    storageBucket: "primer-latino.firebasestorage.app",
-    messagingSenderId: "296587777930",
-    appId: "1:296587777930:web:44467ab54eb20b1a959a73"
-  };
+    function login() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+      document.getElementById("msg").textContent = "Entrando…";
 
-  // LOGIN
-  window.login = function() {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-
-    if(!email || !password){
-      document.getElementById("msg").textContent = "Completa ambos campos";
-      return;
-    }
-
-    document.getElementById("msg").textContent = "Entrando…";
-
-    signInWithEmailAndPassword(auth, email, password)
+      auth.signInWithEmailAndPassword(email, password)
       .then(() => location.reload())
-      .catch(() => document.getElementById("msg").textContent = "Correo o contraseña incorrecta");
-  }
-
-  window.logout = function() {
-    signOut(auth).then(() => location.reload());
-  }
-
-  // OBSERVAR LOGIN
-  onAuthStateChanged(auth, user => {
-    if(user){
-      document.getElementById("loginSection").classList.add("hidden");
-      document.getElementById("panelSection").classList.remove("hidden");
-      cargarPeticiones();
-    } else {
-      document.getElementById("loginSection").classList.remove("hidden");
-      document.getElementById("panelSection").classList.add("hidden");
-    }
-  });
-
-  // ENVIAR CORREO FORM SUBMIT
-  async function enviarCorreoAprobado(contacto, titulo, detalles="") {
-    if(!contacto || !contacto.includes("@")) return;
-
-    const htmlCorreo = `
-      <html>
-      <body style="font-family:system-ui,sans-serif;max-width:600px;margin:40px auto;padding:20px;background:#fdfdfd;border-radius:16px;">
-        <h1 style="color:#ff2e7f;text-align:center;">¡Buenas noticias!</h1>
-        <p style="font-size:1.15rem;text-align:center;">
-          Tu petición ya está disponible en <strong>🍿Primer Latino</strong>
-        </p>
-        <h2 style="color:#333;text-align:center;font-size:1.6rem;margin:30px 0;">
-          ${titulo}
-        </h2>
-        ${detalles ? `<p style="background:#f0f0f0;padding:15px;border-radius:12px;text-align:center;font-size:1.05rem;">
-          <strong>Detalles:</strong> ${detalles}
-        </p>` : ""}
-        <div style="text-align:center;margin:45px 0;">
-          <a href="https://ko-fi.com/johnpradoo"
-            style="background:#ff5e9e;color:white;padding:14px 32px;border-radius:50px;text-decoration:none;font-weight:bold;font-size:1.1rem;display:inline-block;box-shadow:0 6px 16px rgba(255,94,158,0.3);">
-            ☕ Apóyame con un cafecito
-          </a>
-        </div>
-        <p style="text-align:center;color:#555;font-size:1rem;margin:40px 0;">
-          ¡Gracias por ayudarnos a mejorar el catálogo! ❤️
-        </p>
-        <hr style="border:none;border-top:1px solid #eee;margin:40px 0;">
-        <p style="color:#888;font-size:0.95rem;text-align:center;">
-          Hecho con cariño por @johnpradoo<br>
-          <strong>Primer Latino</strong> – El addon privado más rápido de Latinoamérica
-        </p>
-      </body>
-      </html>
-    `.trim();
-
-    const formData = new FormData();
-    formData.append("_subject", "Tu petición ya está disponible 🍿");
-    formData.append("_template", "raw");
-    formData.append("email", contacto);
-    formData.append("message", htmlCorreo);
-
-    fetch("https://formsubmit.co/541bb53841c2c4befb2464f8fd8febe9", {
-      method: "POST",
-      body: formData
-    }).then(() => console.log("Correo enviado")).catch(err => console.error(err));
-  }
-
-  // CARGAR PETICIONES
-  window.cargarPeticiones = function() {
-    const q = query(collection(db, "peticiones"), orderBy("fecha","desc"));
-    onSnapshot(q, (snapshot) => {
-      if(snapshot.empty){
-        document.getElementById("lista").innerHTML = "<p style='text-align:center;color:var(--soft);padding:40px 0;'>No hay peticiones</p>";
-        return;
-      }
-
-      let html = `<table>
-        <tr>
-          <th>Título</th><th>Tipo</th><th>Detalles</th><th>Contacto</th><th>Fecha</th><th>Acciones</th>
-        </tr>`;
-
-      snapshot.forEach(docSnap => {
-        const d = docSnap.data();
-        const fecha = d.fecha?.toDate?.()?.toLocaleDateString("es-ES") || "—";
-
-        html += `
-        <tr>
-          <td><strong>${d.titulo}</strong></td>
-          <td>${d.tipo}</td>
-          <td>${d.detalles || ""}</td>
-          <td>${d.contacto || ""}</td>
-          <td>${fecha}</td>
-          <td>
-            <button class="btn-aceptar" 
-              onclick="cambiarEstado('${docSnap.id}','aceptada','${d.titulo}','${d.contacto}','${d.detalles || ""}')">Aceptar</button>
-            <button class="btn-revision" 
-              onclick="cambiarEstado('${docSnap.id}','revision')">Revisión</button>
-            <button class="btn-rechazar" 
-              onclick="cambiarEstado('${docSnap.id}','rechazada')">Rechazar</button>
-          </td>
-        </tr>`;
+      .catch(() => {
+        document.getElementById("msg").textContent = "Correo o contraseña incorrecta";
       });
+    }
 
-      html += `</table>`;
-      document.getElementById("lista").innerHTML = html;
+    function logout() {
+      auth.signOut().then(() => location.reload());
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("panelSection").style.display = "flex";
+        cargarPeticiones();
+      }
     });
-  }
 
-  // CAMBIAR ESTADO
-  window.cambiarEstado = function(id, estado, titulo="", contacto="", detalles="") {
-    const docRef = doc(db, "peticiones", id);
-    updateDoc(docRef, { 
-      estado: estado, 
-      procesadoPor: auth.currentUser.email, 
-      fechaProcesado: new Date() 
-    })
-    .then(() => {
-      alert(`Petición marcada como: ${estado}`);
-      if(estado === "aceptada") enviarCorreoAprobado(contacto, titulo, detalles);
-    })
-    .catch(() => alert("Error al actualizar"));
-  }
-</script>
+    /* CARGAR PETICIONES */
+    function cargarPeticiones() {
+      db.collection("peticiones")
+      .orderBy("fecha", "desc")
+      .onSnapshot(snapshot => {
+        if (snapshot.empty) {
+          document.getElementById("lista").innerHTML =
+            "<p style='text-align:center;color:#999;'>No hay peticiones.</p>";
+          return;
+        }
 
+        let html = `
+          <table>
+            <tr>
+              <th>Título</th>
+              <th>Tipo</th>
+              <th>Año</th>
+              <th>TMDB</th>
+              <th>Magnet</th>
+              <th>Correo</th>
+              <th>Acciones</th>
+            </tr>
+        `;
+
+        snapshot.forEach(doc => {
+          const d = doc.data();
+
+          html += `
+            <tr>
+              <td><strong>${d.titulo || ""}</strong></td>
+              <td>${d.tipo || ""}</td>
+              <td>${d.anio || "—"}</td>
+              <td>${d.tmdb || "—"}</td>
+              <td>${d.magnet || "—"}</td>
+              <td>${d.correo || "—"}</td>
+              <td>
+                <button class="btn aceptar" onclick="cambiarEstado('${doc.id}','aceptada','${d.titulo}','${d.correo}')">Aceptar</button>
+                <button class="btn revision" onclick="cambiarEstado('${doc.id}','revision')">Revisión</button>
+                <button class="btn rechazar" onclick="cambiarEstado('${doc.id}','rechazada')">Rechazar</button>
+              </td>
+            </tr>
+          `;
+        });
+
+        html += `</table>`;
+        document.getElementById("lista").innerHTML = html;
+      });
+    }
+
+    function cambiarEstado(id, estado, titulo="", correo="") {
+      db.collection("peticiones")
+      .doc(id)
+      .update({
+        estado,
+        procesadoPor: auth.currentUser.email,
+        fechaProcesado: new Date()
+      })
+      .then(() => alert("Actualizado"))
+      .then(() => {
+        if (estado === "aceptada" && correo) {
+          fetch("/api/notificar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ correo, titulo })
+          });
+        }
+      });
+    }
+  </script>
 </body>
 </html>

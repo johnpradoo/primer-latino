@@ -4,10 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Primer Latino</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
   <style>
-    :root{
+    :root {
       --bg:#fad0e0;
       --card:#ffffff;
       --text:#1a1a1a;
@@ -15,8 +17,10 @@
       --soft:#555;
       --border:#e1e1e1;
     }
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
       background:var(--bg);
       color:var(--text);
       font-family:'Inter',sans-serif;
@@ -25,9 +29,10 @@
       display:flex;
       flex-direction:column;
       align-items:center;
-      gap:24px; /* reducido para no tan separadas las tarjetas */
+      gap:24px;
     }
-    .card{
+
+    .card {
       max-width:460px;
       width:100%;
       background:var(--card);
@@ -36,62 +41,69 @@
       overflow:hidden;
       border:1px solid var(--border);
     }
-    /* Ajuste específico para tarjetas de banner (más delgado) */
+
     .card.banner-card {
-      border: 0.5px solid var(--border); /* Borde más delgado */
-      box-shadow: 0 8px 24px rgba(0,0,0,0.04); /* Sombra más sutil */
-      margin-bottom: 16px; /* Margen inferior más delgado */
+      border: 0.5px solid var(--border);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+      margin-bottom:16px;
     }
-    .header-card .header{
+
+    .header-card .header {
       background:linear-gradient(135deg,#ff2e7f,#ff6ba8);
       color:white;
       padding:40px 32px;
       text-align:center;
     }
-    .avatar{
-      width:100px;height:100px;
+
+    .avatar {
+      width:100px; height:100px;
       border-radius:50%;
       border:5px solid white;
       margin-bottom:16px;
       object-fit:cover;
     }
-    .header h1{
+
+    .header h1 {
       font-size:1.8rem;
       font-weight:900;
       margin-bottom:8px;
     }
-    .header p{
+
+    .header p {
       opacity:0.9;
       font-size:1rem;
     }
-    .section{
-      padding:32px;
-    }
-    .title{
+
+    .section { padding:32px; }
+
+    .title {
       font-size:1.5rem;
       font-weight:700;
       margin-bottom:24px;
       text-align:center;
     }
-    .generator{
-      margin-bottom:32px;
-    }
-    select, input{
+
+    /* 🎀 FORMULARIO NUEVO — Modernizado */
+    .input {
       width:100%;
-      padding:16px 20px;
+      padding:16px 18px;
       border:2px solid #ddd;
       border-radius:16px;
       font-size:1rem;
-      margin-bottom:16px;
-      transition:border 0.3s;
+      margin-bottom:14px;
+      transition:border 0.25s;
+      background:#fafafa;
     }
-    select:focus, input:focus{
+
+    .input:focus {
       outline:none;
       border-color:var(--accent);
+      background:white;
     }
-    .btn{
+
+    .btn {
       width:100%;
-      padding:18px;
+      padding:16px;
       background:var(--accent);
       color:white;
       border:none;
@@ -100,12 +112,22 @@
       font-weight:700;
       cursor:pointer;
       transition:0.3s;
+      margin-top:8px;
     }
-    .btn:hover{
+
+    .btn:hover {
       background:#ff1a6f;
       transform:translateY(-2px);
     }
-    .result{
+
+    .msg {
+      margin-top:14px;
+      font-weight:600;
+      text-align:center;
+      font-size:1rem;
+    }
+
+        .result {
       margin-top:24px;
       padding:20px;
       background:#f8f8f8;
@@ -113,7 +135,8 @@
       border:2px dashed var(--accent);
       display:none;
     }
-    .link{
+
+    .link {
       background:#000;
       color:#ff2e7f;
       padding:14px;
@@ -123,11 +146,13 @@
       word-break:break-all;
       margin:16px 0;
     }
-    .actions{
+
+    .actions {
       display:flex;
       gap:12px;
     }
-    .actions button{
+
+    .actions button {
       flex:1;
       padding:14px;
       border:none;
@@ -135,18 +160,18 @@
       font-weight:700;
       cursor:pointer;
     }
-    .copy{background:#00ff9d;color:#000}
-    .stremio{background:#000;color:white}
 
-    .donate{
-      text-align:center; /* centrado todo en donar */
-    }
-    .donate p{
+    .copy { background:#00ff9d; color:#000; }
+    .stremio { background:#000; color:white; }
+
+    .donate { text-align:center; }
+    .donate p {
       color:var(--soft);
       margin-bottom:16px;
       font-size:0.95rem;
     }
-    .donate-btn{
+
+    .donate-btn {
       background:var(--accent);
       color:white;
       padding:18px 40px;
@@ -156,11 +181,13 @@
       display:inline-block;
       transition:0.3s;
     }
-    .donate-btn:hover{
+
+    .donate-btn:hover {
       background:#ff1a6f;
       transform:scale(1.05);
     }
-    .social{
+
+    .social {
       margin-top:32px;
       display:flex;
       justify-content:center;
@@ -168,30 +195,19 @@
       font-size:1.6rem;
       color:var(--soft);
     }
-    footer{
+
+    footer {
       text-align:center;
       margin-top:60px;
       color:var(--soft);
       font-size:0.9rem;
     }
-
-    /* Estilo ajustado para el banner de Real-Debrid (más compacto) */
-    .banner-section {
-      text-align: center;
-      padding: 8px; /* Padding reducido para que sea más ajustado a la imagen */
-    }
-    .banner-section img {
-      max-width: 100%;
-      height: 80px; /* Altura fija para hacerlo más pequeño */
-      object-fit: contain;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
+    
   </style>
 </head>
 <body>
 
-  <!-- TARJETA 1: ENCABEZADO -->
+  <!-- ENCABEZADO -->
   <div class="card header-card">
     <div class="header">
       <img src="https://unavatar.io/x/johnpradooo" alt="John Prado" class="avatar">
@@ -199,59 +215,64 @@
       <p>El addon privado más rápido de Latinoamérica</p>
     </div>
   </div>
-  
-    <!-- TARJETA: PEDIR CONTENIDO -->
+
+  <!-- 🎀 NUEVO FORMULARIO -->
   <div class="card">
     <div class="section">
-      <div class="title">¿No encontrás lo que buscás?</div>
+      <div class="title">¿No encontraste lo que buscás?</div>
       <p style="text-align:center;color:var(--soft);margin-bottom:24px;">
-        Pedilo acá y lo agregamos lo antes posible
+        Pedilo acá y lo subimos lo antes posible
       </p>
 
-      <input type="text" id="titulo" placeholder="Título de película o serie *" required />
-      
-      <select id="tipo" required>
-        <option value="" disabled selected>Tipo de contenido *</option>
+      <input type="text" id="titulo" class="input" placeholder="Título *" />
+
+      <select id="tipo" class="input">
+        <option value="" disabled selected>Tipo *</option>
         <option value="pelicula">Película</option>
         <option value="serie">Serie</option>
       </select>
 
-      <input type="text" id="detalles" placeholder="Temporada/capítulos, año, IMDB... (opcional)" />
+      <input type="text" id="anio" class="input" placeholder="Año (opcional)" />
 
-      <input type="text" id="contacto" placeholder="Correo o Telegram (opcional - para avisarte)" />
+      <input type="text" id="tmdb" class="input" placeholder="ID de TMDB (opcional)" />
 
-      <button class="btn" onclick="enviarPeticion()" style="margin-top:12px;">
-        Enviar petición
-      </button>
+      <input type="text" id="magnet" class="input" placeholder="Link Magnet (opcional)" />
 
-      <p id="msgPeticion" style="margin-top:16px;text-align:center;font-weight:600;"></p>
+      <input type="text" id="correo" class="input" placeholder="Correo para avisarte (opcional)" />
+
+      <button class="btn" onclick="enviarPeticion()">Enviar petición</button>
+
+      <div id="msgPeticion" class="msg"></div>
+
     </div>
   </div>
 
-  <!-- TARJETA 2: BANNER DE REAL-DEBRID (ahora con clase banner-card para ajustes específicos) -->
+  <!-- BANNER -->
   <div class="card banner-card">
-    <div class="banner-section">
-      <a href="http://real-debrid.com/?id=15788320" title="Real-Debrid">
-        <img src="http://real-debrid.com/static/images/banner/es.png" alt="Real-Debrid Banner" />
+    <div class="banner-section" style="text-align:center;padding:8px;">
+      <a href="http://real-debrid.com/?id=15788320">
+        <img src="http://real-debrid.com/static/images/banner/es.png" 
+             alt="Real-Debrid Banner" 
+             style="max-width:100%;height:80px;object-fit:contain;border-radius:12px;">
       </a>
     </div>
   </div>
 
-  <!-- TARJETA 3: GENERADOR -->
+  <!-- GENERADOR -->
   <div class="card">
     <div class="section">
       <div class="title">Genera tu enlace privado</div>
 
       <div class="generator">
-        <select id="debrid">
-          <option value="real">Real-Debrid 🟢 (Línea)</option>
+        <select id="debrid" class="input">
+          <option value="real">Real-Debrid 🟢</option>
           <option value="all">AllDebrid 🟡 (testing)</option>
           <option value="torbox">TorBox 🟡 (testing)</option>
         </select>
 
-        <input type="text" id="token" placeholder="Pega tu token aquí...🗝️" autofocus />
+        <input type="text" id="token" class="input" placeholder="Token…" />
 
-        <button class="btn" onclick="generate()">Generar enlace 🚪</button>
+        <button class="btn" onclick="generate()">Generar</button>
 
         <div class="result" id="result">
           <div class="link" id="linkDisplay"></div>
@@ -264,13 +285,13 @@
     </div>
   </div>
 
-  <!-- TARJETA 4: DONAR -->
+    <!-- DONAR -->
   <div class="card">
     <div class="section">
       <div class="title">Apóyame con un cafecito</div>
 
       <div class="donate">
-        <p>¿Te está sirviendo el addon?</p>
+        <p>¿Te sirve el addon?</p>
         <a href="https://ko-fi.com/johnpradoo" target="_blank" class="donate-btn">
           Donar con Ko-fi ☕
         </a>
@@ -283,14 +304,14 @@
       </div>
     </div>
   </div>
-  
-    <!-- BOTÓN PANEL ADMIN (visible para todos, pero solo entra quien tiene cuenta) -->
+
+  <!-- PANEL ADMIN -->
   <div class="card">
     <div class="section" style="text-align:center; padding:32px;">
-      <p style="margin-bottom:20px; color:var(--soft); font-size:1.1rem;">
-        Área exclusiva para moderadores y administradores
+      <p style="margin-bottom:20px;color:var(--soft);font-size:1.1rem;">
+        Área exclusiva para moderadores
       </p>
-      <a href="/admin/" class="btn" style="background:#8b3dff; width:auto; display:inline-block; padding:18px 40px; font-size:1.2rem;">
+      <a href="/admin/" class="btn" style="background:#8b3dff;width:auto;display:inline-block;padding:18px 40px;font-size:1.2rem;">
         Panel Admin
       </a>
     </div>
@@ -301,6 +322,7 @@
     Contenido latino real • Rápido • Transparente
   </footer>
 
+  <!-- SCRIPT GENERADOR -->
   <script>
     const base = "https://www.primerlatino.com";
 
@@ -311,83 +333,91 @@
       const linkDisplay = document.getElementById("linkDisplay");
 
       if (!token) {
-        alert("Error Token vacío");
+        alert("Error: Token vacío");
         return;
       }
 
-      const prefix = servicio === "real" ? "realdebrid" : 
-                    servicio === "all" ? "alldebrid" : "torbox";
+      const prefix =
+        servicio === "real" ? "realdebrid" :
+        servicio === "all"  ? "alldebrid" :
+                              "torbox";
 
       const link = `${base}/${prefix}=${token}/manifest.json`;
+
       linkDisplay.textContent = link;
       result.style.display = "block";
     }
 
     function copyLink() {
-      navigator.clipboard.writeText(document.getElementById("linkDisplay").textContent);
+      navigator.clipboard.writeText(
+        document.getElementById("linkDisplay").textContent
+      );
       alert("¡Copiado!");
     }
 
     function installStremio() {
       const link = document.getElementById("linkDisplay").textContent;
-      location.href = "stremio://" + link.replace("https://", "");
+      window.location.href = "stremio://" + link.replace("https://", "");
     }
   </script>
-  
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
-<script>
-// MISMA CONFIG que usamos en el panel admin
-const firebaseConfig = {
-  apiKey: "AIzaSyDbM--YzDZ6J2GRZKXGJD88eyKJTKuBRhc",
-  authDomain: "primerlatino-admin.firebaseapp.com",
-  projectId: "primerlatino-admin",
-  storageBucket: "primerlatino-admin.firebasestorage.app",
-  messagingSenderId: "26166116734",
-  appId: "1:26166116734:web:b9634bc650c41703f0732f"
-};
+  <!-- SCRIPT PETICIONES CON BACKEND -->
+  <script>
+    async function enviarPeticion() {
+      const titulo = document.getElementById("titulo").value.trim();
+      const tipo = document.getElementById("tipo").value;
+      const anio = document.getElementById("anio").value.trim();
+      const tmdb = document.getElementById("tmdb").value.trim();
+      const magnet = document.getElementById("magnet").value.trim();
+      const correo = document.getElementById("correo").value.trim();
+      const msg = document.getElementById("msgPeticion");
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+      if (!titulo || !tipo) {
+        msg.style.color = "#ff3b3b";
+        msg.innerHTML = "Completa los campos obligatorios";
+        return;
+      }
 
-function enviarPeticion() {
-  const titulo = document.getElementById("titulo").value.trim();
-  const tipo = document.getElementById("tipo").value;
-  const detalles = document.getElementById("detalles").value.trim();
-  const contacto = document.getElementById("contacto").value.trim();
-  const msg = document.getElementById("msgPeticion");
+      msg.style.color = "#00d26a";
+      msg.innerHTML = "Enviando…";
 
-  if (!titulo || !tipo) {
-    msg.style.color = "#ff4757";
-    msg.textContent = "Completa título y tipo";
-    return;
-  }
+      try {
+        const res = await fetch("/api/peticion", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            titulo,
+            tipo,
+            anio: anio || null,
+            tmdb: tmdb || null,
+            magnet: magnet || null,
+            correo: correo || null
+          })
+        });
 
-  msg.style.color = "#00d26a";
-  msg.textContent = "Enviando…";
+        const data = await res.json();
 
-  db.collection("peticiones").add({
-    titulo: titulo,
-    tipo: tipo,
-    detalles: detalles || null,
-    contacto: contacto || null,
-    fecha: new Date(),
-    estado: "pendiente"
-  })
-  .then(() => {
-    msg.textContent = "¡Petición enviada! Gracias ❤️";
-    document.getElementById("titulo").value = "";
-    document.getElementById("detalles").value = "";
-    document.getElementById("contacto").value = "";
-    document.getElementById("tipo").value = "";
-  })
-  .catch(err => {
-    msg.style.color = "#ff4757";
-    msg.textContent = "Error al enviar, intentá de nuevo";
-    console.error(err);
-  });
-}
-</script>
+        if (res.ok) {
+          msg.style.color = "#00d26a";
+          msg.innerHTML = "¡Petición enviada! Gracias ❤️";
+
+          document.getElementById("titulo").value = "";
+          document.getElementById("tipo").value = "";
+          document.getElementById("anio").value = "";
+          document.getElementById("tmdb").value = "";
+          document.getElementById("magnet").value = "";
+          document.getElementById("correo").value = "";
+        } else {
+          msg.style.color = "#ff3b3b";
+          msg.innerHTML = "Error: " + (data.error || "No se pudo enviar");
+        }
+
+      } catch (e) {
+        msg.style.color = "#ff3b3b";
+        msg.innerHTML = "Error de conexión";
+      }
+    }
+  </script>
+
 </body>
 </html>
