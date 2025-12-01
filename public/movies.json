@@ -410,6 +410,17 @@
       "type": "movie"
     },
     {
+      "id": "tt28278085",
+      "title": "Atena",
+      "quality": "1080p WED-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "EA58471C59619245410762341443A3698CFD38E1",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/kP4380IsiyoQ1EIuJxR1AEIIDPX.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt1396484",
       "title": "It (Eso)",
       "quality": "4K | Dolby Vision | Dolby Atmos",
