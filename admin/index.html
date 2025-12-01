@@ -5,11 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Panel Admin · Primer Latino</title>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-
   <style>
     :root {
       --bg: #f7f7f8;
@@ -34,7 +29,6 @@
       flex-direction: column;
     }
 
-    /* LOGIN */
     #loginSection {
       max-width: 420px;
       width: 92%;
@@ -91,14 +85,12 @@
       font-weight: 600;
     }
 
-    /* PANEL */
     #panelSection {
       display: none;
       flex-direction: column;
       height: 100vh;
     }
 
-    /* TOPBAR */
     .topbar {
       width: 100%;
       background: var(--card);
@@ -133,7 +125,6 @@
       opacity: 0.85;
     }
 
-    /* TABLE AREA */
     .content {
       padding: 26px;
       overflow-y: auto;
@@ -147,6 +138,7 @@
       background: white;
       border-radius: 12px;
       overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
 
     th {
@@ -169,7 +161,6 @@
       border-bottom: none;
     }
 
-    /* BUTTONS STATE */
     .btn {
       padding: 6px 12px;
       border-radius: 8px;
@@ -187,22 +178,17 @@
     .hidden { display: none; }
   </style>
 </head>
-
 <body>
 
-  <!-- LOGIN -->
   <div id="loginSection">
     <h1>Panel Admin</h1>
     <p>Primer Latino</p>
-
     <input type="email" id="email" placeholder="Correo" />
     <input type="password" id="password" placeholder="Contraseña" />
-
     <button onclick="login()">Entrar</button>
     <div id="msg"></div>
   </div>
 
-  <!-- PANEL -->
   <div id="panelSection">
     <div class="topbar">
       <h2>Peticiones</h2>
@@ -214,74 +200,49 @@
     </div>
   </div>
 
-  <!-- FIREBASE CONFIG -->
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDbM--YzDZ6J2GRZKXGJD88eyKJTKuBRhc",
-      authDomain: "primerlatino-admin.firebaseapp.com",
-      projectId: "primerlatino-admin",
-      storageBucket: "primerlatino-admin.firebasestorage.app",
-      messagingSenderId: "26166116734",
-      appId: "1:26166116734:web:b9634bc650c41703f0732f"
-    };
+  <script type="module">
+    import { auth, db, onSnapshot, orderBy, query, collection, updateDoc, doc } from "../firebase.js";
+    import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+    const loginSection = document.getElementById("loginSection");
+    const panelSection = document.getElementById("panelSection");
+    const msg = document.getElementById("msg");
+    const lista = document.getElementById("lista");
 
-    function login() {
+    window.login = function() {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
-      document.getElementById("msg").textContent = "Entrando…";
+      msg.textContent = "Entrando…";
 
-      auth.signInWithEmailAndPassword(email, password)
-      .then(() => location.reload())
-      .catch(() => {
-        document.getElementById("msg").textContent = "Correo o contraseña incorrecta";
-      });
+      signInWithEmailAndPassword(auth, email, password)
+        .catch(() => {
+          msg.textContent = "Correo o contraseña incorrecta";
+        });
     }
 
-    function logout() {
-      auth.signOut().then(() => location.reload());
+    window.logout = function() {
+      signOut(auth);
     }
 
-    auth.onAuthStateChanged(user => {
+    onAuthStateChanged(auth, user => {
       if (user) {
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("panelSection").style.display = "flex";
+        loginSection.style.display = "none";
+        panelSection.style.display = "flex";
         cargarPeticiones();
+      } else {
+        loginSection.style.display = "block";
+        panelSection.style.display = "none";
+        lista.innerHTML = "";
       }
     });
-    
-    async function cargarPeticiones() {
-  const res = await fetch("/api/peticiones");
-  const peticiones = await res.json();
 
-  const cont = document.getElementById("lista");
-  cont.innerHTML = "";
-
-  peticiones.forEach(p => {
-    cont.innerHTML += `
-      <div class="item">
-        <p><b>Nombre:</b> ${p.nombre}</p>
-        <p><b>Correo:</b> ${p.correo}</p>
-        <p><b>Mensaje:</b> ${p.mensaje}</p>
-        <p><b>Estado:</b> ${p.estado}</p>
-        <hr>
-      </div>
-    `;
-  });
-}
-
-    /* CARGAR PETICIONES */
     function cargarPeticiones() {
-      db.collection("peticiones")
-      .orderBy("fecha", "desc")
-      .onSnapshot(snapshot => {
+      const q = query(collection(db, "peticiones"), orderBy("fecha", "desc"));
+
+      onSnapshot(q, snapshot => {
         if (snapshot.empty) {
-          document.getElementById("lista").innerHTML =
-            "<p style='text-align:center;color:#999;'>No hay peticiones.</p>";
+          lista.innerHTML = "<p style='text-align:center;color:#999;padding:40px;'>No hay peticiones pendientes.</p>";
           return;
         }
 
@@ -298,50 +259,42 @@
             </tr>
         `;
 
-        snapshot.forEach(doc => {
-          const d = doc.data();
-
+        snapshot.forEach(docSnap => {
+          const d = docSnap.data();
           html += `
             <tr>
               <td><strong>${d.titulo || ""}</strong></td>
               <td>${d.tipo || ""}</td>
               <td>${d.anio || "—"}</td>
               <td>${d.tmdb || "—"}</td>
-              <td>${d.magnet || "—"}</td>
+              <td>${d.magnet ? "Sí" : "—"}</td>
               <td>${d.correo || "—"}</td>
               <td>
-                <button class="btn aceptar" onclick="cambiarEstado('${doc.id}','aceptada','${d.titulo}','${d.correo}')">Aceptar</button>
-                <button class="btn revision" onclick="cambiarEstado('${doc.id}','revision')">Revisión</button>
-                <button class="btn rechazar" onclick="cambiarEstado('${doc.id}','rechazada')">Rechazar</button>
+                <button class="btn aceptar" onclick="cambiarEstado('${docSnap.id}','aceptada','${d.titulo || ""}','${d.correo || ""}')">Aceptar</button>
+                <button class="btn revision" onclick="cambiarEstado('${docSnap.id}','revision')">Revisión</button>
+                <button class="btn rechazar" onclick="cambiarEstado('${docSnap.id}','rechazada')">Rechazar</button>
               </td>
             </tr>
           `;
         });
 
         html += `</table>`;
-        document.getElementById("lista").innerHTML = html;
+        lista.innerHTML = html;
       });
     }
 
-    function cambiarEstado(id, estado, titulo="", correo="") {
-      db.collection("peticiones")
-      .doc(id)
-      .update({
-        estado,
-        procesadoPor: auth.currentUser.email,
-        fechaProcesado: new Date()
-      })
-      .then(() => alert("Actualizado"))
-      .then(() => {
-        if (estado === "aceptada" && correo) {
-          fetch("/api/notificar", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ correo, titulo })
-          });
-        }
-      });
+    window.cambiarEstado = async function(id, estado, titulo = "", correo = "") {
+      try {
+        await updateDoc(doc(db, "peticiones", id), {
+          estado,
+          procesadoPor: auth.currentUser.email,
+          fechaProcesado: new Date()
+        });
+        alert("Estado actualizado ✔️");
+      } catch (e) {
+        alert("Error al actualizar");
+      }
     }
   </script>
 </body>
-</html>
+</html> 

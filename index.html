@@ -362,62 +362,52 @@
   </script>
 
   <!-- SCRIPT PETICIONES CON BACKEND -->
-  <script>
-    async function enviarPeticion() {
-      const titulo = document.getElementById("titulo").value.trim();
-      const tipo = document.getElementById("tipo").value;
-      const anio = document.getElementById("anio").value.trim();
-      const tmdb = document.getElementById("tmdb").value.trim();
-      const magnet = document.getElementById("magnet").value.trim();
-      const correo = document.getElementById("correo").value.trim();
-      const msg = document.getElementById("msgPeticion");
+<script type="module">
+  import { db, collection, addDoc, serverTimestamp } from "./firebase.js";
 
-      if (!titulo || !tipo) {
-        msg.style.color = "#ff3b3b";
-        msg.innerHTML = "Completa los campos obligatorios";
-        return;
-      }
+  window.enviarPeticion = async function() {
+    const titulo = document.getElementById("titulo").value.trim();
+    const tipo = document.getElementById("tipo").value;
+    const anio = document.getElementById("anio").value.trim();
+    const tmdb = document.getElementById("tmdb").value.trim();
+    const magnet = document.getElementById("magnet").value.trim();
+    const correo = document.getElementById("correo").value.trim();
+    const msg = document.getElementById("msgPeticion");
 
-      msg.style.color = "#00d26a";
-      msg.innerHTML = "Enviando…";
-
-      try {
-        const res = await fetch("/api/peticion", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            titulo,
-            tipo,
-            anio: anio || null,
-            tmdb: tmdb || null,
-            magnet: magnet || null,
-            correo: correo || null
-          })
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          msg.style.color = "#00d26a";
-          msg.innerHTML = "¡Petición enviada! Gracias ❤️";
-
-          document.getElementById("titulo").value = "";
-          document.getElementById("tipo").value = "";
-          document.getElementById("anio").value = "";
-          document.getElementById("tmdb").value = "";
-          document.getElementById("magnet").value = "";
-          document.getElementById("correo").value = "";
-        } else {
-          msg.style.color = "#ff3b3b";
-          msg.innerHTML = "Error: " + (data.error || "No se pudo enviar");
-        }
-
-      } catch (e) {
-        msg.style.color = "#ff3b3b";
-        msg.innerHTML = "Error de conexión";
-      }
+    if (!titulo || !tipo) {
+      msg.style.color = "#ff3b3b";
+      msg.innerHTML = "Completa título y tipo";
+      return;
     }
-  </script>
 
+    msg.style.color = "#00d26a";
+    msg.innerHTML = "Enviando…";
+
+    try {
+      await addDoc(collection(db, "peticiones"), {
+        titulo,
+        tipo,
+        anio: anio || null,
+        tmdb: tmdb || null,
+        magnet: magnet || null,
+        correo: correo || null,
+        estado: "pendiente",
+        fecha: serverTimestamp()
+      });
+
+      msg.innerHTML = "¡Petición enviada! Gracias ❤️";
+      document.getElementById("titulo").value = "";
+      document.getElementById("tipo").value = "";
+      document.getElementById("anio").value = "";
+      document.getElementById("tmdb").value = "";
+      document.getElementById("magnet").value = "";
+      document.getElementById("correo").value = "";
+    } catch (e) {
+      msg.style.color = "#ff3b3b";
+      msg.innerHTML = "Error al enviar (intenta de nuevo)";
+      console.error(e);
+    }
+  }
+</script>
 </body>
 </html>
