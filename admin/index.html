@@ -6,129 +6,118 @@
   <title>Panel Admin · Primer Latino</title>
 
   <!-- Firebase CDN v10 -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-    import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCbSu-l8g5pjK6hbmHvWX5DM7mFILrDdBQ",
-      authDomain: "primer-latino.firebaseapp.com",
-      projectId: "primer-latino",
-      storageBucket: "primer-latino.firebasestorage.app",
-      messagingSenderId: "296587777930",
-      appId: "1:296587777930:web:44467ab54eb20b1a959a73"
-    };
+  // Firebase (proyecto correcto)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCbSu-l8g5pjK6hbmHvWX5DM7mFILrDdBQ",
+    authDomain: "primer-latino.firebaseapp.com",
+    projectId: "primer-latino",
+    storageBucket: "primer-latino.firebasestorage.app",
+    messagingSenderId: "296587777930",
+    appId: "1:296587777930:web:44467ab54eb20b1a959a73"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    const loginSection = document.getElementById("loginSection");
-    const panelSection = document.getElementById("panelSection");
-    const msg = document.getElementById("msg");
-    const lista = document.getElementById("lista");
+  // === EMAILJS CONFIG (tuyos reales) ===
+  const EMAILJS_SERVICE_ID = "service_7uozjxe";
+  const EMAILJS_TEMPLATE_ID = "template_hzoe7z4";
+  const EMAILJS_PUBLIC_KEY = "f0AIcX0oEVX84gsyz";
 
-    window.login = function() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
+  emailjs.init(EMAILJS_PUBLIC_KEY);
 
-      if (!email || !password) {
-        msg.textContent = "Completa correo y contraseña";
+  // Login / panel
+  const loginSection = document.getElementById("loginSection");
+  const panelSection = document.getElementById("panelSection");
+  const msg = document.getElementById("msg");
+  const lista = document.getElementById("lista");
+
+  window.login = function () {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    if (!email || !password) return msg.textContent = "Completa los campos";
+    msg.textContent = "Entrando…";
+    signInWithEmailAndPassword(auth, email, password)
+      .catch(() => msg.textContent = "Correo o contraseña incorrecta");
+  };
+
+  window.logout = () => signOut(auth);
+
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      loginSection.style.display = "none";
+      panelSection.style.display = "flex";
+      cargarPeticiones();
+    } else {
+      loginSection.style.display = "block";
+      panelSection.style.display = "none";
+      lista.innerHTML = "";
+    }
+  });
+
+  // Cargar peticiones en tiempo real
+  function cargarPeticiones() {
+    const q = query(collection(db, "peticiones"), orderBy("fecha", "desc"));
+    onSnapshot(q, snapshot => {
+      if (snapshot.empty) {
+        lista.innerHTML = "<p style='text-align:center;color:#999;padding:40px;'>No hay peticiones pendientes.</p>";
         return;
       }
-
-      msg.textContent = "Entrando…";
-
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          // onAuthStateChanged se encarga de mostrar el panel
-        })
-        .catch((error) => {
-          console.error(error);
-          msg.textContent = "Correo o contraseña incorrecta";
-        });
-    }
-
-    window.logout = function() {
-      signOut(auth);
-    }
-
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        loginSection.style.display = "none";
-        panelSection.style.display = "flex";
-        cargarPeticiones();
-      } else {
-        loginSection.style.display = "block";
-        panelSection.style.display = "none";
-        lista.innerHTML = "";
-        msg.textContent = "";
-      }
-    });
-
-    function cargarPeticiones() {
-      const q = query(collection(db, "peticiones"), orderBy("fecha", "desc"));
-
-      onSnapshot(q, snapshot => {
-        if (snapshot.empty) {
-          lista.innerHTML = "<p style='text-align:center;color:#999;padding:40px;'>No hay peticiones pendientes.</p>";
-          return;
-        }
-
-        let html = `
-          <table>
-            <tr>
-              <th>Título</th>
-              <th>Tipo</th>
-              <th>Año</th>
-              <th>TMDB</th>
-              <th>Magnet</th>
-              <th>Correo</th>
-              <th>Acciones</th>
-            </tr>
-        `;
-
-        snapshot.forEach(docSnap => {
-          const d = docSnap.data();
-          html += `
-            <tr>
-              <td><strong>${d.titulo || ""}</strong></td>
-              <td>${d.tipo || ""}</td>
-              <td>${d.anio || "—"}</td>
-              <td>${d.tmdb || "—"}</td>
-              <td>${d.magnet ? "Sí" : "—"}</td>
-              <td>${d.correo || "—"}</td>
-              <td>
-                <button class="btn aceptar" onclick="cambiarEstado('${docSnap.id}','aceptada')">Aceptar</button>
-                <button class="btn revision" onclick="cambiarEstado('${docSnap.id}','revision')">Revisión</button>
-                <button class="btn rechazar" onclick="cambiarEstado('${docSnap.id}','rechazada')">Rechazar</button>
-              </td>
-            </tr>
-          `;
-        });
-
-        html += `</table>`;
-        lista.innerHTML = html;
-      }, (error) => {
-        console.error(error);
-        lista.innerHTML = "<p style='color:red;'>Error de permisos o conexión</p>";
+      let html = `<table><tr><th>Título</th><th>Tipo</th><th>Año</th><th>TMDB</th><th>Magnet</th><th>Correo</th><th>Acciones</th></tr>`;
+      snapshot.forEach(docSnap => {
+        const d = docSnap.data();
+        html += `
+          <tr>
+            <td><strong>${d.titulo || ""}</strong></td>
+            <td>${d.tipo || ""}</td>
+            <td>${d.anio || "—"}</td>
+            <td>${d.tmdb || "—"}</td>
+            <td>${d.magnet ? "Sí" : "—"}</td>
+            <td>${d.correo || "—"}</td>
+            <td>
+              <button class="btn aceptar" onclick="cambiarEstado('${docSnap.id}', 'aceptada', '${d.titulo || ""}', '${d.correo || ""}')">Aceptar</button>
+              <button class="btn revision" onclick="cambiarEstado('${docSnap.id}', 'revision')">Revisión</button>
+              <button class="btn rechazar" onclick="cambiarEstado('${docSnap.id}', 'rechazada')">Rechazar</button>
+            </td>
+          </tr>`;
       });
-    }
+      html += `</table>`;
+      lista.innerHTML = html;
+    });
+  }
 
-    window.cambiarEstado = async function(id, estado) {
-      try {
-        await updateDoc(doc(db, "peticiones", id), {
-          estado,
-          procesadoPor: auth.currentUser.email,
-          fechaProcesado: new Date()
+  // Cambiar estado + ENVIAR EMAIL SOLO AL ACEPTAR
+  window.cambiarEstado = async function (id, estado, titulo = "", correo = "") {
+    try {
+      await updateDoc(doc(db, "peticiones", id), {
+        estado,
+        procesadoPor: auth.currentUser.email,
+        fechaProcesado: new Date()
+      });
+
+      if (estado === "aceptada" && correo && correo.includes("@")) {
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_email: correo,
+          titulo: titulo
+        }).then(() => {
+          alert("Petición aceptada + Email enviado al usuario");
+        }).catch(() => {
+          alert("Petición aceptada, pero falló el email (revisa consola)");
         });
-        alert("Estado actualizado ✔️");
-      } catch (e) {
-        alert("Error al actualizar");
+      } else {
+        alert("Estado actualizado");
       }
+    } catch (e) {
+      alert("Error");
     }
-  </script>
+  }
+</script>
 
   <style>
     :root {
@@ -193,6 +182,7 @@
     .rechazar { background: var(--error); color: white; }
   </style>
 </head>
+
 <body>
 
   <div id="loginSection">
@@ -213,6 +203,8 @@
       <div id="lista">Cargando peticiones…</div>
     </div>
   </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 </body>
 </html>
