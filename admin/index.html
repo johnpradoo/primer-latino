@@ -5,126 +5,138 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Panel Admin · Primer Latino</title>
 
-  <!-- Firebase CDN v10 -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-  // Firebase (proyecto correcto)
-  const firebaseConfig = {
-    apiKey: "AIzaSyCbSu-l8g5pjK6hbmHvWX5DM7mFILrDdBQ",
-    authDomain: "primer-latino.firebaseapp.com",
-    projectId: "primer-latino",
-    storageBucket: "primer-latino.firebasestorage.app",
-    messagingSenderId: "296587777930",
-    appId: "1:296587777930:web:44467ab54eb20b1a959a73"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyCbSu-l8g5pjK6hbmHvWX5DM7mFILrDdBQ",
+      authDomain: "primer-latino.firebaseapp.com",
+      projectId: "primer-latino",
+      storageBucket: "primer-latino.firebasestorage.app",
+      messagingSenderId: "296587777930",
+      appId: "1:296587777930:web:44467ab54eb20b1a959a73"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-  // === EMAILJS CONFIG (tuyos reales) ===
-  const EMAILJS_SERVICE_ID = "service_7uozjxe";
-  const EMAILJS_TEMPLATE_ID = "template_hzoe7z4";
-  const EMAILJS_PUBLIC_KEY = "f0AIcX0oEVX84gsyz";
+    // EmailJS
+    const EMAILJS_SERVICE_ID = "service_7uozjxe";
+    const EMAILJS_TEMPLATE_ID = "template_hzoe7z4";
+    const EMAILJS_PUBLIC_KEY = "f0AIcX0oEVX84gsyz";
+    emailjs.init(EMAILJS_PUBLIC_KEY);
 
-  emailjs.init(EMAILJS_PUBLIC_KEY);
+    const loginSection = document.getElementById("loginSection");
+    const panelSection = document.getElementById("panelSection");
+    const msg = document.getElementById("msg");
+    const lista = document.getElementById("lista");
 
-  // Login / panel
-  const loginSection = document.getElementById("loginSection");
-  const panelSection = document.getElementById("panelSection");
-  const msg = document.getElementById("msg");
-  const lista = document.getElementById("lista");
+    window.login = function () {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      if (!email || !password) return msg.textContent = "Completa los campos";
+      msg.textContent = "Entrando…";
+      signInWithEmailAndPassword(auth, email, password)
+        .catch(() => msg.textContent = "Correo o contraseña incorrecta");
+    };
 
-  window.login = function () {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-    if (!email || !password) return msg.textContent = "Completa los campos";
-    msg.textContent = "Entrando…";
-    signInWithEmailAndPassword(auth, email, password)
-      .catch(() => msg.textContent = "Correo o contraseña incorrecta");
-  };
+    window.logout = () => signOut(auth);
 
-  window.logout = () => signOut(auth);
-
-  onAuthStateChanged(auth, user => {
-    if (user) {
-      loginSection.style.display = "none";
-      panelSection.style.display = "flex";
-      cargarPeticiones();
-    } else {
-      loginSection.style.display = "block";
-      panelSection.style.display = "none";
-      lista.innerHTML = "";
-    }
-  });
-
-  // Cargar peticiones en tiempo real
-  function cargarPeticiones() {
-    const q = query(collection(db, "peticiones"), orderBy("fecha", "desc"));
-    onSnapshot(q, snapshot => {
-      if (snapshot.empty) {
-        lista.innerHTML = "<p style='text-align:center;color:#999;padding:40px;'>No hay peticiones pendientes.</p>";
-        return;
-      }
-      let html = `<table><tr><th>Título</th><th>Tipo</th><th>Año</th><th>TMDB</th><th>Magnet</th><th>Correo</th><th>Acciones</th></tr>`;
-      snapshot.forEach(docSnap => {
-        const d = docSnap.data();
-        html += `
-          <tr>
-            <td><strong>${d.titulo || ""}</strong></td>
-            <td>${d.tipo || ""}</td>
-            <td>${d.anio || "—"}</td>
-            <td>${d.tmdb || "—"}</td>
-            <td>${d.magnet ? "Sí" : "—"}</td>
-            <td>${d.correo || "—"}</td>
-            <td>
-              <button class="btn aceptar" onclick="cambiarEstado('${docSnap.id}', 'aceptada', '${d.titulo || ""}', '${d.correo || ""}')">Aceptar</button>
-              <button class="btn revision" onclick="cambiarEstado('${docSnap.id}', 'revision')">Revisión</button>
-              <button class="btn rechazar" onclick="cambiarEstado('${docSnap.id}', 'rechazada')">Rechazar</button>
-            </td>
-          </tr>`;
-      });
-      html += `</table>`;
-      lista.innerHTML = html;
-    });
-  }
-
-  // Cambiar estado + ENVIAR EMAIL SOLO AL ACEPTAR
-  window.cambiarEstado = async function (id, estado, titulo = "", correo = "") {
-    try {
-      await updateDoc(doc(db, "peticiones", id), {
-        estado,
-        procesadoPor: auth.currentUser.email,
-        fechaProcesado: new Date()
-      });
-
-      if (estado === "aceptada" && correo && correo.includes("@")) {
-        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-          to_email: correo,
-          titulo: titulo
-        }).then(() => {
-          alert("Petición aceptada + Email enviado al usuario");
-        }).catch(() => {
-          alert("Petición aceptada, pero falló el email (revisa consola)");
-        });
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        loginSection.style.display = "none";
+        panelSection.style.display = "flex";
+        cargarPeticiones();
       } else {
-        alert("Estado actualizado");
+        loginSection.style.display = "block";
+        panelSection.style.display = "none";
+        lista.innerHTML = "";
       }
-    } catch (e) {
-      alert("Error");
+    });
+
+    function cargarPeticiones() {
+      const q = query(collection(db, "peticiones"), orderBy("fecha", "desc"));
+      onSnapshot(q, snapshot => {
+        if (snapshot.empty) {
+          lista.innerHTML = "<p style='text-align:center;color:#999;padding:60px;font-size:1.2rem;'>No hay peticiones pendientes ❤️</p>";
+          return;
+        }
+
+        let html = `
+          <table>
+            <tr>
+              <th>Título</th>
+              <th>Tipo</th>
+              <th>Año</th>
+              <th>TMDB</th>
+              <th>Magnet</th>
+              <th>Correo</th>
+              <th style="text-align:center;width:260px;">Acciones</th>
+            </tr>`;
+
+        snapshot.forEach(docSnap => {
+          const d = docSnap.data();
+          const id = docSnap.id;
+
+          html += `
+            <tr>
+              <td><strong>${d.titulo || "Sin título"}</strong></td>
+              <td>${d.tipo || "—"}</td>
+              <td>${d.anio || "—"}</td>
+              <td>${d.tmdb || "—"}</td>
+              <td>${d.magnet ? "Sí" : "—"}</td>
+              <td>${d.correo || "—"}</td>
+              <td style="text-align:center;">
+                <div class="acciones">
+                  <button class="aceptar" onclick="aceptar('${id}', '${d.titulo || ""}', '${d.correo || ""}')">Aceptar</button>
+                  <button class="revision" onclick="revision('${id}')">Revisión</button>
+                  <button class="rechazar" onclick="eliminar('${id}')">Rechazar</button>
+                </div>
+              </td>
+            </tr>`;
+        });
+
+        html += `</table>`;
+        lista.innerHTML = html;
+      });
     }
-  }
-</script>
+
+    // Aceptar + email
+    window.aceptar = async (id, titulo, correo) => {
+      if (!confirm("¿Aceptar esta petición?")) return;
+      await updateDoc(doc(db, "peticiones", id), { estado: "aceptada", procesadoPor: auth.currentUser.email });
+      if (correo && correo.includes("@")) {
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_email: correo, titulo })
+          .then(() => alert("¡Aceptada + Email enviado!"))
+          .catch(() => alert("Aceptada, pero falló el email"));
+      } else {
+        alert("¡Aceptada!");
+      }
+    };
+
+    // Revisión
+    window.revision = async (id) => {
+      if (!confirm("¿Marcar como en revisión?")) return;
+      await updateDoc(doc(db, "peticiones", id), { estado: "revision" });
+      alert("Marcada como revisión");
+    };
+
+    // Rechazar = ELIMINAR PARA SIEMPRE
+    window.eliminar = async (id) => {
+      if (!confirm("¿Rechazar y ELIMINAR esta petición para siempre?")) return;
+      await deleteDoc(doc(db, "peticiones", id));
+      alert("Petición eliminada");
+    };
+  </script>
 
   <style>
     :root {
       --bg: #f7f7f8;
       --card: #ffffff;
       --border: #e3e3e3;
-      --text: #1f1f1f;
       --accent: #ff2e7f;
       --success: #00d26a;
       --warn: #ffa502;
@@ -159,7 +171,7 @@
 
     .topbar {
       background: var(--card); border-bottom: 1px solid var(--border); padding: 18px 26px;
-      display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0;
+      display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;
     }
 
     .logout {
@@ -167,22 +179,30 @@
       cursor: pointer; font-weight: 700; border: none;
     }
 
-    .content { padding: 26px; overflow-y: auto; flex: 1; }
+    .content { padding: 20px; overflow-y: auto; flex: 1; }
 
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
 
-    th { text-align: left; background: #f0f0f0; padding: 14px; font-weight: 700; border-bottom: 1px solid var(--border); }
+    th { background: #1a1a1a; color: white; padding: 16px; text-align: left; font-weight: 700; }
+    td { padding: 16px; border-bottom: 1px solid #333; vertical-align: middle; }
 
-    td { padding: 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .acciones {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
 
-    .btn { padding: 6px 12px; border-radius: 8px; border: none; font-weight: 700; margin-right: 4px; cursor: pointer; }
+    .aceptar  { background: var(--success); color: white; padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.9rem; }
+    .revision { background: var(--warn); color: white; padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.9rem; }
+    .rechazar { background: var(--error); color: white; padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.9rem; }
 
-    .aceptar { background: var(--success); color: white; }
-    .revision { background: var(--warn); color: white; }
-    .rechazar { background: var(--error); color: white; }
+    @media (max-width: 768px) {
+      .acciones { flex-direction: column; }
+      .aceptar, .revision, .rechazar { width: 100%; }
+    }
   </style>
 </head>
-
 <body>
 
   <div id="loginSection">
@@ -203,7 +223,7 @@
       <div id="lista">Cargando peticiones…</div>
     </div>
   </div>
-  
+
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 </body>
