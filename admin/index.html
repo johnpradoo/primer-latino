@@ -47,10 +47,12 @@
 
     onAuthStateChanged(auth, user => {
       if (user) {
+        document.body.classList.add("logged-in");
         loginSection.style.display = "none";
         panelSection.style.display = "flex";
         cargarPeticiones();
       } else {
+        document.body.classList.remove("logged-in");
         loginSection.style.display = "block";
         panelSection.style.display = "none";
         lista.innerHTML = "";
@@ -141,14 +143,49 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", sans-serif; }
 
-    body { background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; }
-
-    #loginSection {
-      max-width: 420px; width: 92%; background: var(--card); margin: auto; padding: 40px 32px;
-      border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      transition: all 0.3s;
     }
 
-    #panelSection { display: none; flex-direction: column; height: 100vh; }
+    body.logged-in {
+      align-items: flex-start;
+      padding: 0;
+    }
+
+    #loginSection {
+      width: 100%;
+      max-width: 380px;
+      background: var(--card);
+      padding: 48px 36px;
+      border-radius: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+
+    #loginSection h1 { font-size: 2rem; font-weight: 900; margin-bottom: 8px; color: #1a1a1a; }
+    #loginSection p { color: #777; margin-bottom: 32px; font-size: 1.1rem; }
+
+    #loginSection input {
+      width: 100%; padding: 18px; margin-bottom: 18px; border: 2px solid #e0e0e0;
+      border-radius: 18px; font-size: 1.1rem; background: #f9f9f9; transition: 0.3s;
+    }
+
+    #loginSection input:focus { outline: none; border-color: var(--accent); background: white; }
+
+    #loginSection button {
+      width: 100%; padding: 18px; background: var(--accent); color: white; border: none;
+      border-radius: 18px; font-weight: 700; font-size: 1.2rem; cursor: pointer; margin-top: 10px;
+    }
+
+    #msg { margin-top: 16px; color: var(--error); font-weight: 600; min-height: 24px; font-size: 1rem; }
+
+    #panelSection { display: none; flex-direction: column; height: 100vh; width: 100%; }
 
     .topbar {
       background: var(--card); border-bottom: 1px solid #e3e3e3; padding: 18px 20px;
@@ -156,8 +193,8 @@
     }
 
     .logout {
-      background: var(--accent); color: white; padding: 10px 18px; border-radius: 10px;
-      cursor: pointer; font-weight: 700; border: none; font-size: 0.95rem;
+      background: var(--accent); color: white; padding: 12px 20px; border-radius: 12px;
+      cursor: pointer; font-weight: 700; border: none; font-size: 1rem;
     }
 
     .content { padding: 16px; overflow-y: auto; flex: 1; }
@@ -167,8 +204,8 @@
       overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); font-size: 0.9rem;
     }
 
-    th { background: #1a1a1a; color: white; padding: 10px 8px; text-align: left; font-weight: 700; font-size: 0.85rem; }
-    td { padding: 10px 8px; border-bottom: 1px solid #333; vertical-align: middle; }
+    th { background: #1a1a1a; color: white; padding: 12px 8px; text-align: left; font-weight: 700; font-size: 0.85rem; }
+    td { padding: 12px 8px; border-bottom: 1px solid #333; vertical-align: middle; }
 
     .titulo { max-width: 180px; word-wrap: break-word; }
 
@@ -176,21 +213,20 @@
       display: flex;
       gap: 6px;
       justify-content: center;
-      flex-wrap: nowrap; /* Nunca en vertical */
+      flex-wrap: nowrap;
     }
 
     .aceptar  { background: var(--success); color: white; padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.8rem; white-space: nowrap; }
     .revision { background: var(--warn); color: white; padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.8rem; white-space: nowrap; }
     .rechazar { background: var(--error); color: white; padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.8rem; white-space: nowrap; }
 
-    /* En móvil todo más compacto pero botones siempre horizontales */
     @media (max-width: 768px) {
+      #loginSection { padding: 40px 28px; }
       .content { padding: 10px; }
       th, td { padding: 8px 6px; font-size: 0.8rem; }
       .titulo { max-width: 120px; }
       .acciones { gap: 4px; }
       .aceptar, .revision, .rechazar { padding: 5px 8px; font-size: 0.75rem; }
-      table { font-size: 0.8rem; }
     }
   </style>
 </head>
