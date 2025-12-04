@@ -1233,28 +1233,6 @@
       "status": "aprobado",
       "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/aLniylyJlbXEdxvaGSuQkRACWUx.jpg",
       "type": "movie"
-    },
-    {
-      "id": "tt0889573",
-      "title": "Un pequeño cambio (2010)",
-      "quality": "1080p | WEBB-DL",
-      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
-      "codec": "H.264",
-      "hash": "89421DC5C6526AE9F3C0C1E77660D4122FEA8095",
-      "status": "aprobado",
-      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/7Ei0pNUOnyhXBsY9v30XPpypZcc.jpg",
-      "type": "movie"
-    },
-      {
-      "id": "tt6195094",
-      "title": "Pesadilla en el infierno (2018)",
-      "quality": "1080p WED-DL | Dolby Atmos",
-      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
-      "codec": "H.264",
-      "hash": "4D7C65ADC5F9F1EEF8865F78B4477B56F5C25AC2",
-      "status": "aprobado",
-      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/6TU88oDDNRYnuPGvViwPxGZNY1m.jpg",
-      "type": "movie"
     }
   ]
 }
