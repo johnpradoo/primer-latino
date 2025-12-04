@@ -5,217 +5,253 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Panel Admin · Primer Latino</title>
 
-  <!-- FONTS -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCbSu-l8g5pjK6hbmHvWX5DM7mFILrDdBQ",
+      authDomain: "primer-latino.firebaseapp.com",
+      projectId: "primer-latino",
+      storageBucket: "primer-latino.firebasestorage.app",
+      messagingSenderId: "296587777930",
+      appId: "1:296587777930:web:44467ab54eb20b1a959a73"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // EmailJS
+    const EMAILJS_SERVICE_ID = "service_7uozjxe";
+    const EMAILJS_TEMPLATE_ID = "template_hzoe7z4";
+    const EMAILJS_PUBLIC_KEY = "f0AIcX0oEVX84gsyz";
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+
+    const loginSection = document.getElementById("loginSection");
+    const panelSection = document.getElementById("panelSection");
+    const msg = document.getElementById("msg");
+    const lista = document.getElementById("lista");
+
+    window.login = function () {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      if (!email || !password) return msg.textContent = "Completa los campos";
+      msg.textContent = "Entrando…";
+      signInWithEmailAndPassword(auth, email, password)
+        .catch(() => msg.textContent = "Correo o contraseña incorrecta");
+    };
+
+    window.logout = () => signOut(auth);
+
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        document.body.classList.add("logged-in");
+        loginSection.style.display = "none";
+        panelSection.style.display = "flex";
+        cargarPeticiones();
+      } else {
+        document.body.classList.remove("logged-in");
+        loginSection.style.display = "block";
+        panelSection.style.display = "none";
+        lista.innerHTML = "";
+      }
+    });
+
+    function cargarPeticiones() {
+      const q = query(collection(db, "peticiones"), orderBy("fecha", "desc"));
+      onSnapshot(q, snapshot => {
+        if (snapshot.empty) {
+          lista.innerHTML = "<p style='text-align:center;color:#999;padding:60px;font-size:1.2rem;'>No hay peticiones pendientes ❤️</p>";
+          return;
+        }
+
+        let html = `
+          <table>
+            <tr>
+              <th>Título</th>
+              <th>Tipo</th>
+              <th>Año</th>
+              <th>TMDB</th>
+              <th>Magnet</th>
+              <th>Correo</th>
+              <th>Acciones</th>
+            </tr>`;
+
+        snapshot.forEach(docSnap => {
+          const d = docSnap.data();
+          const id = docSnap.id;
+
+          html += `
+            <tr>
+              <td class="titulo"><strong>${d.titulo || "Sin título"}</strong></td>
+              <td>${d.tipo || "—"}</td>
+              <td>${d.anio || "—"}</td>
+              <td>${d.tmdb || "—"}</td>
+              <td>${d.magnet ? "Sí" : "—"}</td>
+              <td>${d.correo || "—"}</td>
+              <td>
+                <div class="acciones">
+                  <button class="aceptar" onclick="aceptar('${id}', '${d.titulo || ""}', '${d.correo || ""}')">Aceptar</button>
+                  <button class="revision" onclick="revision('${id}')">Revisión</button>
+                  <button class="rechazar" onclick="eliminar('${id}')">Rechazar</button>
+                </div>
+              </td>
+            </tr>`;
+        });
+
+        html += `</table>`;
+        lista.innerHTML = html;
+      });
+    }
+
+    window.aceptar = async (id, titulo, correo) => {
+      if (!confirm("¿Aceptar esta petición?")) return;
+      await updateDoc(doc(db, "peticiones", id), { estado: "aceptada", procesadoPor: auth.currentUser.email });
+      if (correo && correo.includes("@")) {
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_email: correo, titulo })
+          .then(() => alert("¡Aceptada + Email enviado!"))
+          .catch(() => alert("Aceptada, pero falló el email"));
+      } else {
+        alert("¡Aceptada!");
+      }
+    };
+
+    window.revision = async (id) => {
+      if (!confirm("¿Marcar como en revisión?")) return;
+      await updateDoc(doc(db, "peticiones", id), { estado: "revision" });
+      alert("Marcada como revisión");
+    };
+
+    window.eliminar = async (id) => {
+      if (!confirm("¿Rechazar y ELIMINAR esta petición para siempre?")) return;
+      await deleteDoc(doc(db, "peticiones", id));
+      alert("Petición eliminada");
+    };
+  </script>
 
   <style>
-    :root{--bg:#fad0e0;--card:#ffffff;--text:#1a1a1a;--accent:#ff2e7f;--purple:#8b3dff;--soft:#555;}
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
-    .card{max-width:480px;width:100%;background:var(--card);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,0.1);overflow:hidden;position:relative;}
-    .header{background:linear-gradient(135deg,var(--purple),#a86bff);color:white;padding:32px 24px;text-align:center;}
-    .section{padding:24px;}
-    .hidden{display:none;}
-    .table-container{overflow-x:auto;margin-top:16px;}
-    table{width:100%;min-width:520px;border-collapse:collapse;font-size:0.92rem;}
-    th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #eee;vertical-align:middle;}
-    th{background:#f0f0f0;font-weight:600;font-size:0.85rem;}
-    .btn-aceptar{background:#00d26a;color:white;border:none;padding:7px 12px;border-radius:50px;cursor:pointer;font-size:0.85rem;margin:2px;}
-    .btn-revision{background:#ffa502;color:white;border:none;padding:7px 12px;border-radius:50px;cursor:pointer;font-size:0.85rem;margin:2px;}
-    .btn-rechazar{background:#ff4757;color:white;border:none;padding:7px 12px;border-radius:50px;cursor:pointer;font-size:0.85rem;margin:2px;}
-    .logout{position:absolute;top:12px;right:12px;background:var(--accent);color:white;padding:7px 14px;border-radius:50px;font-size:0.85rem;cursor:pointer;}
-    @media (max-width:560px){
-      table{min-width:100%;}
-      td:nth-child(6){display:block;width:100%;padding-top:8px;}
-      .btn-aceptar,.btn-revision,.btn-rechazar{display:inline-block;width:auto;margin:4px;}
+    :root {
+      --bg: #f7f7f8;
+      --card: #ffffff;
+      --accent: #ff2e7f;
+      --success: #00d26a;
+      --warn: #ffa502;
+      --error: #ff4757;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", sans-serif; }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      transition: all 0.3s;
+    }
+
+    body.logged-in {
+      align-items: flex-start;
+      padding: 0;
+    }
+
+    #loginSection {
+      width: 100%;
+      max-width: 380px;
+      background: var(--card);
+      padding: 48px 36px;
+      border-radius: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+
+    #loginSection h1 { font-size: 2rem; font-weight: 900; margin-bottom: 8px; color: #1a1a1a; }
+    #loginSection p { color: #777; margin-bottom: 32px; font-size: 1.1rem; }
+
+    #loginSection input {
+      width: 100%; padding: 18px; margin-bottom: 18px; border: 2px solid #e0e0e0;
+      border-radius: 18px; font-size: 1.1rem; background: #f9f9f9; transition: 0.3s;
+    }
+
+    #loginSection input:focus { outline: none; border-color: var(--accent); background: white; }
+
+    #loginSection button {
+      width: 100%; padding: 18px; background: var(--accent); color: white; border: none;
+      border-radius: 18px; font-weight: 700; font-size: 1.2rem; cursor: pointer; margin-top: 10px;
+    }
+
+    #msg { margin-top: 16px; color: var(--error); font-weight: 600; min-height: 24px; font-size: 1rem; }
+
+    #panelSection { display: none; flex-direction: column; height: 100vh; width: 100%; }
+
+    .topbar {
+      background: var(--card); border-bottom: 1px solid #e3e3e3; padding: 18px 20px;
+      display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;
+    }
+
+    .logout {
+      background: var(--accent); color: white; padding: 12px 20px; border-radius: 12px;
+      cursor: pointer; font-weight: 700; border: none; font-size: 1rem;
+    }
+
+    .content { padding: 16px; overflow-y: auto; flex: 1; }
+
+    table { 
+      width: 100%; border-collapse: collapse; background: white; border-radius: 12px; 
+      overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); font-size: 0.9rem;
+    }
+
+    th { background: #1a1a1a; color: white; padding: 12px 8px; text-align: left; font-weight: 700; font-size: 0.85rem; }
+    td { padding: 12px 8px; border-bottom: 1px solid #333; vertical-align: middle; }
+
+    .titulo { max-width: 180px; word-wrap: break-word; }
+
+    .acciones {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: nowrap;
+    }
+
+    .aceptar  { background: var(--success); color: white; padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.8rem; white-space: nowrap; }
+    .revision { background: var(--warn); color: white; padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.8rem; white-space: nowrap; }
+    .rechazar { background: var(--error); color: white; padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.8rem; white-space: nowrap; }
+
+    @media (max-width: 768px) {
+      #loginSection { padding: 40px 28px; }
+      .content { padding: 10px; }
+      th, td { padding: 8px 6px; font-size: 0.8rem; }
+      .titulo { max-width: 120px; }
+      .acciones { gap: 4px; }
+      .aceptar, .revision, .rechazar { padding: 5px 8px; font-size: 0.75rem; }
     }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <!-- LOGIN -->
   <div id="loginSection">
-    <div class="header"><h1>Panel Admin</h1><p>Primer Latino</p></div>
-    <div class="section">
-      <input type="email" id="email" placeholder="Correo electrónico" required />
-      <input type="password" id="password" placeholder="Contraseña" required />
-      <button onclick="login()">Entrar</button>
-      <p id="msg" style="color:#ff4757;margin-top:16px;text-align:center;font-weight:600;"></p>
+    <h1>Panel Admin</h1>
+    <p>Primer Latino</p>
+    <input type="email" id="email" placeholder="Correo" />
+    <input type="password" id="password" placeholder="Contraseña" />
+    <button onclick="login()">Entrar</button>
+    <div id="msg"></div>
+  </div>
+
+  <div id="panelSection">
+    <div class="topbar">
+      <h2>Peticiones</h2>
+      <button class="logout" onclick="logout()">Salir</button>
+    </div>
+    <div class="content">
+      <div id="lista">Cargando peticiones…</div>
     </div>
   </div>
 
-  <!-- PANEL ADMIN -->
-  <div id="panelSection" class="hidden">
-    <div class="header">
-      <h1>Peticiones</h1>
-      <div class="logout" onclick="logout()">Salir</div>
-    </div>
-    <div class="section">
-      <div class="table-container">
-        <div id="lista">Cargando peticiones…</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- FIREBASE MODULAR -->
-<script type="module">
-  // Import Firebase modular
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-
-  // Config Firebase nueva
-  const firebaseConfig = {
-    apiKey: "AIzaSyCbSu-l8g5pjK6hbmHvWX5DM7mFILrDdBQ",
-    authDomain: "primer-latino.firebaseapp.com",
-    projectId: "primer-latino",
-    storageBucket: "primer-latino.firebasestorage.app",
-    messagingSenderId: "296587777930",
-    appId: "1:296587777930:web:44467ab54eb20b1a959a73"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  // LOGIN
-  window.login = function() {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-
-    if(!email || !password){
-      document.getElementById("msg").textContent = "Completa ambos campos";
-      return;
-    }
-
-    document.getElementById("msg").textContent = "Entrando…";
-
-    signInWithEmailAndPassword(auth, email, password)
-      .then(() => location.reload())
-      .catch(() => document.getElementById("msg").textContent = "Correo o contraseña incorrecta");
-  }
-
-  window.logout = function() {
-    signOut(auth).then(() => location.reload());
-  }
-
-  // OBSERVAR LOGIN
-  onAuthStateChanged(auth, user => {
-    if(user){
-      document.getElementById("loginSection").classList.add("hidden");
-      document.getElementById("panelSection").classList.remove("hidden");
-      cargarPeticiones();
-    } else {
-      document.getElementById("loginSection").classList.remove("hidden");
-      document.getElementById("panelSection").classList.add("hidden");
-    }
-  });
-
-  // ENVIAR CORREO FORM SUBMIT
-  async function enviarCorreoAprobado(contacto, titulo, detalles="") {
-    if(!contacto || !contacto.includes("@")) return;
-
-    const htmlCorreo = `
-      <html>
-      <body style="font-family:system-ui,sans-serif;max-width:600px;margin:40px auto;padding:20px;background:#fdfdfd;border-radius:16px;">
-        <h1 style="color:#ff2e7f;text-align:center;">¡Buenas noticias!</h1>
-        <p style="font-size:1.15rem;text-align:center;">
-          Tu petición ya está disponible en <strong>🍿Primer Latino</strong>
-        </p>
-        <h2 style="color:#333;text-align:center;font-size:1.6rem;margin:30px 0;">
-          ${titulo}
-        </h2>
-        ${detalles ? `<p style="background:#f0f0f0;padding:15px;border-radius:12px;text-align:center;font-size:1.05rem;">
-          <strong>Detalles:</strong> ${detalles}
-        </p>` : ""}
-        <div style="text-align:center;margin:45px 0;">
-          <a href="https://ko-fi.com/johnpradoo"
-            style="background:#ff5e9e;color:white;padding:14px 32px;border-radius:50px;text-decoration:none;font-weight:bold;font-size:1.1rem;display:inline-block;box-shadow:0 6px 16px rgba(255,94,158,0.3);">
-            ☕ Apóyame con un cafecito
-          </a>
-        </div>
-        <p style="text-align:center;color:#555;font-size:1rem;margin:40px 0;">
-          ¡Gracias por ayudarnos a mejorar el catálogo! ❤️
-        </p>
-        <hr style="border:none;border-top:1px solid #eee;margin:40px 0;">
-        <p style="color:#888;font-size:0.95rem;text-align:center;">
-          Hecho con cariño por @johnpradoo<br>
-          <strong>Primer Latino</strong> – El addon privado más rápido de Latinoamérica
-        </p>
-      </body>
-      </html>
-    `.trim();
-
-    const formData = new FormData();
-    formData.append("_subject", "Tu petición ya está disponible 🍿");
-    formData.append("_template", "raw");
-    formData.append("email", contacto);
-    formData.append("message", htmlCorreo);
-
-    fetch("https://formsubmit.co/541bb53841c2c4befb2464f8fd8febe9", {
-      method: "POST",
-      body: formData
-    }).then(() => console.log("Correo enviado")).catch(err => console.error(err));
-  }
-
-  // CARGAR PETICIONES
-  window.cargarPeticiones = function() {
-    const q = query(collection(db, "peticiones"), orderBy("fecha","desc"));
-    onSnapshot(q, (snapshot) => {
-      if(snapshot.empty){
-        document.getElementById("lista").innerHTML = "<p style='text-align:center;color:var(--soft);padding:40px 0;'>No hay peticiones</p>";
-        return;
-      }
-
-      let html = `<table>
-        <tr>
-          <th>Título</th><th>Tipo</th><th>Detalles</th><th>Contacto</th><th>Fecha</th><th>Acciones</th>
-        </tr>`;
-
-      snapshot.forEach(docSnap => {
-        const d = docSnap.data();
-        const fecha = d.fecha?.toDate?.()?.toLocaleDateString("es-ES") || "—";
-
-        html += `
-        <tr>
-          <td><strong>${d.titulo}</strong></td>
-          <td>${d.tipo}</td>
-          <td>${d.detalles || ""}</td>
-          <td>${d.contacto || ""}</td>
-          <td>${fecha}</td>
-          <td>
-            <button class="btn-aceptar" 
-              onclick="cambiarEstado('${docSnap.id}','aceptada','${d.titulo}','${d.contacto}','${d.detalles || ""}')">Aceptar</button>
-            <button class="btn-revision" 
-              onclick="cambiarEstado('${docSnap.id}','revision')">Revisión</button>
-            <button class="btn-rechazar" 
-              onclick="cambiarEstado('${docSnap.id}','rechazada')">Rechazar</button>
-          </td>
-        </tr>`;
-      });
-
-      html += `</table>`;
-      document.getElementById("lista").innerHTML = html;
-    });
-  }
-
-  // CAMBIAR ESTADO
-  window.cambiarEstado = function(id, estado, titulo="", contacto="", detalles="") {
-    const docRef = doc(db, "peticiones", id);
-    updateDoc(docRef, { 
-      estado: estado, 
-      procesadoPor: auth.currentUser.email, 
-      fechaProcesado: new Date() 
-    })
-    .then(() => {
-      alert(`Petición marcada como: ${estado}`);
-      if(estado === "aceptada") enviarCorreoAprobado(contacto, titulo, detalles);
-    })
-    .catch(() => alert("Error al actualizar"));
-  }
-</script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 </body>
 </html>

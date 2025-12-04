@@ -1,6 +1,17 @@
 {
   "movies": [
     {
+      "id": "tt6604188",
+      "title": "Tron: Ares",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "A362E898F213FB92C7E871320A6892E09FC9C26F",
+      "status": "aprobado",
+      "poster": "https://image.tmdb.org/t/p/w1280/chpWmskl3aKm1aTZqUHRCtviwPy.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt31137117",
       "title": "The Carman Family Deaths",
       "quality": "1080p | WEB-DL | Dolby Atmos",
@@ -20,6 +31,17 @@
       "hash": "BDEC4385257EE6428A10BEDD76D50D89A6AEFE34",
       "status": "aprobado",
       "poster": "https://image.tmdb.org/t/p/w1280/hfuxIKRCNsecLmoDdO0HJ1YUvv1.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt38774646",
+      "title": "31 minutos Calurosa Navidad",
+      "quality": "1080p WED-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "2D05BA54868D3BF2C7DB479E0FFFD1B146E0C4B2",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/dv9UrOoicRiMGkzr2oj2YwSFY2K.jpg",
       "type": "movie"
     },
     {
@@ -429,6 +451,17 @@
       "hash": "A21ECC1F11516C4F2517FA145361B009581B2F51",
       "status": "aprobado",
       "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/73wQy0eqijesk0y0wbLUiw5wVZN.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt28278085",
+      "title": "Atena",
+      "quality": "1080p WED-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "EA58471C59619245410762341443A3698CFD38E1",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/kP4380IsiyoQ1EIuJxR1AEIIDPX.jpg",
       "type": "movie"
     },
     {
