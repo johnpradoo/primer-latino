@@ -1,6 +1,17 @@
 {
   "movies": [
     {
+      "id": "tt6604188",
+      "title": "Tron: Ares",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "A362E898F213FB92C7E871320A6892E09FC9C26F",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/movie/533533-tron-ares?language=es",
+      "type": "movie"
+    },
+    {
       "id": "tt31137117",
       "title": "The Carman Family Deaths",
       "quality": "1080p | WEB-DL | Dolby Atmos",
