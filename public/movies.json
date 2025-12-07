@@ -1387,6 +1387,17 @@
       "status": "aprobado",
       "poster": "https://image.tmdb.org/t/p/w1280/9xtH1RmAzQ0rrMBNUMXstb2s3er.jpg",
       "type": "movie"
+    },
+    {
+      "id": "tt0093437",
+      "title": "Jovenes Ocultos (1987)",
+      "quality": "4K | BLURAY | AAC",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.265",
+      "hash": "ACE6CEBF543BE5C6E33F57941E57D671F5327433",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/w93f1iH59LfCJEpZujk45L6kjWk.jpg",
+      "type": "movie"
     }
   ]
 }
