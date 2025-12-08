@@ -20,12 +20,14 @@
 
     * { margin:0; padding:0; box-sizing:border-box; }
 
+    html { scroll-behavior: smooth; }
+
     body {
       background:var(--bg);
       color:var(--text);
       font-family:'Inter',sans-serif;
       line-height:1.6;
-      padding:60px 20px;
+      padding:100px 20px 60px;
       display:flex;
       flex-direction:column;
       align-items:center;
@@ -46,6 +48,8 @@
       border: 0.5px solid var(--border);
       box-shadow: 0 8px 24px rgba(0,0,0,0.04);
       margin-bottom:16px;
+      max-width: none;
+      width: 100%;
     }
 
     .header-card .header {
@@ -202,127 +206,235 @@
       color:var(--soft);
       font-size:0.9rem;
     }
-    
+
+    /* NUEVO: Navbar */
+    .navbar {
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      padding: 0;
+    }
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
+    .nav-logo {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: 2rem;
+      margin: 0;
+    }
+    .nav-links a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+    .nav-admin {
+      background: #8b3dff;
+      color: white !important;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+    }
+
+    /* NUEVO: Main Grid Layout */
+    .main-grid {
+      max-width: 1200px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin: 0 auto;
+    }
+    .grid-left, .grid-right {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .full-width {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      align-items: center; /* Para centrar en full-width */
+    }
+    .banner-card {
+      grid-column: 1 / -1;
+      max-width: none;
+      width: 100%;
+    }
+    @media (max-width: 768px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .full-width { gap: 16px; }
+    }
+    @media (min-width: 1024px) {
+      .card { max-width: none; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- ENCABEZADO -->
-  <div class="card header-card">
-    <div class="header">
-      <img src="https://unavatar.io/x/johnpradooo" alt="John Prado" class="avatar">
-      <h1>Primer Latino</h1>
-      <p>El addon privado más rápido de Latinoamérica</p>
+  <!-- NUEVO: Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="#" class="nav-logo">Primer Latino</a>
+      <ul class="nav-links">
+        <li><a href="#peticiones">Peticiones</a></li>
+        <li><a href="#generador">Generador</a></li>
+        <li><a href="#donar">Donar</a></li>
+        <li><a href="/admin/" class="nav-admin">Admin</a></li>
+      </ul>
     </div>
-  </div>
+  </nav>
 
-  <!-- 🎀 NUEVO FORMULARIO -->
-  <div class="card">
-    <div class="section">
-      <div class="title">¿No encontraste lo que buscás?</div>
-      <p style="text-align:center;color:var(--soft);margin-bottom:24px;">
-        Pedilo acá y lo subimos lo antes posible
-      </p>
+  <!-- NUEVO: Contenedor Principal -->
+  <div class="main-grid">
 
-      <input type="text" id="titulo" class="input" placeholder="Título *" />
-
-      <select id="tipo" class="input">
-        <option value="" disabled selected>Tipo *</option>
-        <option value="pelicula">Película</option>
-        <option value="serie">Serie</option>
-      </select>
-
-      <input type="text" id="anio" class="input" placeholder="Año (opcional)" />
-
-      <input type="text" id="tmdb" class="input" placeholder="ID de TMDB (opcional)" />
-
-      <input type="text" id="magnet" class="input" placeholder="Link Magnet (opcional)" />
-
-      <input type="text" id="correo" class="input" placeholder="Correo para avisarte (opcional)" />
-
-      <button class="btn" onclick="enviarPeticion()">Enviar petición</button>
-
-      <div id="msgPeticion" class="msg"></div>
-
+    <!-- ENCABEZADO – Full-width y centrado -->
+    <div class="card header-card" style="grid-column: 1 / -1; max-width: none; width: 100%;">
+      <div class="header">
+        <img src="https://unavatar.io/x/johnpradooo" alt="John Prado" class="avatar">
+        <h1>Primer Latino</h1>
+        <p>El addon privado más rápido de Latinoamérica</p>
+      </div>
     </div>
-  </div>
 
-  <!-- BANNER -->
-  <div class="d">
-    <div class="banner-section" style="text-align:center;padding:1px;">
-      <a href="http://real-debrid.com/?id=15788320">
-        <img src="http://real-debrid.com/static/images/banner/es.png" 
-             alt="Real-Debrid Banner" 
-             style="max-width:80%;height:75px;object-fit:contain;border-radius:0px;">
-      </a>
+    <!-- BANNER – Full-width -->
+    <div class="banner-card">
+      <div class="banner-section" style="text-align:center;padding:1px;">
+        <a href="http://real-debrid.com/?id=15788320">
+          <img src="http://real-debrid.com/static/images/banner/es.png" 
+               alt="Real-Debrid Banner" 
+               style="max-width:80%;height:75px;object-fit:contain;border-radius:0px;">
+        </a>
+      </div>
     </div>
-  </div>
 
-  <!-- GENERADOR -->
-  <div class="card">
-    <div class="section">
-      <div class="title">Genera tu enlace privado</div>
+    <!-- COLUMNA IZQUIERDA: Peticiones -->
+    <div class="grid-left">
+      <div class="card" id="peticiones">
+        <div class="section">
+          <div class="title">¿No encontraste lo que buscás?</div>
+          <p style="text-align:center;color:var(--soft);margin-bottom:24px;">
+            Pedilo acá y lo subimos lo antes posible
+          </p>
 
-      <div class="generator">
-        <select id="debrid" class="input">
-          <option value="real">Real-Debrid 🟢</option>
-          <option value="all">AllDebrid 🟡 (testing)</option>
-          <option value="torbox">TorBox 🟡 (testing)</option>
-        </select>
+          <input type="text" id="titulo" class="input" placeholder="Título *" />
 
-        <input type="text" id="token" class="input" placeholder="Token…" />
+          <select id="tipo" class="input">
+            <option value="" disabled selected>Tipo *</option>
+            <option value="pelicula">Película</option>
+            <option value="serie">Serie</option>
+          </select>
 
-        <button class="btn" onclick="generate()">Generar</button>
+          <input type="text" id="anio" class="input" placeholder="Año (opcional)" />
 
-        <div class="result" id="result">
-          <div class="link" id="linkDisplay"></div>
-          <div class="actions">
-            <button class="copy" onclick="copyLink()">Copiar</button>
-            <button class="stremio" onclick="installStremio()">Abrir en Stremio</button>
+          <input type="text" id="tmdb" class="input" placeholder="ID de TMDB (opcional)" />
+
+          <input type="text" id="magnet" class="input" placeholder="Link Magnet (opcional)" />
+
+          <input type="text" id="correo" class="input" placeholder="Correo para avisarte (opcional)" />
+
+          <button class="btn" onclick="enviarPeticion()">Enviar petición</button>
+
+          <div id="msgPeticion" class="msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMNA DERECHA: Generador + Donar debajo -->
+    <div class="grid-right">
+      <div class="card" id="generador">
+        <div class="section">
+          <div class="title">Genera tu enlace privado</div>
+
+          <div class="generator">
+            <select id="debrid" class="input">
+              <option value="real">Real-Debrid 🟢</option>
+              <option value="all">AllDebrid 🟡 (testing)</option>
+              <option value="torbox">TorBox 🟡 (testing)</option>
+            </select>
+
+            <input type="text" id="token" class="input" placeholder="Token…" />
+
+            <button class="btn" onclick="generate()">Generar</button>
+
+            <div class="result" id="result">
+              <div class="link" id="linkDisplay"></div>
+              <div class="actions">
+                <button class="copy" onclick="copyLink()">Copiar</button>
+                <button class="stremio" onclick="installStremio()">Abrir en Stremio</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DONAR movido debajo del generador -->
+      <div class="card" id="donar">
+        <div class="section">
+          <div class="title">Apóyame con un cafecito</div>
+
+          <div class="donate">
+            <p>¿Te sirve el addon?</p>
+            <a href="https://ko-fi.com/johnpradoo" target="_blank" class="donate-btn">
+              Donar con Ko-fi ☕
+            </a>
+          </div>
+
+          <div class="social">
+            <a href="https://x.com/johnpradooo" target="_blank"><i class="fab fa-x-twitter"></i></a>
+            <a href="https://instagram.com/johnpradoo" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://paypal.me/johnpradoo" target="_blank"><i class="fab fa-paypal"></i></a>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-    <!-- DONAR -->
-  <div class="card">
-    <div class="section">
-      <div class="title">Apóyame con un cafecito</div>
-
-      <div class="donate">
-        <p>¿Te sirve el addon?</p>
-        <a href="https://ko-fi.com/johnpradoo" target="_blank" class="donate-btn">
-          Donar con Ko-fi ☕
-        </a>
-      </div>
-
-      <div class="social">
-        <a href="https://x.com/johnpradooo" target="_blank"><i class="fab fa-x-twitter"></i></a>
-        <a href="https://instagram.com/johnpradoo" target="_blank"><i class="fab fa-instagram"></i></a>
-        <a href="https://paypal.me/johnpradoo" target="_blank"><i class="fab fa-paypal"></i></a>
+    <!-- Full-width abajo: Admin centrado -->
+    <div class="full-width">
+      <div class="card" style="max-width: 460px; width: 100%;">
+        <div class="section" style="text-align:center; padding:32px;">
+          <p style="margin-bottom:20px;color:var(--soft);font-size:1.1rem;">
+            Área exclusiva para moderadores
+          </p>
+          <a href="/admin/" class="btn" style="background:#8b3dff;width:auto;display:inline-block;padding:18px 40px;font-size:1.2rem;">
+            Panel Admin
+          </a>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- PANEL ADMIN -->
-  <div class="card">
-    <div class="section" style="text-align:center; padding:32px;">
-      <p style="margin-bottom:20px;color:var(--soft);font-size:1.1rem;">
-        Área exclusiva para moderadores
-      </p>
-      <a href="/admin/" class="btn" style="background:#8b3dff;width:auto;display:inline-block;padding:18px 40px;font-size:1.2rem;">
-        Panel Admin
-      </a>
-    </div>
-  </div>
+  </div> <!-- Fin main-grid -->
 
   <footer>
     © 2025 Primer Latino • Hecho con ❤️ por @johnpradoo<br>
     Contenido latino real • Rápido • Transparente
   </footer>
 
-  <!-- SCRIPT GENERADOR -->
+  <!-- SCRIPT GENERADOR – Sin cambios -->
   <script>
     const base = "https://www.primerlatino.com";
 
@@ -361,7 +473,7 @@
     }
   </script>
 
-  <!-- SCRIPT PETICIONES CON BACKEND -->
+  <!-- SCRIPT PETICIONES CON BACKEND – Sin cambios -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
