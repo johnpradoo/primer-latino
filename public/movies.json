@@ -1,6 +1,28 @@
 {
   "movies": [
-     {
+    {
+      "id": "tt30472557",
+      "title": "Chainsaw Man – La película: El arco de Reze (2025)",
+      "quality": "1080p | WEB-DLL | Dolby Atmos",
+      "language": "🇯🇵 JAPON | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "939908C72E185902E4D4E4C9AADE313C54DA3C85",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/1CfZCb56vWjq37uXtbKNMevMzwG.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt4627382",
+      "title": "Un Buen Ladrón (2025)",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "7716691384972DD05A53E425A4E98B4033EBAA6A",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/cZGV19xq83KZR7kAwqdBkxQ87Gy.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt31434030",
       "title": "Drácula (2025)",
       "quality": "1080p | WEB-DL | E-AC3 5.1",
@@ -11,7 +33,7 @@
       "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/ff7fyDdtXM2wu9jsm9gOMYtpvOl.jpg",
       "type": "movie"
     },
-     {
+    {
       "id": "tt29232158",
       "title": "Troll 2 (2025)",
       "quality": "1080p | WEB-DL | AAC 5.1",
@@ -86,6 +108,17 @@
       "hash": "BDEC4385257EE6428A10BEDD76D50D89A6AEFE34",
       "status": "aprobado",
       "poster": "https://image.tmdb.org/t/p/w1280/hfuxIKRCNsecLmoDdO0HJ1YUvv1.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt31806049",
+      "title": "El Muro Negro (2025)",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "DE4F3AE7A0843300B0F9BAE8A9D2D99DD123B1D5",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/yCRxUvswHsSRuMYnW3DbipVNXIz.jpg",
       "type": "movie"
     },
     {
@@ -219,6 +252,17 @@
       "hash": "DBC18914286A504D71E05CFBDAD4A11009CD8C98",
       "status": "aprobado",
       "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/4KjMMLHqKcAxNRTd5mhMDtNXW1P.jpg",
+      "type": "movie"
+    },
+    {
+      "id": "tt13098590",
+      "title": "Terror en el rio (2025)",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "7EC9A4F1599AAE73F36C7C6216819FDC47B25C78",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/kIO7eVOivYH9LptLxdXio5KRor.jpg",
       "type": "movie"
     },
     {
