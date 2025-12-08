@@ -67,6 +67,17 @@
       "type": "movie"
     },
     {
+      "id": "tt38681567",
+      "title": "Stephen (2025)",
+      "quality": "1080p | WEB-DL | Dolby Atmos",
+      "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+      "codec": "H.264",
+      "hash": "2664869BABAB7AED9F9F1C513AFA0455AB71EC5A",
+      "status": "aprobado",
+      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/yUURUJzeSTc47T2VeNw7nZwZ8VJ.jpg",
+      "type": "movie"
+    },
+    {
       "id": "tt27722618",
       "title": "La chica zurda (2025)",
       "quality": "1080p | WEB-DL | Dolby Atmos",
