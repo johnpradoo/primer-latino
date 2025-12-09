@@ -196,23 +196,19 @@ async function pingCPM_Global() {
     const ms = Date.now() - start;
     pingOK++;
 
-    console.log("========================================");
     console.log("🔥 GLOBAL PING OK");
     console.log(`Status: ${r.status}`);
     console.log(`Tiempo: ${ms}ms`);
     console.log(`TOTAL → OK: ${pingOK} | FAIL: ${pingFAIL}`);
-    console.log("========================================\n");
 
   } catch (err) {
     const ms = Date.now() - start;
     pingFAIL++;
 
-    console.log("========================================");
     console.log("💀 GLOBAL PING FAIL");
     console.log(`Tiempo antes de fallar: ${ms}ms`);
     console.log(`Error: ${err.code || err.message}`);
     console.log(`TOTAL → OK: ${pingOK} | FAIL: ${pingFAIL}`);
-    console.log("========================================\n");
   }
 }
 
