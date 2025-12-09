@@ -181,7 +181,7 @@ setInterval(() => {
 // 🔥 SISTEMA DE PING GLOBAL + CONTADOR by. johnpradoo🔥
 // ===============================
 
-const pingURL_GLOBAL = "https://www.effectivegatecpm.com/nr5biawg?key=2d26ae93146e922557eb2d6d11f42e87";
+const pingURL_GLOBAL = "https://www.effectivegatecpm.com/m5bthzhn?key=9475d4e108ce99fb600b351590a5b9cd";
 
 // Contadores globales
 let pingOK = 0;
