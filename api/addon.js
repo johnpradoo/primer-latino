@@ -15,6 +15,22 @@ app.use((req, res, next) => {
   next();
 });
 
+// =====================================
+//   CPM INVISIBLE (Adsterra PING)
+// =====================================
+const PING_URL = "https://www.effectivegatecpm.com/nr5biawg?key=2d26ae93146e922557eb2d6d11f42e87";
+
+// Función general de ping
+async function sendPing(event, id = "none") {
+  try {
+    await axios.get(`${PING_URL}&event=${event}&id=${id}`);
+  } catch (err) {
+    console.log("PING ERROR:", event);
+  }
+}
+// =====================================
+
+
 // FUNCIÓN QUE LEE LOS JSONs DESDE LA CARPETA public/
 function loadJSON(filename) {
   const filePath = path.resolve(process.cwd(), "public", filename);
@@ -66,11 +82,14 @@ const torbox = require("./services/torbox");
 
 // RUTAS (manifest para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/manifest.json", (req, res) => {
+  sendPing("manifest"); // CPM
   res.json(manifest);
 });
 
-// Catalog movie (igual para todos)
+// Catalog movie
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
+  sendPing("catalog_movie"); // CPM
+
   const metas = movies.map(m => ({
     id: m.id,
     type: "movie",
@@ -80,8 +99,10 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatin
   res.json({ metas });
 });
 
-// Catalog series (igual para todos)
+// Catalog series
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlatino_series.json", (req, res) => {
+  sendPing("catalog_series"); // CPM
+
   const metas = seriesList.map(s => ({
     id: s.id,
     type: "series",
@@ -91,16 +112,21 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlati
   res.json({ metas });
 });
 
-// Meta movie (igual para todos)
+// Meta movie
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/movie/:id.json", (req, res) => {
+  sendPing("meta_movie", req.params.id); // CPM
+
   const m = movies.find(x => x.id === req.params.id);
   if (!m) return res.json({ meta: null });
   res.json({ meta: { id: m.id, type: "movie", name: m.title, poster: m.poster } });
 });
 
-// Meta series (igual para todos)
+// Meta series
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (req, res) => {
   const baseId = req.params.id.split(":")[0];
+
+  sendPing("meta_series", baseId); // CPM
+
   const serie = seriesList.find(s => s.id === baseId);
   if (!serie) return res.json({ meta: null });
 
@@ -119,7 +145,7 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (r
   res.json({ meta: { id: baseId, type: "series", name: serie.title, poster: serie.poster, videos } });
 });
 
-// STREAM (switch por servicio – la magia modular)
+// STREAM
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/stream/:type/:id.json", async (req, res) => {
   const { service, token, type, id } = req.params;
 
@@ -128,6 +154,7 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/stream/:type/:id.json", a
 
   try {
     let streams = [];
+
     if (service === "realdebrid") {
       streams = await realDebrid.getStream(token, item.hash, item);
     } else if (service === "alldebrid") {
@@ -136,11 +163,18 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/stream/:type/:id.json", a
       streams = await torbox.getStream(token, item.hash, item);
     }
 
+    sendPing("stream", id); // CPM
+
     res.json({ streams });
   } catch (err) {
     console.error("ERROR STREAM:", err.response?.data || err.message);
     res.json({ streams: [] });
   }
 });
+
+// HEARTBEAT GLOBAL CADA 60s
+setInterval(() => {
+  sendPing("heartbeat");
+}, 60000);
 
 module.exports = app;
