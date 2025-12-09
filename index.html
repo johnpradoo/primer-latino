@@ -305,9 +305,57 @@
   </div>
 
   <footer>
-    © 2025 Primer Latino • Hecho con amor por @johnpradoo<br>
-    Contenido latino real • Rápido • Transparente
-  </footer>
+  © 2025 Primer Latino • Hecho con amor por 
+  <a href="https://github.com/johnpradoo" target="_blank" style="color:#58a6ff; text-decoration:none;">@johnpradoo</a><br>
+  Contenido latino real • Rápido • Transparente
+
+  <!-- Contribuidores automáticos de GitHub -->
+  <div style="margin-top: 30px; padding: 20px 0; border-top: 1px solid #444;">
+    <p style="margin:0 0 15px; font-size:14px; color:#888;">
+      Gracias a nuestros contribuidores:
+    </p>
+    <div id="github-contributors" style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;"></div>
+  </div>
+</footer>
+
+<script>
+// Cargar contribuidores del repo johnpradoo/primer-latino
+fetch('https://api.github.com/repos/johnpradoo/primer-latino/contributors?per_page=100')
+  .then(response => response.json())
+  .then(data => {
+    const container = document.getElementById('github-contributors');
+    // Ordenar por número de contribuciones (opcional)
+    data.sort((a, b) => b.contributions - a.contributions);
+    
+    data.forEach(contributor => {
+      const a = document.createElement('a');
+      a.href = contributor.html_url;
+      a.target = '_blank';
+      a.title = `${contributor.login} (${contributor.contributions} commits)`;
+      a.style.textDecoration = 'none';
+
+      const img = document.createElement('img');
+      img.src = contributor.avatar_url + '&s=80';
+      img.alt = contributor.login;
+      img.width = 48;
+      img.height = 48;
+      img.style.borderRadius = '50%';
+      img.style.border = '2px solid #333';
+      img.style.transition = 'all 0.2s';
+
+      // Efecto hover bonito
+      img.addEventListener('mouseover', () => img.style.transform = 'scale(1.15)');
+      img.addEventListener('mouseout', () => img.style.transform = 'scale(1)');
+
+      a.appendChild(img);
+      container.appendChild(a);
+    });
+  })
+  .catch(err => {
+    document.getElementById('github-contributors').innerHTML = 
+      '<span style="color:#888; font-size:14px;">No se pudieron cargar los contribuidores</span>';
+  });
+</script>
 
   <!-- SCRIPTS (sin cambios) -->
   <script>
