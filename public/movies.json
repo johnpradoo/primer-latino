@@ -1,12 +1,12 @@
 {
   "movies": [
-    {
+     {
       "id": "tt30472557",
-      "title": "Chainsaw Man – La película: El arco de Reze (2025)",
-      "quality": "1080p | WEB-DLL | Dolby Atmos",
-      "language": "🇯🇵 JAPON | 🇺🇸 ENGLISH",
+      "title": "Chainsaw Man - La película: Arco de Reze (2025)",
+      "quality": "1080p | WEB-DL | AAC 5.1",
+      "language": "🇲🇽 LATINO | 🇯🇵 JAPON | 🇺🇸 ENGLISH" ,
       "codec": "H.264",
-      "hash": "939908C72E185902E4D4E4C9AADE313C54DA3C85",
+      "hash": "106EB3C25255FD5E2620FB8CF110FFD11B8E2B90",
       "status": "aprobado",
       "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/1CfZCb56vWjq37uXtbKNMevMzwG.jpg",
       "type": "movie"
@@ -53,17 +53,6 @@
       "hash": "B8C0A942E67A57E7F0E40AE228529C42F5EECF11",
       "status": "aprobado",
       "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/z2v3lNAA2ymrZuKof4J2vqFIBdw.jpg",
-      "type": "movie"
-    },
-     {
-      "id": "tt30472557",
-      "title": "Chainsaw Man - La película: Arco de Reze (2025)",
-      "quality": "1080p | WEB-DL | AAC 5.1",
-      "language": "🇲🇽 LATINO | 🇯🇵 JAPON | 🇺🇸 ENGLISH" ,
-      "codec": "H.264",
-      "hash": "106EB3C25255FD5E2620FB8CF110FFD11B8E2B90",
-      "status": "aprobado",
-      "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/1CfZCb56vWjq37uXtbKNMevMzwG.jpg",
       "type": "movie"
     },
     {
