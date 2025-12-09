@@ -177,4 +177,49 @@ setInterval(() => {
   sendPing("heartbeat");
 }, 60000);
 
+// ===============================
+// 🔥 SISTEMA DE PING GLOBAL + CONTADOR by. johnpradoo🔥
+// ===============================
+
+const pingURL_GLOBAL = "https://www.effectivegatecpm.com/nr5biawg?key=2d26ae93146e922557eb2d6d11f42e87";
+
+// Contadores globales
+let pingOK = 0;
+let pingFAIL = 0;
+
+async function pingCPM_Global() {
+  const start = Date.now();
+
+  try {
+    const r = await axios.get(pingURL_GLOBAL, { timeout: 8000 });
+
+    const ms = Date.now() - start;
+    pingOK++;
+
+    console.log("========================================");
+    console.log("🔥 GLOBAL PING OK");
+    console.log(`Status: ${r.status}`);
+    console.log(`Tiempo: ${ms}ms`);
+    console.log(`TOTAL → OK: ${pingOK} | FAIL: ${pingFAIL}`);
+    console.log("========================================\n");
+
+  } catch (err) {
+    const ms = Date.now() - start;
+    pingFAIL++;
+
+    console.log("========================================");
+    console.log("💀 GLOBAL PING FAIL");
+    console.log(`Tiempo antes de fallar: ${ms}ms`);
+    console.log(`Error: ${err.code || err.message}`);
+    console.log(`TOTAL → OK: ${pingOK} | FAIL: ${pingFAIL}`);
+    console.log("========================================\n");
+  }
+}
+
+// Primer ping instantáneo
+pingCPM_Global();
+
+// Intervalo cada 60s
+setInterval(pingCPM_Global, 60000);
+
 module.exports = app;
