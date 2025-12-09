@@ -95,7 +95,7 @@
                 <div class="acciones">
                   <button class="aceptar" onclick="aceptar('${id}', '${d.titulo || ""}', '${d.correo || ""}')">Aceptar</button>
                   <button class="revision" onclick="revision('${id}')">Revisión</button>
-                  <button class="rechazar" onclick="eliminar('${id}')">Rechazar</button>
+                  <button class="rechazar" onclick="eliminar('${id}')">Eliminar</button>
                 </div>
               </td>
             </tr>`;
@@ -125,7 +125,7 @@
     };
 
     window.eliminar = async (id) => {
-      if (!confirm("¿Rechazar y ELIMINAR esta petición para siempre?")) return;
+      if (!confirm("¿ELIMINAR esta petición para siempre?")) return;
       await deleteDoc(doc(db, "peticiones", id));
       alert("Petición eliminada");
     };
