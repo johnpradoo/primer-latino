@@ -18,7 +18,7 @@ app.use((req, res, next) => {
 // =====================================
 //   CPM INVISIBLE (Adsterra PING)
 // =====================================
-const PING_URL = "https://www.effectivegatecpm.com/nr5biawg?key=2d26ae93146e922557eb2d6d11f42e87";
+const PING_URL = "https://www.effectivegatecpm.com/m5bthzhn?key=9475d4e108ce99fb600b351590a5b9cd";
 
 // Función general de ping
 async function sendPing(event, id = "none") {
