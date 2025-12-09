@@ -1,4 +1,4 @@
-// api/addon.js → INTEGRADO CON ALLDEBRID Y TORBOX (modular)
+// api/addon.js → INTEGRADO CON ALLDEBRID Y TORBOX (modular) + CPM INTELIGENTE
 const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
@@ -16,20 +16,32 @@ app.use((req, res, next) => {
 });
 
 // =====================================
-//   CPM INVISIBLE (Adsterra PING)
+//   CPM INTELIGENTE 2025 – Solo cuando Stremio realmente usa el addon
 // =====================================
-const PING_URL = "https://www.effectivegatecpm.com/m5bthzhn?key=9475d4e108ce99fb600b351590a5b9cd";
+const CPM_URL = "https://www.effectivegatecpm.com/m5bthzhn?key=9475d4e108ce99fb600b351590a5b9cd";
 
-// Función general de ping
-async function sendPing(event, id = "none") {
+let totalRequests = 0;
+let lastPingTime = 0;
+const MIN_INTERVAL = 4 * 60 * 1000; // 4 minutos entre pings como máximo
+
+async function cpmPing(event = "use", id = "none") {
+  totalRequests++;
+  const now = Date.now();
+
+  // Antispam: aunque haya 100 peticiones seguidas, solo hacemos 1 ping cada 4 min
+  if (now - lastPingTime < MIN_INTERVAL) return;
+
   try {
-    await axios.get(`${PING_URL}&event=${event}&id=${id}`);
+    await axios.get(`${CPM_URL}&event=${event}&id=${id}&sub1=${totalRequests}`, {
+      timeout: 6000
+    });
+    lastPingTime = now;
+    console.log(`CPM → ${event} (#${totalRequests})`);
   } catch (err) {
-    console.log("PING ERROR:", event);
+    // Silencioso, no spameamos consola
   }
 }
 // =====================================
-
 
 // FUNCIÓN QUE LEE LOS JSONs DESDE LA CARPETA public/
 function loadJSON(filename) {
@@ -82,14 +94,13 @@ const torbox = require("./services/torbox");
 
 // RUTAS (manifest para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/manifest.json", (req, res) => {
-  sendPing("manifest"); // CPM
+  cpmPing("manifest");
   res.json(manifest);
 });
 
-// Catalog movie
+// Catalog movie (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
-  sendPing("catalog_movie"); // CPM
-
+  cpmPing("catalog_movie");
   const metas = movies.map(m => ({
     id: m.id,
     type: "movie",
@@ -99,10 +110,9 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatin
   res.json({ metas });
 });
 
-// Catalog series
+// Catalog series (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlatino_series.json", (req, res) => {
-  sendPing("catalog_series"); // CPM
-
+  cpmPing("catalog_series");
   const metas = seriesList.map(s => ({
     id: s.id,
     type: "series",
@@ -112,20 +122,18 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlati
   res.json({ metas });
 });
 
-// Meta movie
+// Meta movie (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/movie/:id.json", (req, res) => {
-  sendPing("meta_movie", req.params.id); // CPM
-
+  cpmPing("meta_movie", req.params.id);
   const m = movies.find(x => x.id === req.params.id);
   if (!m) return res.json({ meta: null });
   res.json({ meta: { id: m.id, type: "movie", name: m.title, poster: m.poster } });
 });
 
-// Meta series
+// Meta series (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (req, res) => {
   const baseId = req.params.id.split(":")[0];
-
-  sendPing("meta_series", baseId); // CPM
+  cpmPing("meta_series", baseId);
 
   const serie = seriesList.find(s => s.id === baseId);
   if (!serie) return res.json({ meta: null });
@@ -145,16 +153,17 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (r
   res.json({ meta: { id: baseId, type: "series", name: serie.title, poster: serie.poster, videos } });
 });
 
-// STREAM
+// STREAM (switch por servicio – la magia modular)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/stream/:type/:id.json", async (req, res) => {
   const { service, token, type, id } = req.params;
+
+  cpmPing("stream", id);
 
   const item = type === "movie" ? movies.find(m => m.id === id) : episodes.find(e => e.id === id);
   if (!item || !item.hash) return res.json({ streams: [] });
 
   try {
     let streams = [];
-
     if (service === "realdebrid") {
       streams = await realDebrid.getStream(token, item.hash, item);
     } else if (service === "alldebrid") {
@@ -163,59 +172,11 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/stream/:type/:id.json", a
       streams = await torbox.getStream(token, item.hash, item);
     }
 
-    sendPing("stream", id); // CPM
-
     res.json({ streams });
   } catch (err) {
     console.error("ERROR STREAM:", err.response?.data || err.message);
     res.json({ streams: [] });
   }
 });
-
-// HEARTBEAT GLOBAL CADA 60s
-setInterval(() => {
-  sendPing("heartbeat");
-}, 60000);
-
-// ===============================
-// 🔥 SISTEMA DE PING GLOBAL + CONTADOR by. johnpradoo🔥
-// ===============================
-
-const pingURL_GLOBAL = "https://www.effectivegatecpm.com/nr5biawg?key=2d26ae93146e922557eb2d6d11f42e87";
-
-// Contadores globales
-let pingOK = 0;
-let pingFAIL = 0;
-
-async function pingCPM_Global() {
-  const start = Date.now();
-
-  try {
-    const r = await axios.get(pingURL_GLOBAL, { timeout: 8000 });
-
-    const ms = Date.now() - start;
-    pingOK++;
-
-    console.log("🔥 GLOBAL PING OK");
-    console.log(`Status: ${r.status}`);
-    console.log(`Tiempo: ${ms}ms`);
-    console.log(`TOTAL → OK: ${pingOK} | FAIL: ${pingFAIL}`);
-
-  } catch (err) {
-    const ms = Date.now() - start;
-    pingFAIL++;
-
-    console.log("💀 GLOBAL PING FAIL");
-    console.log(`Tiempo antes de fallar: ${ms}ms`);
-    console.log(`Error: ${err.code || err.message}`);
-    console.log(`TOTAL → OK: ${pingOK} | FAIL: ${pingFAIL}`);
-  }
-}
-
-// Primer ping instantáneo
-pingCPM_Global();
-
-// Intervalo cada 60s
-setInterval(pingCPM_Global, 60000);
 
 module.exports = app;
