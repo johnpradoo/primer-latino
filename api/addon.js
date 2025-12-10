@@ -1,4 +1,4 @@
-// api/addon.js → INTEGRADO CON ALLDEBRID Y TORBOX (modular) + CPM INTELIGENTE
+// api/addon.js → INTEGRADO CON ALLDEBRID Y TORBOX (modular)
 const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
@@ -14,34 +14,6 @@ app.use((req, res, next) => {
   res.type("application/json");
   next();
 });
-
-// =====================================
-//   CPM INTELIGENTE 2025 – Solo cuando Stremio realmente usa el addon
-// =====================================
-const CPM_URL = "https://www.effectivegatecpm.com/m5bthzhn?key=9475d4e108ce99fb600b351590a5b9cd";
-
-let totalRequests = 0;
-let lastPingTime = 0;
-const MIN_INTERVAL = 4 * 60 * 1000; // 4 minutos entre pings como máximo
-
-async function cpmPing(event = "use", id = "none") {
-  totalRequests++;
-  const now = Date.now();
-
-  // Antispam: aunque haya 100 peticiones seguidas, solo hacemos 1 ping cada 4 min
-  if (now - lastPingTime < MIN_INTERVAL) return;
-
-  try {
-    await axios.get(`${CPM_URL}&event=${event}&id=${id}&sub1=${totalRequests}`, {
-      timeout: 6000
-    });
-    lastPingTime = now;
-    console.log(`CPM → ${event} (#${totalRequests})`);
-  } catch (err) {
-    // Silencioso, no spameamos consola
-  }
-}
-// =====================================
 
 // FUNCIÓN QUE LEE LOS JSONs DESDE LA CARPETA public/
 function loadJSON(filename) {
@@ -94,13 +66,11 @@ const torbox = require("./services/torbox");
 
 // RUTAS (manifest para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/manifest.json", (req, res) => {
-  cpmPing("manifest");
   res.json(manifest);
 });
 
 // Catalog movie (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
-  cpmPing("catalog_movie");
   const metas = movies.map(m => ({
     id: m.id,
     type: "movie",
@@ -112,7 +82,6 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatin
 
 // Catalog series (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlatino_series.json", (req, res) => {
-  cpmPing("catalog_series");
   const metas = seriesList.map(s => ({
     id: s.id,
     type: "series",
@@ -124,7 +93,6 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlati
 
 // Meta movie (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/movie/:id.json", (req, res) => {
-  cpmPing("meta_movie", req.params.id);
   const m = movies.find(x => x.id === req.params.id);
   if (!m) return res.json({ meta: null });
   res.json({ meta: { id: m.id, type: "movie", name: m.title, poster: m.poster } });
@@ -133,8 +101,6 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/movie/:id.json", (re
 // Meta series (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (req, res) => {
   const baseId = req.params.id.split(":")[0];
-  cpmPing("meta_series", baseId);
-
   const serie = seriesList.find(s => s.id === baseId);
   if (!serie) return res.json({ meta: null });
 
@@ -156,8 +122,6 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (r
 // STREAM (switch por servicio – la magia modular)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/stream/:type/:id.json", async (req, res) => {
   const { service, token, type, id } = req.params;
-
-  cpmPing("stream", id);
 
   const item = type === "movie" ? movies.find(m => m.id === id) : episodes.find(e => e.id === id);
   if (!item || !item.hash) return res.json({ streams: [] });
