@@ -1,4 +1,4 @@
-// api/addon.js → PRIMER LATINO + MONETAG DIRECT LINK (FUNCIONANDO 100%)
+// api/addon.js → PRIMER LATINO + MONETAG TAG (CUENTA TODO, CPM ALTO)
 const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
@@ -16,52 +16,49 @@ app.use((req, res, next) => {
 });
 
 // =====================================
-//   MONETAG DIRECT LINK CPM – FUNCIONA SIEMPRE
+//   MONETAG TAG CPM – ESTE SÍ CUENTA 100%
 // =====================================
-const MONETAG_URL = "https://otieu.com/4/10300954";
+const MONETAG_TAG_URL = "https://quge5.com/88/tag.min.js";
+const MONETAG_ZONE = "191688";
 
 let totalRequests = 0;
-let lastPingTime = 0;
-const MIN_INTERVAL = 3 * 60 * 1000; // 3 minutos entre pings (Monetag lo acepta perfecto)
+let lastTagTime = 0;
+const MIN_INTERVAL = 2 * 60 * 1000; // 2 minutos entre tags (más que suficiente)
 
-async function monetagPing(event = "use", id = "none") {
+async function fireMonetagTag(event = "use", id = "none") {
   totalRequests++;
   const now = Date.now();
 
-  // Siempre enviamos el ping de "stream" (el que más paga)
-  const isStream = event === "stream";
-  if (!isStream && now - lastPingTime < MIN_INTERVAL) return;
+  // Siempre disparamos en "stream" → es el que más paga
+  if (event !== "stream" && now - lastTagTime < MIN_INTERVAL) return;
 
   try {
-    await axios.get(MONETAG_URL, {
-      timeout: 8000,
-      maxRedirects: 5,
+    await axios.get(MONETAG_TAG_URL, {
+      timeout: 10000,
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+        "Accept": "*/*",
         "Referer": "https://www.primerlatino.com/",
         "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
       },
       params: {
+        zone: MONETAG_ZONE,
         sub1: `primerlatino_${event}`,
         sub2: id || "none",
-        sub3: totalRequests,
+        sub3: totalRequests.toString(),
       },
     });
 
-    lastPingTime = now;
-    console.log(`MONETAG OK → ${event} (#${totalRequests})`);
+    lastTagTime = now;
+    console.log(`MONETAG TAG OK → ${event} (#${totalRequests})`);
   } catch (err) {
-    // Silencioso (solo si realmente falla, casi nunca pasa con estos headers)
-    console.log(`MONETAG falló → ${event}`);
+    console.log(`MONETAG TAG falló → ${event}`);
   }
 }
 // =====================================
 
-// CARGA JSONs
+// CARGA JSONs DESDE public/
 function loadJSON(filename) {
   const filePath = path.resolve(process.cwd(), "public", filename);
   if (!fs.existsSync(filePath)) {
@@ -103,18 +100,19 @@ const manifest = {
   idPrefixes: ["tt"]
 };
 
+// SERVICIOS
 const realDebrid = require("./services/realDebrid");
 const allDebrid = require("./services/allDebrid");
 const torbox = require("./services/torbox");
 
-// RUTAS + MONETAG
+// RUTAS + MONETAG TAG
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/manifest.json", (req, res) => {
-  monetagPing("manifest");
+  fireMonetagTag("manifest");
   res.json(manifest);
 });
 
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
-  monetagPing("catalog_movie");
+  fireMonetagTag("catalog_movie");
   const metas = movies.map(m => ({
     id: m.id,
     type: "movie",
@@ -125,7 +123,7 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatin
 });
 
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlatino_series.json", (req, res) => {
-  monetagPing("catalog_series");
+  fireMonetagTag("catalog_series");
   const metas = seriesList.map(s => ({
     id: s.id,
     type: "series",
@@ -136,7 +134,7 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlati
 });
 
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/movie/:id.json", (req, res) => {
-  monetagPing("meta_movie", req.params.id);
+  fireMonetagTag("meta_movie", req.params.id);
   const m = movies.find(x => x.id === req.params.id);
   if (!m) return res.json({ meta: null });
   res.json({ meta: { id: m.id, type: "movie", name: m.title, poster: m.poster } });
@@ -144,7 +142,7 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/movie/:id.json", (re
 
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (req, res) => {
   const baseId = req.params.id.split(":")[0];
-  monetagPing("meta_series", baseId);
+  fireMonetagTag("meta_series", baseId);
 
   const serie = seriesList.find(s => s.id === baseId);
   if (!serie) return res.json({ meta: null });
@@ -167,16 +165,20 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (r
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/stream/:type/:id.json", async (req, res) => {
   const { service, token, type, id } = req.params;
 
-  monetagPing("stream", id); // Siempre se envía (el que más paga)
+  fireMonetagTag("stream", id); // ESTE ES EL QUE MÁS PAGA
 
   const item = type === "movie" ? movies.find(m => m.id === id) : episodes.find(e => e.id === id);
   if (!item || !item.hash) return res.json({ streams: [] });
 
   try {
     let streams = [];
-    if (service === "realdebrid") streams = await realDebrid.getStream(token, item.hash, item);
-    else if (service === "alldebrid") streams = await allDebrid.getStream(token, item.hash, item);
-    else if (service === "torbox") streams = await torbox.getStream(token, item.hash, item);
+    if (service === "realdebrid") {
+      streams = await realDebrid.getStream(token, item.hash, item);
+    } else if (service === "alldebrid") {
+      streams = await allDebrid.getStream(token, item.hash, item);
+    } else if (service === "torbox") {
+      streams = await torbox.getStream(token, item.hash, item);
+    }
 
     res.json({ streams });
   } catch (err) {
