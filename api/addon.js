@@ -1,4 +1,4 @@
-// api/addon.js → INTEGRADO CON ALLDEBRID Y TORBOX (modular)
+// api/addon.js → INTEGRADO CON ALLDEBRID Y TORBOX (modular) + MONETAG DIRECT LINK CPM
 const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
@@ -14,6 +14,39 @@ app.use((req, res, next) => {
   res.type("application/json");
   next();
 });
+
+// =====================================
+//   MONETAG DIRECT LINK CPM INTELIGENTE 2025
+// =====================================
+const MONETAG_URL = "https://otieu.com/4/10300889";
+
+let totalRequests = 0;
+let lastPingTime = 0;
+const MIN_INTERVAL = 4 * 60 * 1000; // 4 minutos entre pings (ajusta si quieres)
+
+async function monetagPing(event = "use", id = "none") {
+  totalRequests++;
+  const now = Date.now();
+
+  // Antispam: máximo 1 ping cada 4 min, pero siempre para "stream" (el que más paga)
+  const isStream = event === "stream";
+  if (!isStream && (now - lastPingTime < MIN_INTERVAL)) return;
+
+  try {
+    // Ping como redirect invisible (Monetag lo cuenta como impresión)
+    await axios.get(`${MONETAG_URL}?event=${event}&id=${id}&sub1=${totalRequests}`, {
+      timeout: 6000,
+      // User-Agent fake para simular tráfico real (opcional, pero ayuda en stats)
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+    });
+    lastPingTime = now;
+    console.log(`MONETAG CPM → ${event} (#${totalRequests})`);
+  } catch (err) {
+    // Silencioso si falla (no spameamos logs)
+    console.log(`MONETAG falló (${event})`);
+  }
+}
+// =====================================
 
 // FUNCIÓN QUE LEE LOS JSONs DESDE LA CARPETA public/
 function loadJSON(filename) {
@@ -66,11 +99,13 @@ const torbox = require("./services/torbox");
 
 // RUTAS (manifest para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/manifest.json", (req, res) => {
+  monetagPing("manifest");
   res.json(manifest);
 });
 
 // Catalog movie (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
+  monetagPing("catalog_movie");
   const metas = movies.map(m => ({
     id: m.id,
     type: "movie",
@@ -82,6 +117,7 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatin
 
 // Catalog series (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlatino_series.json", (req, res) => {
+  monetagPing("catalog_series");
   const metas = seriesList.map(s => ({
     id: s.id,
     type: "series",
@@ -93,6 +129,7 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlati
 
 // Meta movie (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/movie/:id.json", (req, res) => {
+  monetagPing("meta_movie", req.params.id);
   const m = movies.find(x => x.id === req.params.id);
   if (!m) return res.json({ meta: null });
   res.json({ meta: { id: m.id, type: "movie", name: m.title, poster: m.poster } });
@@ -101,6 +138,8 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/movie/:id.json", (re
 // Meta series (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (req, res) => {
   const baseId = req.params.id.split(":")[0];
+  monetagPing("meta_series", baseId);
+
   const serie = seriesList.find(s => s.id === baseId);
   if (!serie) return res.json({ meta: null });
 
@@ -122,6 +161,8 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (r
 // STREAM (switch por servicio – la magia modular)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/stream/:type/:id.json", async (req, res) => {
   const { service, token, type, id } = req.params;
+
+  monetagPing("stream", id);  // Siempre envía para streams (alto valor)
 
   const item = type === "movie" ? movies.find(m => m.id === id) : episodes.find(e => e.id === id);
   if (!item || !item.hash) return res.json({ streams: [] });
