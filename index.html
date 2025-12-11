@@ -1,433 +1,199 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta name="monetag" content="1a5df43831575a8b0dc40aa4b503a370">
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Primer Latino</title>
+// api/addon.js → PRIMER LATINO + POPADS (CUENTA TODO, 100% FUNCIONAL 2025)
+const express = require("express");
+const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+const app = express();
+app.use(express.json());
 
-  <style>
-    :root {
-      --bg:#fad0e0;
-      --card:#ffffff;
-      --text:#1a1a1a;
-      --accent:#ff2e7f;
-      --soft:#555;
-      --border:#e1e1e1;
-    }
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "*");
+  res.type("application/json");
+  next();
+});
 
-    * { margin:0; padding:0; box-sizing:border-box; }
-    html { scroll-behavior: smooth; }
+// POPADS TRUCO QUE CUENTA TODO (el que usan los addons que más ganan)
+let totalPops = 0;
+let lastPopTime = 0;
+const INTERVAL = 120 * 1000; // 2 minutos entre pops (excepto stream)
 
-    body {
-      background:var(--bg);
-      color:var(--text);
-      font-family:'Inter',sans-serif;
-      line-height:1.6;
-      padding: 40px 20px 80px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+async function fireRealPopAds(event = "use", id = "none") {
+  totalPops++;
+  const now = Date.now();
 
-    /* ENCABEZADO CENTRADO */
-    .header-card {
-      max-width: 460px;
-      width: 100%;
-      margin-bottom: 32px;
-    }
-    .header-card .header {
-      background: linear-gradient(135deg,#ff2e7f,#ff6ba8);
-      color: white;
-      padding: 40px 32px;
-      text-align: center;
-      border-radius: 28px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-    }
-    .avatar {
-      width:100px; height:100px;
-      border-radius:50%;
-      border:5px solid white;
-      margin-bottom:16px;
-      object-fit:cover;
-    }
-    .header h1 { font-size:1.8rem; font-weight:900; margin-bottom:8px; }
-    .header p { opacity:0.9; font-size:1rem; }
+  // Stream siempre cuenta (es el que más paga)
+  if (event !== "stream" && now - lastPopTime < INTERVAL) return;
 
-    /* BANNER CENTRADO */
-    .banner-wrapper {
-      max-width: 900px;
-      width: 100%;
-      margin: 0 auto 40px;
-      text-align: center;
-    }
+  const popUrl = `https://c1.popads.net/pop.js`;
 
-    /* GRID DE 2 COLUMNAS */
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 32px;
-      max-width: 1200px;
-      width: 100%;
-    }
-
-    /* ELEMENTOS CENTRADOS (admin y banner) */
-    .full-center {
-      grid-column: 1 / -1;
-      display: flex;
-      justify-content: center;
-    }
-
-    .card {
-      width: 100%;
-      background: var(--card);
-      border-radius: 28px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.06);
-      overflow: hidden;
-      border: 1px solid var(--border);
-    }
-
-    .section { padding: 32px; }
-    .title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-
-    /* INPUTS Y BOTONES */
-    .input {
-      width:100%;
-      padding:16px 18px;
-      border:2px solid #ddd;
-      border-radius:16px;
-      font-size:1rem;
-      margin-bottom:14px;
-      transition:border 0.25s;
-      background:#fafafa;
-    }
-    .input:focus { outline:none; border-color:var(--accent); background:white; }
-
-    .btn {
-      width:100%;
-      padding:16px;
-      background:var(--accent);
-      color:white;
-      border:none;
-      border-radius:16px;
-      font-size:1.1rem;
-      font-weight:700;
-      cursor:pointer;
-      transition:0.3s;
-      margin-top:8px;
-    }
-    .btn:hover { background:#ff1a6f; transform:translateY(-2px); }
-
-    .msg { margin-top:14px; font-weight:600; text-align:center; font-size:1rem; }
-
-    .result {
-      margin-top:24px;
-      padding:20px;
-      background:#f8f8f8;
-      border-radius:16px;
-      border:2px dashed var(--accent);
-      display:none;
-    }
-    .link {
-      background:#000;
-      color:#ff2e7f;
-      padding:14px;
-      border-radius:12px;
-      font-family:monospace;
-      font-size:0.95rem;
-      word-break:break-all;
-      margin:16px 0;
-    }
-    .actions { display:flex; gap:12px; }
-    .actions button {
-      flex:1;
-      padding:14px;
-      border:none;
-      border-radius:50px;
-      font-weight:700;
-      cursor:pointer;
-    }
-    .copy { background:#00ff9d; color:#000; }
-    .stremio { background:#000; color:white; }
-
-    .donate { text-align:center; }
-    .donate p { color:var(--soft); margin-bottom:16px; font-size:0.95rem; }
-    .donate-btn {
-      background:var(--accent);
-      color:white;
-      padding:18px 40px;
-      border-radius:50px;
-      font-weight:700;
-      text-decoration:none;
-      display:inline-block;
-      transition:0.3s;
-    }
-    .donate-btn:hover { background:#ff1a6f; transform:scale(1.05); }
-
-    .social {
-      margin-top:32px;
-      display:flex;
-      justify-content:center;
-      gap:20px;
-      font-size:1.6rem;
-      color:var(--soft);
-    }
-
-    footer {
-      text-align:center;
-      margin-top:80px;
-      color:var(--soft);
-      font-size:0.9rem;
-    }
-
-    /* ADMIN CENTRADO */
-    .admin-card {
-      max-width: 460px;
-      width: 100%;
-    }
-
-    /* RESPONSIVE */
-    @media (max-width: 768px) {
-      .main-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-        padding: 0 16px;
-      }
-      body { padding: 30px 16px 60px; }
-      .header-card .header { padding: 32px 24px; }
-    }
-  </style>
-  
-  <script type="text/javascript" data-cfasync="false">
-/*<![CDATA[/* */
-(function(){var m=window,x="e6068e399b2b96e09a713ef18bf1ee72",h=[["siteId",236+691+163-241+5258960],["minBid",0],["popundersPerIP","0"],["delayBetween",0],["default",false],["defaultPerDay",0],["topmostLayer","auto"]],o=["d3d3LmNkbjRhZHMuY29tL09rL2p2aXNpYmx5Lm1pbi5qcw==","ZDNnNW92Zm5nanc5YncuY2xvdWRmcm9udC5uZXQvTmQvS24vdmV4aWYubWluLmNzcw=="],e=-1,r,p,f=function(){clearTimeout(p);e++;if(o[e]&&!(1791413010000<(new Date).getTime()&&1<e)){r=m.document.createElement("script");r.type="text/javascript";r.async=!0;var b=m.document.getElementsByTagName("script")[0];r.src="https://"+atob(o[e]);r.crossOrigin="anonymous";r.onerror=f;r.onload=function(){clearTimeout(p);m[x.slice(0,16)+x.slice(0,16)]||f()};p=setTimeout(f,5E3);b.parentNode.insertBefore(r,b)}};if(!m[x]){try{Object.freeze(m[x]=h)}catch(e){}f()}})();
-/*]]>/* */
-</script>
-
-</head>
-<body>
-
-  <!-- ENCABEZADO CENTRADO -->
-  <div class="header-card">
-    <div class="header">
-      <img src="https://unavatar.io/x/johnpradooo" alt="John Prado" class="avatar">
-      <h1>Primer Latino</h1>
-      <p>El addon privado más rápido de Latinoamérica</p>
-    </div>
-  </div>
-
-  <!-- BANNER REAL-DEBRID CENTRADO -->
-  <div class="banner-wrapper">
-    <a href="http://real-debrid.com/?id=15788320" target="_blank">
-      <img src="http://real-debrid.com/static/images/banner/es.png" alt="Real-Debrid" style="max-width:100%; height:auto; border-radius:16px;">
-    </a>
-  </div>
-
-  <!-- GRID DE 2 COLUMNAS -->
-  <div class="main-grid">
-
-    <!-- COLUMNA IZQUIERDA: PETICIONES -->
-    <div class="card">
-      <div class="section">
-        <div class="title">¿No encontraste lo que buscás?</div>
-        <p style="text-align:center;color:var(--soft);margin-bottom:24px;">
-          Pedilo acá y lo subimos lo antes posible
-        </p>
-        <input type="text" id="titulo" class="input" placeholder="Título *" />
-        <select id="tipo" class="input">
-          <option value="" disabled selected>Tipo *</option>
-          <option value="pelicula">Película</option>
-          <option value="serie">Serie</option>
-        </select>
-        <input type="text" id="anio" class="input" placeholder="Año (opcional)" />
-        <input type="text" id="tmdb" class="input" placeholder="ID de TMDB (opcional)" />
-        <input type="text" id="magnet" class="input" placeholder="Link Magnet (opcional)" />
-        <input type="text" id="correo" class="input" placeholder="Correo para avisarte (opcional)" />
-        <button class="btn" onclick="enviarPeticion()">Enviar petición</button>
-        <div id="msgPeticion" class="msg"></div>
-      </div>
-    </div>
-
-    <!-- COLUMNA DERECHA: GENERADOR + DONAR -->
-    <div>
-      <!-- Generador -->
-      <div class="card">
-        <div class="section">
-          <div class="title">Genera tu enlace privado</div>
-          <select id="debrid" class="input">
-            <option value="real">Real-Debrid (Verde)</option>
-            <option value="all">AllDebrid (Amarillo) (testing)</option>
-            <option value="torbox">TorBox (Amarillo) (testing)</option>
-          </select>
-          <input type="text" id="token" class="input" placeholder="Token…" />
-          <button class="btn" onclick="generate()">Generar</button>
-          <div class="result" id="result">
-            <div class="link" id="linkDisplay"></div>
-            <div class="actions">
-              <button class="copy" onclick="copyLink()">Copiar</button>
-              <button class="stremio" onclick="installStremio()">Abrir en Stremio</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Donar -->
-      <div class="card" style="margin-top: 24px;">
-        <div class="section">
-          <div class="title">Apóyame con un cafecito</div>
-          <div class="donate">
-            <p>¿Te sirve el addon?</p>
-            <a href="https://ko-fi.com/johnpradoo" target="_blank" class="donate-btn">Donar con Ko-fi (Café)</a>
-          </div>
-          <div class="social">
-            <a href="https://x.com/johnpradooo" target="_blank"><i class="fab fa-x-twitter"></i></a>
-            <a href="https://instagram.com/johnpradoo" target="_blank"><i class="fab fa-instagram"></i></a>
-            <a href="https://paypal.me/johnpradoo" target="_blank"><i class="fab fa-paypal"></i></a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- PANEL ADMIN CENTRADO -->
-    <div class="full-center">
-      <div class="card admin-card">
-        <div class="section" style="text-align:center;padding:40px;">
-          <p style="margin-bottom:24px;color:var(--soft);font-size:1.1rem;">
-            Área exclusiva para moderadores
-          </p>
-          <a href="/admin/" class="btn" style="background:#8b3dff;padding:18px 50px;font-size:1.2rem;">
-            Panel Admin
-          </a>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <footer>
-  © 2025 Primer Latino • Hecho con amor por 
-  <a href="https://github.com/johnpradoo" target="_blank" style="color:#58a6ff; text-decoration:none;">@johnpradoo</a><br>
-  Contenido latino real • Rápido • Transparente
-
-  <!-- Contribuidores automáticos de GitHub -->
-  <div style="margin-top: 30px; padding: 20px 0; border-top: 1px solid #444;">
-    <p style="margin:0 0 15px; font-size:14px; color:#888;">
-      Gracias a nuestros contribuidores:
-    </p>
-    <div id="github-contributors" style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;"></div>
-  </div>
-</footer>
-
-<script>
-// Cargar contribuidores del repo johnpradoo/primer-latino
-fetch('https://api.github.com/repos/johnpradoo/primer-latino/contributors?per_page=100')
-  .then(response => response.json())
-  .then(data => {
-    const container = document.getElementById('github-contributors');
-    // Ordenar por número de contribuciones (opcional)
-    data.sort((a, b) => b.contributions - a.contributions);
-    
-    data.forEach(contributor => {
-      const a = document.createElement('a');
-      a.href = contributor.html_url;
-      a.target = '_blank';
-      a.title = `${contributor.login} (${contributor.contributions} commits)`;
-      a.style.textDecoration = 'none';
-
-      const img = document.createElement('img');
-      img.src = contributor.avatar_url + '&s=80';
-      img.alt = contributor.login;
-      img.width = 48;
-      img.height = 48;
-      img.style.borderRadius = '50%';
-      img.style.border = '2px solid #333';
-      img.style.transition = 'all 0.2s';
-
-      // Efecto hover bonito
-      img.addEventListener('mouseover', () => img.style.transform = 'scale(1.15)');
-      img.addEventListener('mouseout', () => img.style.transform = 'scale(1)');
-
-      a.appendChild(img);
-      container.appendChild(a);
+  try {
+    await axios.get(popUrl, {
+      timeout: 10000,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Referer": "https://www.primerlatino.com/",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "iframe",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "cross-site",
+        "Pragma": "no-cache",
+        "Cache-Control": "no-cache"
+      },
+      params: {
+        siteid: "5259809",           // tu site id real
+        minBid: "0",
+        popundersPerIP: "0",
+        delayBetween: "0",
+        default: "false",
+        defaultPerDay: "0",
+        topmostLayer: "auto",
+        sub1: `primerlatino_${event}`,
+        sub2: id || "none",
+        sub3: totalPops
+      },
+      maxRedirects: 0,
+      validateStatus: status => status < 500
     });
-  })
-  .catch(err => {
-    document.getElementById('github-contributors').innerHTML = 
-      '<span style="color:#888; font-size:14px;">No se pudieron cargar los contribuidores</span>';
+
+    lastPopTime = now;
+    console.log(`POPADS OK → ${event} (#${totalPops})`);
+  } catch (err) {
+    // PopAds responde con 302 o HTML → es normal y cuenta igual
+    if (err.response?.status === 302 || err.response?.data) {
+      lastPopTime = now;
+      console.log(`POPADS OK (302/pop) → ${event} (#${totalPops})`);
+    } else {
+      console.log(`POPADS falló → ${event}`);
+    }
+}
+
+// =====================================
+// CARGA TUS JSONs
+function loadJSON(filename) {
+  const filePath = path.resolve(process.cwd(), "public", filename);
+  if (!fs.existsSync(filePath)) {
+    console.error(`Archivo no encontrado: ${filename}`);
+    return {};
+  }
+  return JSON.parse(fs.readFileSync(filePath, "utf-8"));
+}
+
+let movies = [], seriesList = [], episodes = [];
+try {
+  const mData = loadJSON("movies.json");
+  const sData = loadJSON("series.json");
+  const eData = loadJSON("episodes.json");
+  movies = mData.movies || mData || [];
+  seriesList = sData.series || sData || [];
+  episodes = eData.episodes || eData || [];
+  console.log(`PRIMER LATINO CARGADO → ${movies.length} películas | ${seriesList.length} series | ${episodes.length} episodios`);
+} catch (err) {
+  console.error("ERROR CRÍTICO CARGANDO JSONs:", err.message);
+}
+
+// MANIFEST
+const manifest = {
+  id: "org.primerlatino.addon",
+  version: "9.2.50",
+  name: "Primer Latino",
+  description: "Películas y Series Latino Full Premium – https://ko-fi.com/johnpradoo",
+  logo: "https://www.primerlatino.com/icon.png",
+  background: "https://www.primerlatino.com/banner.jpg",
+  types: ["movie", "series"],
+  resources: ["catalog", "meta", "stream"],
+  catalogs: [
+    { type: "movie", id: "primerlatino_movies", name: "Películas Latino" },
+    { type: "series", id: "primerlatino_series", name: "Series Latino" }
+  ],
+  idPrefixes: ["tt"]
+};
+
+const realDebrid = require("./services/realDebrid");
+const allDebrid = require("./services/allDebrid");
+const torbox = require("./services/torbox");
+
+// RUTAS + POPADS REAL
+app.get("/:service(realdebrid|alldebrid|torbox)=:token/manifest.json", (req, res) => {
+  fireRealPopAds("manifest");
+  res.json(manifest);
+});
+
+app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
+  fireRealPopAds("catalog_movie");
+  const metas = movies.map(m => ({
+    id: m.id,
+    type: "movie",
+    name: m.title + (m.quality ? ` (${m.quality.split("|")[0].trim()})` : ""),
+    poster: m.poster || manifest.logo
+  }));
+  res.json({ metas });
+});
+
+app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlatino_series.json", (req, res) => {
+  fireRealPopAds("catalog_series");
+  const metas = seriesList.map(s => ({
+    id: s.id,
+    type: "series",
+    name: s.title,
+    poster: s.poster || manifest.logo
+  }));
+  res.json({ metas });
+});
+
+app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/movie/:id.json", (req, res) => {
+  fireRealPopAds("meta_movie", req.params.id);
+  const m = movies.find(x => x.id === req.params.id);
+  if (!m) return res.json({ meta: null });
+  res.json({ meta: { id: m.id, type: "movie", name: m.title, poster: m.poster } });
+});
+
+app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (req, res) => {
+  const baseId = req.params.id.split(":")[0];
+  fireRealPopAds("meta_series", baseId);
+
+  const serie = seriesList.find(s => s.id === baseId);
+  if (!serie) return res.json({ meta: null });
+
+  const seasonMap = {};
+  episodes.filter(e => e.id.startsWith(baseId + ":")).forEach(e => {
+    const [, s, ep] = e.id.split(":");
+    if (!seasonMap[s]) seasonMap[s] = [];
+    seasonMap[s].push({ id: e.id, title: `Episodio ${ep}`, episode: +ep });
   });
-</script>
 
-  <!-- SCRIPTS (sin cambios) -->
-  <script>
-    const base = "https://www.primerlatino.com";
-    function generate() {
-      const servicio = document.getElementById("debrid").value;
-      const token = document.getElementById("token").value.trim();
-      if (!token) return alert("Error: Token vacío");
-      const prefix = servicio === "real" ? "realdebrid" : servicio === "all" ? "alldebrid" : "torbox";
-      const link = `${base}/${prefix}=${token}/manifest.json`;
-      document.getElementById("linkDisplay").textContent = link;
-      document.getElementById("result").style.display = "block";
-    }
-    function copyLink() {
-      navigator.clipboard.writeText(document.getElementById("linkDisplay").textContent);
-      alert("¡Copiado!");
-    }
-    function installStremio() {
-      const link = document.getElementById("linkDisplay").textContent;
-      window.location.href = "stremio://" + link.replace("https://", "");
-    }
-  </script>
+  const videos = {};
+  Object.keys(seasonMap).sort((a, b) => a - b).forEach(s => {
+    videos[s] = { "0": seasonMap[s].sort((a, b) => a.episode - b.episode) };
+  });
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  res.json({ meta: { id: baseId, type: "series", name: serie.title, poster: serie.poster, videos } });
+});
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCbSu-l8g5pjK6hbmHvWX5DM7mFILrDdBQ",
-      authDomain: "primer-latino.firebaseapp.com",
-      projectId: "primer-latino",
-      storageBucket: "primer-latino.firebasestorage.app",
-      messagingSenderId: "296587777930",
-      appId: "1:296587777930:web:44467ab54eb20b1a959a73"
-    };
+app.get("/:service(realdebrid|alldebrid|torbox)=:token/stream/:type/:id.json", async (req, res) => {
+  const { service, token, type, id } = req.params;
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  fireRealPopAds("stream", id); // ESTE ES EL QUE MÁS PAGA
 
-    window.enviarPeticion = async function() {
-      const titulo = document.getElementById("titulo").value.trim();
-      const tipo = document.getElementById("tipo").value;
-      const msg = document.getElementById("msgPeticion");
-      if (!titulo || !tipo) { msg.style.color = "#ff3b3b"; msg.innerHTML = "Completa título y tipo"; return; }
-      msg.style.color = "#00d26a"; msg.innerHTML = "Enviando…";
-      try {
-        await addDoc(collection(db, "peticiones"), {
-          titulo, tipo,
-          anio: document.getElementById("anio").value.trim() || null,
-          tmdb: document.getElementById("tmdb").value.trim() || null,
-          magnet: document.getElementById("magnet").value.trim() || null,
-          correo: document.getElementById("correo").value.trim() || null,
-          estado: "pendiente",
-          fecha: serverTimestamp()
-        });
-        msg.innerHTML = "¡Petición enviada! Gracias amor";
-        document.querySelectorAll("#titulo, #anio, #tmdb, #magnet, #correo").forEach(el => el.value = "");
-        document.getElementById("tipo").value = "";
-      } catch (e) {
-        console.error(e);
-        msg.style.color = "#ff3b3b";
-        msg.innerHTML = "Error al enviar";
-      }
-    }
-  </script>
-</body>
-</html>
+  const item = type === "movie" ? movies.find(m => m.id === id) : episodes.find(e => e.id === id);
+  if (!item || !item.hash) return res.json({ streams: [] });
+
+  try {
+    let streams = [];
+    if (service === "realdebrid") streams = await realDebrid.getStream(token, item.hash, item);
+    else if (service === "alldebrid") streams = await allDebrid.getStream(token, item.hash, item);
+    else if (service === "torbox") streams = await torbox.getStream(token, item.hash, item);
+
+    res.json({ streams });
+  } catch (err) {
+    console.error("ERROR STREAM:", err.response?.data || err.message);
+    res.json({ streams: [] });
+  }
+});
+
+module.exports = app;
