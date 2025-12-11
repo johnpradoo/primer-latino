@@ -1,4 +1,4 @@
-// api/addon.js → PRIMER LATINO + MONETAG TAG (CUENTA TODO, CPM ALTO)
+// api/addon.js → INTEGRADO CON ALLDEBRID Y TORBOX (modular)
 const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
@@ -15,50 +15,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// =====================================
-//   MONETAG TAG CPM – ESTE SÍ CUENTA 100%
-// =====================================
-const MONETAG_TAG_URL = "https://quge5.com/88/tag.min.js";
-const MONETAG_ZONE = "191688";
-
-let totalRequests = 0;
-let lastTagTime = 0;
-const MIN_INTERVAL = 2 * 60 * 1000; // 2 minutos entre tags (más que suficiente)
-
-async function fireMonetagTag(event = "use", id = "none") {
-  totalRequests++;
-  const now = Date.now();
-
-  // Siempre disparamos en "stream" → es el que más paga
-  if (event !== "stream" && now - lastTagTime < MIN_INTERVAL) return;
-
-  try {
-    await axios.get(MONETAG_TAG_URL, {
-      timeout: 10000,
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36",
-        "Accept": "*/*",
-        "Referer": "https://www.primerlatino.com/",
-        "Connection": "keep-alive",
-      },
-      params: {
-        zone: MONETAG_ZONE,
-        sub1: `primerlatino_${event}`,
-        sub2: id || "none",
-        sub3: totalRequests.toString(),
-      },
-    });
-
-    lastTagTime = now;
-    console.log(`MONETAG TAG OK → ${event} (#${totalRequests})`);
-  } catch (err) {
-    console.log(`MONETAG TAG falló → ${event}`);
-  }
-}
-// =====================================
-
-// CARGA JSONs DESDE public/
+// FUNCIÓN QUE LEE LOS JSONs DESDE LA CARPETA public/
 function loadJSON(filename) {
   const filePath = path.resolve(process.cwd(), "public", filename);
   if (!fs.existsSync(filePath)) {
@@ -68,7 +25,9 @@ function loadJSON(filename) {
   return JSON.parse(fs.readFileSync(filePath, "utf-8"));
 }
 
+// CARGAR TUS JSONs DESDE public/
 let movies = [], seriesList = [], episodes = [];
+
 try {
   const mData = loadJSON("movies.json");
   const sData = loadJSON("series.json");
@@ -78,7 +37,7 @@ try {
   seriesList = sData.series || sData || [];
   episodes = eData.episodes || eData || [];
 
-  console.log(`PRIMER LATINO CARGADO → ${movies.length} películas | ${seriesList.length} series | ${episodes.length} episodios`);
+  console.log(`✅ PRIMER LATINO CARGADO → ${movies.length} películas | ${seriesList.length} series | ${episodes.length} episodios`);
 } catch (err) {
   console.error("ERROR CRÍTICO CARGANDO JSONs:", err.message);
 }
@@ -88,7 +47,7 @@ const manifest = {
   id: "org.primerlatino.addon",
   version: "9.2.50",
   name: "Primer Latino",
-  description: "Películas y Series Latino Full Premium – https://ko-fi.com/johnpradoo",
+  description: "Películas y Series Latino Full Premium – https://ko-fi.com/johnpradoo ☕",
   logo: "https://www.primerlatino.com/icon.png",
   background: "https://www.primerlatino.com/banner.jpg",
   types: ["movie", "series"],
@@ -100,19 +59,18 @@ const manifest = {
   idPrefixes: ["tt"]
 };
 
-// SERVICIOS
+// IMPORTA LOS SERVICIOS (modular)
 const realDebrid = require("./services/realDebrid");
 const allDebrid = require("./services/allDebrid");
 const torbox = require("./services/torbox");
 
-// RUTAS + MONETAG TAG
+// RUTAS (manifest para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/manifest.json", (req, res) => {
-  fireMonetagTag("manifest");
   res.json(manifest);
 });
 
+// Catalog movie (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatino_movies.json", (req, res) => {
-  fireMonetagTag("catalog_movie");
   const metas = movies.map(m => ({
     id: m.id,
     type: "movie",
@@ -122,8 +80,8 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/movie/primerlatin
   res.json({ metas });
 });
 
+// Catalog series (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlatino_series.json", (req, res) => {
-  fireMonetagTag("catalog_series");
   const metas = seriesList.map(s => ({
     id: s.id,
     type: "series",
@@ -133,17 +91,16 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/catalog/series/primerlati
   res.json({ metas });
 });
 
+// Meta movie (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/movie/:id.json", (req, res) => {
-  fireMonetagTag("meta_movie", req.params.id);
   const m = movies.find(x => x.id === req.params.id);
   if (!m) return res.json({ meta: null });
   res.json({ meta: { id: m.id, type: "movie", name: m.title, poster: m.poster } });
 });
 
+// Meta series (igual para todos)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (req, res) => {
   const baseId = req.params.id.split(":")[0];
-  fireMonetagTag("meta_series", baseId);
-
   const serie = seriesList.find(s => s.id === baseId);
   if (!serie) return res.json({ meta: null });
 
@@ -162,10 +119,9 @@ app.get("/:service(realdebrid|alldebrid|torbox)=:token/meta/series/:id.json", (r
   res.json({ meta: { id: baseId, type: "series", name: serie.title, poster: serie.poster, videos } });
 });
 
+// STREAM (switch por servicio – la magia modular)
 app.get("/:service(realdebrid|alldebrid|torbox)=:token/stream/:type/:id.json", async (req, res) => {
   const { service, token, type, id } = req.params;
-
-  fireMonetagTag("stream", id); // ESTE ES EL QUE MÁS PAGA
 
   const item = type === "movie" ? movies.find(m => m.id === id) : episodes.find(e => e.id === id);
   if (!item || !item.hash) return res.json({ streams: [] });
