@@ -1,13 +1,12 @@
 {
   "movies": [
-    
      {
       "id": "tt30472557",
       "title": "Chainsaw Man - La película: Arco de Reze (2025)",
-      "quality": "1080p | WEB-DL | AAC 5.1",
+      "quality": "4K | Dolby Vision | Dolby Atmos",
       "language": "🇲🇽 LATINO | 🇯🇵 JAPON | 🇺🇸 ENGLISH" ,
       "codec": "H.264",
-      "hash": "106EB3C25255FD5E2620FB8CF110FFD11B8E2B90",
+      "hash": "BEC1B136EF1C313A2B61CA5685B4C4F3B697EAA0",
       "status": "aprobado",
       "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/1CfZCb56vWjq37uXtbKNMevMzwG.jpg",
       "type": "movie"
