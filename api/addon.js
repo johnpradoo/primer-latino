@@ -40,7 +40,7 @@ async function firePopAdsAPI(event = "use", id = "none") {
         "Referer": "https://www.primerlatino.com/",
       },
       params: {
-        key: "https://www.popads.net/api/website_code?key=APIKEY&website_id=5259809&tl=auto&of=1",
+        key: "8858e84df5979e5dcfdd081054517b896fbd76c0",
         website_id: "5259809",
         tl: "auto",
         of: "1",
