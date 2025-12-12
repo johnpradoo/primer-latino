@@ -23,6 +23,17 @@
       "type": "movie"
     },
     {
+    "id": "tt37751253",
+    "title": "El Diario de Greg: Esto es el colmo (2025)",
+    "quality": "4K | Dolby Vision | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "208BA51CAE4E18407159B72EB25AFE033E2E7520",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/xg6hPJGl130XkJgwWpBagMHojWz.jpg",
+    "type": "movie"
+    },
+    {
       "id": "tt31434030",
       "title": "Drácula (2025)",
       "quality": "1080p | WEB-DL | E-AC3 5.1",
@@ -1489,7 +1500,7 @@
     },
     {
       "id": "tt0120737",
-      "title": "El señor de los anillos: La comunidad del anillo",
+      "title": "El señor de los anillos: La comunidad del anillo (2001)",
       "quality": "1080p | WEB-DL | Dolby Atmos",
       "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
       "codec": "H.264",
@@ -1508,6 +1519,17 @@
       "status": "aprobado",
       "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/w93f1iH59LfCJEpZujk45L6kjWk.jpg",
       "type": "movie"
+    },
+    {
+    "id": "tt0099785",
+    "title": "Mi pobre angelito (1990)",
+    "quality": "1080p | WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "7A91D91C43D5B9B7339D7120E893D37366DF8C70",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/zbzMCGszAiHCwIpTGD7fX79zsDA.jpg",
+    "type": "movie"
     },
     {
       "id": "tt0120755",
