@@ -112,13 +112,18 @@
     },
     {
       "id": "tt0121220",
-      "title": "Dragon Ball Z",
+      "title": "Dragon Ball Z (1989)",
       "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/ogH4r9HsimigseBNLzHn4uVNOxh.jpg"
     },
     {
       "id": "tt2356777",
       "title": "True Detective (2014)",
       "poster": "https://image.tmdb.org/t/p/w600_and_h900_face/fAZpwffGhMQvk8SrrMnILcXtbQH.jpg"
+    },
+    {
+    "id": "tt0903747",
+    "title": "Breaking Bad (2008)",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg"
     }
   ]
 }
