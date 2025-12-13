@@ -6,7 +6,7 @@
     { "src": "admin/index.html", "use": "@vercel/static" },
     { "src": "public/(.*)", "use": "@vercel/static" },
     { "src": "icon.png", "use": "@vercel/static" },
-    { "src": "banner.jpg", "use": "@vercel/static" }
+    { "src": "banner.jpg", "use": "@vercel/static" } 
   ],
   "routes": [
     

@@ -263,11 +263,4 @@ app.get(["/p2p/stream/:type/:id.json", "/:service(realdebrid|alldebrid|torbox)=:
   }
 });
 
-// Servidor
-const port = 3000;
-app.listen(port, () => {
-  console.log(`Servidor corriendo en http://localhost:${port}`);
-  console.log(`P2P Free → http://localhost:${port}/p2p/manifest.json`);
-});
-
 module.exports = app;

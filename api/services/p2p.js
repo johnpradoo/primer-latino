@@ -6,7 +6,7 @@ const getStream = async (token, infoHash, item) => {
   // Calidad manual (soporte array o string separado por |)
   let qualities = item.quality || item.q || [];
   qualities = Array.isArray(qualities) ? qualities : (qualities ? qualities.split("|").map(q => q.trim()) : []);
-  const manualQuality = qualities[0] || "Unknown"; // Si tienes múltiples hashes, se manejará en el loop del addon.js
+  const manualQuality = qualities[0] || "Unknown"; // S
 
   // Idioma (soporte language o l)
   const langRaw = (item.language || item.l || "").replace(/\|/g, "·").trim();
