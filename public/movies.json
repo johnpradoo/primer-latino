@@ -12,6 +12,17 @@
       "type": "movie"
     },
     {
+    "id": "tt36639986",
+    "title": "Soy Frankelda (2025)",
+    "quality": "1080p | Bluray | AAC 5.1",
+    "language": "🇲🇽 LATINO",
+    "codec": "H.264",
+    "hash": "5CF67AE53B2ACB1CCE40A10144A77ED63F1CB046",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/rh3HNzV7o8ouH4NnCuL76OFPFBF.jpg",
+    "type": "movie"
+    },
+    {
       "id": "tt4627382",
       "title": "Un Buen Ladrón (2025)",
       "quality": "1080p | WEB-DL | Dolby Atmos",
@@ -31,6 +42,17 @@
     "hash": "208BA51CAE4E18407159B72EB25AFE033E2E7520",
     "status": "aprobado",
     "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/xg6hPJGl130XkJgwWpBagMHojWz.jpg",
+    "type": "movie"
+    },
+    {
+    "id": "tt35521922",
+    "title": "Good Boy (2025)",
+    "quality": "1080p | WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "0A77664049C94CD92943215074B2477A1F6E21EE",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/6rZOKB5EhGcTLaSPoyX8La44ZDT.jpg",
     "type": "movie"
     },
     {
@@ -1400,6 +1422,17 @@
       "type": "movie"
     },
     {
+    "id": "tt4589218",
+    "title": "Five Nights at Freddy's (2023)",
+    "quality": "4K | WEB-DL | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "3570D9E5FE1306A48954EDE2E2B6FC5A384981EE",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/t6RSJ1z8bDEYpk4fLwxfkXciUak.jpg",
+    "type": "movie"
+    },
+    {
       "id": "tt4729430",
       "title": "Klaus (2019)",
       "quality": "4K | WEB-RIP | AAC 5.1",
@@ -1433,6 +1466,17 @@
       "type": "movie"
     },
     {
+    "id": "tt2557478",
+    "title": "Pacific Rim: Uprising (2018)",
+    "quality": "4K | BLURAY | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "E194A4A70B8E65EB8C3129AD16BB8C57EC7AA0C7",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/cAQRgMxyuy3qhjCitR0hHJhEPAI.jpg",
+    "type": "movie"
+    },
+    {
       "id": "tt3783958",
       "title": "La La Land (2016)",
       "quality": "4K | HDR | DV | DD+",
@@ -1442,6 +1486,17 @@
       "status": "aprobado",
       "poster": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/7pFsAaJmiOppVHcldBzg8JKBHwe.jpg",
       "type": "movie"
+    },
+    {
+    "id": "tt3040964",
+    "title": "El Libro de la Selva (2016)",
+    "quality": "4K | BLURAY | Dolby Atmos",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "44009979A3BE6FD035F54B0D71642AE2243BAD08",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/pQGB08Kxyt3TLN4L01E175BRcvu.jpg",
+    "type": "movie"
     },
     {
       "id": "tt0082198",
@@ -1510,6 +1565,17 @@
       "type": "movie"
     },
     {
+    "id": "tt0283426",
+    "title": "The Jungle Book 2 (2003)",
+    "quality": "1080p | Bluray | AAC 5.1",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "18ACA0E4CBBEE7AC8697107F97303D46273BDD2D",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/3yELRp1h8ngfTgWdeiozaiaMBnV.jpg",
+    "type": "movie"
+    },
+    {
       "id": "tt0093437",
       "title": "Jovenes Ocultos (1987)",
       "quality": "4K | BLURAY | AAC 5.1",
@@ -1552,6 +1618,17 @@
       "status": "aprobado",
       "poster": "https://image.tmdb.org/t/p/w600_and_h900_face/8hI4ciKXsgzNFBfJpkBtjj1VW1Z.jpg",
       "type": "movie"
+    },
+    {
+    "id": "tt0061852",
+    "title": "The Jungle Book (1967)",
+    "quality": "1080p | BluRayRip | AAC 5.1",
+    "language": "🇲🇽 LATINO | 🇺🇸 ENGLISH",
+    "codec": "H.264",
+    "hash": "21D4972FB1DAF5DD5AE73639B9DA7322441F5F5A",
+    "status": "aprobado",
+    "poster": "https://www.themoviedb.org/t/p/w600_and_h900_face/uBKffnwwHGIkQET18gVPsyeDdjC.jpg",
+    "type": "movie"
     }
   ]
 }
