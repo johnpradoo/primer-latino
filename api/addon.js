@@ -51,8 +51,8 @@ const manifest = {
   types: ["movie", "series"],
   resources: ["catalog", "meta", "stream"],
   catalogs: [
-    { type: "movie", id: "primerlatino_movies", name: "Películas Latino" },
-    { type: "series", id: "primerlatino_series", name: "Series Latino" }
+    { type: "movie", id: "primerlatino_movies", name: "Películas Latino 🎄" },
+    { type: "series", id: "primerlatino_series", name: "Series Latino 🎄" }
   ],
   idPrefixes: ["tt"]
 };
@@ -238,7 +238,7 @@ app.get(["/p2p/stream/:type/:id.json", "/:service(realdebrid|alldebrid|torbox)=:
           else if (filename.includes("720")) quality = "720p";
 
           const lang = (item.language || item.l || "").replace(/\|/g, "·").trim();
-          const title = lang ? `Primer Latino ${quality} · ${lang}` : `Primer Latino ${quality}`;
+          const title = lang ? `Primer Latino 🚀​ ${quality} · ${lang}` : `Primer Latino 👨‍🚀 ${quality}`;
           return { ...stream, title: title.trim() };
         });
       }

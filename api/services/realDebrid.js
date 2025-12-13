@@ -5,7 +5,7 @@ function crearTituloEpico(item, fromCache = false) {
   const calidad = (item.quality || "1080p").trim();
   const idioma = (item.language || "MX LATINO").trim();
   const title = `${calidad} ${idioma}${fromCache ? " ⚡️| CAHE" : ""} Primer Latino`.trim();
-  const infoTitle = "Primer Latino";
+  const infoTitle = "Primer Latino 🎄";
   return { title, infoTitle };
 }
 
