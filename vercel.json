@@ -3,21 +3,28 @@
   "builds": [
     { "src": "api/addon.js", "use": "@vercel/node" },
     { "src": "index.html", "use": "@vercel/static" },
-    { "src": "*.json", "use": "@vercel/static" },
-    { "src": "admin/index.html", "use": "@vercel/static" }
+    { "src": "admin/index.html", "use": "@vercel/static" },
+    { "src": "public/(.*)", "use": "@vercel/static" },
+    { "src": "icon.png", "use": "@vercel/static" },
+    { "src": "banner.jpg", "use": "@vercel/static" }
   ],
   "routes": [
+    
+    {
+      "src": "/p2p/(.*)",
+      "dest": "/api/addon.js"
+    },
+    {
+      "src": "/(realdebrid|alldebrid|torbox)=[^/]+/(.*)",
+      "dest": "/api/addon.js"
+    },
     {
       "src": "/admin",
       "dest": "/admin/index.html"
     },
     {
-      "src": "/admin/",
+      "src": "/admin/(.*)",
       "dest": "/admin/index.html"
-    },
-    {
-      "src": "/(realdebrid|alldebrid|torbox)=[^/]+/(.*)",
-      "dest": "/api/addon.js"
     },
     {
       "src": "/icon.png",
@@ -26,6 +33,10 @@
     {
       "src": "/banner.jpg",
       "dest": "/banner.jpg"
+    },
+    {
+      "src": "/public/(.*)",
+      "dest": "/public/$1"
     },
     {
       "src": "/(.*)",
